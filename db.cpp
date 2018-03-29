@@ -9,6 +9,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <math.h>
 
 #if defined(_WIN32) || defined(_WIN64)
   #define strcasecmp _stricmp
@@ -338,6 +339,13 @@ int do_semantic(token_list *tok_list)
 		cur_cmd = LIST_SCHEMA;
 		cur = cur->next->next;
 	}
+  else if ((cur->tok_value == K_INSERT) &&
+          ((cur->next != NULL) && (cur->next->tok_value == K_INTO)))
+  {
+    printf("INSERT INTO TABLE statement\n");
+    cur_cmd = INSERT;
+    cur = cur->next->next;
+  }
 	else
   {
 		printf("Invalid statement\n");
@@ -360,6 +368,9 @@ int do_semantic(token_list *tok_list)
 			case LIST_SCHEMA:
 						rc = sem_list_schema(cur);
 						break;
+      case INSERT:
+            rc = sem_insert_record(cur);
+            break;
 			default:
 					; /* no action */
 		}
@@ -411,14 +422,12 @@ int sem_create_table(token_list *t_list)
       int tmp_record_size = 0;
 
       /* Create the tab file */
-      char filename[15];
+      char filename[10];
       strcpy(filename, cur->tok_string);
       strcat(filename, ".tab");
-      printf("Filename: %s\n", filename);
+      printf("CREATED Filename: %s\n", filename);
       FILE *fhandle = NULL;
       fhandle = fopen(filename, "wbc");
-
-
 
       /* copy the table name string by its name into tab_entry */
       strcpy(tab_entry.table_name, cur->tok_string);
@@ -638,16 +647,19 @@ int sem_create_table(token_list *t_list)
           /* return the pointer to the allocated space */
 					new_entry = (tpd_entry*)calloc(1, tab_entry.tpd_size);
 
-
-          printf("%d\n", tmp_record_size);
+          if(tmp_record_size % 4 != 0){
+              tmp_record_size = (int)(floor(tmp_record_size / 4) * 4);
+          }
           /* Set the final record size to tab file*/
           tabfile_ptr->record_size = tmp_record_size;
           tabfile_ptr->record_offset = tmp_record_size;
 
-          /* Intialize everything with 0 to the tab file */
+          /* Intialize everything with starter column defintiion to the tab file */
           fwrite(tabfile_ptr, sizeof(table_file_header), 1, fhandle);
           fflush(fhandle);
           fclose(fhandle);
+          /* Test the new tab file */
+          table_file_header* testrc = get_tabinfo_from_tab(tab_entry.table_name);
 
 					if (new_entry == NULL)
 					{
@@ -708,6 +720,11 @@ int sem_drop_table(token_list *t_list)
 			{
 				/* Found a valid tpd, drop it from tpd list */
 				rc = drop_tpd_from_list(cur->tok_string);
+        char filename[10];
+        strcpy(filename, cur->tok_string);
+        strcat(filename, ".tab");
+        remove(filename);
+        printf("DELETED Filename: %s\n", filename);
 			}
 		}
 	}
@@ -926,10 +943,9 @@ int initialize_tpd_list()
 	else
 	{
 		/* There is a valid dbfile.bin file - get file size */
-//		_fstat(_fileno(fhandle), &file_stat);
+    //		_fstat(_fileno(fhandle), &file_stat);
 		fstat(fileno(fhandle), &file_stat);
 		printf("dbfile.bin size = %d\n", file_stat.st_size);
-
 		g_tpd_list = (tpd_list*)calloc(1, file_stat.st_size);
 
 		if (!g_tpd_list)
@@ -1131,4 +1147,146 @@ tpd_entry* get_tpd_from_list(char *tabname)
 	}
 
 	return tpd;
+}
+
+int sem_insert_record(token_list *t_list)
+{
+    int rc = 0;
+	  token_list *cur; /* The current pointer to the token list */
+    /* Temp table packed descriptor sturcture */
+  	tpd_entry tab_entry;
+    tpd_entry *new_entry;
+    bool column_done = false;
+    int cur_id = 0;
+    /* Column descriptor sturcture */
+    cd_entry  *col_entry = NULL;
+    struct table_file_header_def tabfile;
+    tabfile_ptr = NULL;
+    void *cur_record;
+    int i = 0;
+
+    /*
+      col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset
+      to get the column entry based on the table
+    */
+    /* Set the current pointer to the token list */
+    cur = t_list;
+
+    if ((cur->tok_class != keyword) &&
+  		  (cur->tok_class != identifier) &&
+  			(cur->tok_class != type_name))
+  	{
+  		// Error
+  		rc = INVALID_TABLE_NAME;
+  		cur->tok_value = INVALID;
+  	}
+    else /* There is a valid class */
+    {
+      /* if the table alerady existed then we can insert */
+      if ((new_entry = get_tpd_from_list(cur->tok_string)) != NULL)
+      {
+          strcpy(tab_entry.table_name, cur->tok_string);
+          cur = cur->next;
+          //If the insert statement doesn't contain VALUES
+          if (cur->tok_value != K_VALUES)
+          {
+            //Error
+            rc = INVALID_INSERT_SYNTAX;
+            cur->tok_value = INVALID;
+          }
+          else
+    			{
+             cur = cur->next;
+             //If the insert statement doesn't have ( left paran
+             if(cur->tok_value != S_LEFT_PAREN)
+             {
+               rc = INVALID_INSERT_SYNTAX;
+               cur->tok_value = INVALID;
+             }
+             else {
+               //Go inside the paranthesis
+               cur = cur->next;
+               tabfile_ptr = get_tabinfo_from_tab(tab_entry.table_name);
+               cur_record = (void*)calloc(1, sizeof(tabfile_ptr->record_size));
+               printf("%d\n", new_entry->cd_offset);
+               printf("%d\n", new_entry->num_columns);
+               //Loop through all the columns within the table
+                for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
+								i < new_entry->num_columns; i++, col_entry++)
+						    {
+                    printf("%d\n", col_entry->col_type);
+                    printf("%d\n", col_entry->not_null);
+                    if(col_entry->col_type == T_CHAR)
+                      {
+                          if(cur->tok_value != STRING_LITERAL || cur->tok_class != constant)
+                          {
+                              rc = INVALID_INSERT_COLUMN_TYPE;
+                              cur->tok_value = INVALID;
+                          }
+                          else { //if it's a valid string value
+                              printf("%s\n", "It's a valid string");
+                          }
+                      }
+                      else if(col_entry->col_type == T_INT)
+                      {
+                          if(cur->tok_value != INT_LITERAL || cur->tok_class != constant)
+                          {
+                              rc = INVALID_INSERT_COLUMN_TYPE;
+                              cur->tok_value = INVALID;
+                          }
+                          else { // if its a valid int value
+                            printf("%s\n", "It's a valid int");
+                          }
+                      }
+                    if(!rc){
+                      cur = cur->next;
+                    }
+                }
+             }
+          }
+      }// check if table exist
+      else
+      {
+          /* This is not working because the table must exist for insertion */
+          rc = TABLE_NOT_EXIST;
+          cur->tok_value = INVALID;
+      }
+
+    }
+    return rc;
+}
+
+table_file_header* get_tabinfo_from_tab(char *tabname){
+  int rc = 0;
+  struct stat file_stat;
+  FILE *fhandle = NULL;
+  table_file_header_def *test = NULL;
+  char filename[20];
+  strcpy(filename, tabname);
+  strcat(filename, ".tab");
+  printf("GET Tabfile: %s\n", filename);
+  /* Trying to read the fhandle */
+  if((fhandle = fopen(filename, "rbc")) != NULL){
+      fstat(fileno(fhandle), &file_stat);
+      test = (table_file_header_def*)calloc(1, file_stat.st_size);
+      if (!test)
+      {
+        rc = MEMORY_ERROR;
+      }
+      else
+      {
+        fread(test, file_stat.st_size, 1, fhandle);
+        printf("File Size (file_size) = %d\n", test->file_size);
+        printf("Record Size (record_size) = %d\n", test->record_size);
+        printf("Num Record (num_records) = %d\n", test->num_records);
+        printf("Record Offset (record_offset) = %d\n", test->record_offset);
+        printf("File Header Flag (file_header_flag) = %d\n", test->file_header_flag);
+        fflush(fhandle);
+        fclose(fhandle);
+      }
+  }
+  else {
+    rc = FILE_OPEN_ERROR;
+  }
+  return test;
 }

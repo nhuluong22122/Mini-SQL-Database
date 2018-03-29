@@ -184,6 +184,9 @@ typedef enum error_return_codes
 	INVALID_COLUMN_LENGTH,			// -389
   INVALID_REPORT_FILE_NAME,		// -388
   /* Must add all the possible errors from I/U/D + SELECT here */
+	INVALID_INSERT_SYNTAX,      // -387
+	INVALID_INSERT_COLUMN_TYPE,  // -386
+	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299
 	DBFILE_CORRUPTION,					// -298
 	MEMORY_ERROR							  // -297
@@ -197,6 +200,7 @@ int sem_create_table(token_list *t_list);
 int sem_drop_table(token_list *t_list);
 int sem_list_tables();
 int sem_list_schema(token_list *t_list);
+int sem_insert_record(token_list *t_list);
 
 /*
 	Keep a global list of tpd - in real life, this will be stored
@@ -206,5 +210,6 @@ tpd_list	*g_tpd_list;
 int initialize_tpd_list();
 int add_tpd_to_list(tpd_entry *tpd);
 int drop_tpd_from_list(char *tabname);
+table_file_header* get_tabinfo_from_tab(char *tabname);
 table_file_header *tabfile_ptr;
 tpd_entry* get_tpd_from_list(char *tabname);
