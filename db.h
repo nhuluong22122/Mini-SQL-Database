@@ -186,6 +186,7 @@ typedef enum error_return_codes
   /* Must add all the possible errors from I/U/D + SELECT here */
 	INVALID_INSERT_SYNTAX,      // -387
 	INVALID_INSERT_COLUMN_TYPE,  // -386
+	INSERT_NOT_NULL_EXCEPTION,	// -385
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299
 	DBFILE_CORRUPTION,					// -298
@@ -212,4 +213,5 @@ int add_tpd_to_list(tpd_entry *tpd);
 int drop_tpd_from_list(char *tabname);
 table_file_header* get_tabinfo_from_tab(char *tabname);
 table_file_header *tabfile_ptr;
+int *record_ptr;
 tpd_entry* get_tpd_from_list(char *tabname);
