@@ -1208,21 +1208,17 @@ int sem_insert_record(token_list *t_list)
              }
              else {
                //Go inside the paranthesis
-               cur = cur->next;
-               int record_offset = 0;
-               tabfile_ptr = get_tabinfo_from_tab(tab_entry.table_name); //beginning of tab
-               printf("TABFILE: %p\n", tabfile_ptr);
-               record_ptr = (char*)calloc(0, tabfile_ptr->record_size);
-               printf("RECORD : %p\n", record_ptr);
-              if(tabfile_ptr->record_size > tabfile_ptr->file_size){
-                record_ptr = record_ptr - (tabfile_ptr->record_size - tabfile_ptr->file_size) ;
-              }
+                cur = cur->next;
+                int record_offset = 0;
+                tabfile_ptr = get_tabinfo_from_tab(tab_entry.table_name); //beginning of tab
+                printf("TABFILE: %p\n", tabfile_ptr);
+                record_ptr = (char*)calloc(0, tabfile_ptr->record_size);
+                printf("RECORD : %p\n", record_ptr);
+                record_ptr = record_ptr - (tabfile_ptr->record_size - 24);
+                printf("RECORD AFTER - : %p\n", record_ptr);
+                // record_ptr = record_ptr + (tabfile_ptr->num_records * tabfile_ptr->record_size);
+                // printf("RECORD AFTER + : %p\n", record_ptr);
 
-               // }
-               // printf("COMPARED TO: %d\n", (int*)tabfile_ptr + (tabfile_ptr->record_size / 4) );
-               // printf("TABFILE PTR: %d\n", tabfile_ptr);
-               // printf("CUR RECORD: %d\n\n", record_ptr);
-               //Loop through all the columns within the table
                 for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
 								i < new_entry->num_columns; i++, col_entry++)
 						    {
@@ -1253,11 +1249,11 @@ int sem_insert_record(token_list *t_list)
                                 int *p_len = &temp_len;
                                 memcpy(record_ptr+record_offset, p_len, 1);
                                 record_offset = record_offset + 1;
-                                printf("%p OFFSET %d\n", record_ptr+record_offset);
+                                printf("%p OFFSET %d\n", record_ptr+record_offset,record_offset);
                                 // printf("%s LENGTH %d\n", temp_string, col_entry->col_len + 1);
                                 memcpy(record_ptr+record_offset, cur->tok_string, col_entry->col_len);
                                 record_offset = record_offset + col_entry->col_len;
-                                printf("%p OFFSET %d\n", record_ptr+record_offset);
+                                printf("%p OFFSET %d\n", record_ptr+record_offset,record_offset);
                                 //Check for comma
                                 cur = cur->next;
                                 //Parse the string and then check for comma
