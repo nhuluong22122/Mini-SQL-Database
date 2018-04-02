@@ -213,5 +213,5 @@ int add_tpd_to_list(tpd_entry *tpd);
 int drop_tpd_from_list(char *tabname);
 table_file_header* get_tabinfo_from_tab(char *tabname);
 table_file_header *tabfile_ptr;
-int *record_ptr;
+char *record_ptr;
 tpd_entry* get_tpd_from_list(char *tabname);

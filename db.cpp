@@ -1162,7 +1162,7 @@ int sem_insert_record(token_list *t_list)
     struct table_file_header_def tabfile;
     FILE *fhandle = NULL;
     tabfile_ptr = NULL;
-    record_ptr = NULL;
+    char* record_ptr = NULL;
     int i = 0;
     char filename[20];
 
@@ -1210,12 +1210,17 @@ int sem_insert_record(token_list *t_list)
                //Go inside the paranthesis
                cur = cur->next;
                int record_offset = 0;
-               tabfile_ptr = get_tabinfo_from_tab(tab_entry.table_name);
-               record_ptr = (int*)calloc(0, tabfile_ptr->record_size);
-               record_ptr = (int*)tabfile_ptr + (tabfile_ptr->record_offset / 4);
+               tabfile_ptr = get_tabinfo_from_tab(tab_entry.table_name); //beginning of tab
+               printf("TABFILE: %p\n", tabfile_ptr);
+               record_ptr = (char*)calloc(0, tabfile_ptr->record_size);
+               printf("RECORD : %p\n", record_ptr);
+              if(tabfile_ptr->record_size > tabfile_ptr->file_size){
+                record_ptr = record_ptr - (tabfile_ptr->record_size - tabfile_ptr->file_size) ;
+              }
+
                // }
                // printf("COMPARED TO: %d\n", (int*)tabfile_ptr + (tabfile_ptr->record_size / 4) );
-               printf("TABFILE PTR: %d\n", tabfile_ptr);
+               // printf("TABFILE PTR: %d\n", tabfile_ptr);
                // printf("CUR RECORD: %d\n\n", record_ptr);
                //Loop through all the columns within the table
                 for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
@@ -1244,22 +1249,15 @@ int sem_insert_record(token_list *t_list)
                             }
                             else { //if it's a valid string value
                                 printf("%s%d\n", "It's a valid string", strlen(cur->tok_string));
-                                // printf("CUR RECORD: %d\n", record_ptr);
-
-                                char temp_string[col_entry->col_len + 1];
-                                int string_len = strlen(cur->tok_string);
-                                char p_strlen[1];
-                                sprintf(p_strlen, "%d", string_len);
-                                strcpy(temp_string, p_strlen);
-                                strcat(temp_string, cur->tok_string);
-                                // for (unsigned int i = 0; i < strlen(cur->tok_string); i++)
-                                // {
-                                //     a += (unsigned)cur->tok_string[i];
-                                // }
-                                printf("%s LENGTH %d\n", temp_string, col_entry->col_len + 1);
-                                memcpy(record_ptr+record_offset, temp_string, 4);
-                                printf("%p\n", record_ptr+record_offset);
-                                record_offset = record_offset + 3;
+                                int temp_len = strlen(cur->tok_string);
+                                int *p_len = &temp_len;
+                                memcpy(record_ptr+record_offset, p_len, 1);
+                                record_offset = record_offset + 1;
+                                printf("%p OFFSET %d\n", record_ptr+record_offset);
+                                // printf("%s LENGTH %d\n", temp_string, col_entry->col_len + 1);
+                                memcpy(record_ptr+record_offset, cur->tok_string, col_entry->col_len);
+                                record_offset = record_offset + col_entry->col_len;
+                                printf("%p OFFSET %d\n", record_ptr+record_offset);
                                 //Check for comma
                                 cur = cur->next;
                                 //Parse the string and then check for comma
@@ -1290,12 +1288,14 @@ int sem_insert_record(token_list *t_list)
                             else { // if its a valid int value
                               printf("%s\n", "It's a valid int");
                               //Parse the int and then check for comma
-                              printf("LENGTH: %d\n",   col_entry->col_len + 1);
+                              int temp_len = sizeof(int);
+                              int *p_len = &temp_len;
+                              memcpy(record_ptr+record_offset, p_len, 1);
+                              record_offset = record_offset + 1;
                               int temp_int = atoi(cur->tok_string);
                               int *p_int = &temp_int;
-                              memcpy(record_ptr+record_offset, p_int, 1);
-                              // memset(record_ptr+record_offset, atoi(cur->tok_string), 2);
-                              record_offset = record_offset + 1;
+                              memcpy(record_ptr+record_offset, p_int, col_entry->col_len );
+                              record_offset = record_offset + col_entry->col_len ;
                               cur = cur->next;
                               //Parse the string and then check for comma
                               if(cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1){
@@ -1330,12 +1330,12 @@ int sem_insert_record(token_list *t_list)
           {
             /* Now finished building tpd entry and add it to the Table packed descriptor list (tpd) */
             /* Intialize everything with starter column defintiion to the tab file */
-            // fhandle = fopen(filename,"a+bc");
-            // fwrite(record_ptr, tabfile_ptr->record_size, 1, fhandle);
-            // fflush(fhandle);
-            // fclose(fhandle);
+            fhandle = fopen(filename,"a+bc");
+            fwrite(record_ptr, tabfile_ptr->record_size, 1, fhandle);
+            fflush(fhandle);
+            fclose(fhandle);
 
-            tabfile_ptr->file_size = sizeof(table_file_header) + tabfile_ptr->record_size;
+            tabfile_ptr->file_size =   tabfile_ptr->file_size + tabfile_ptr->record_size;
             tabfile_ptr->num_records += 1;
             fhandle = fopen(filename,"r+bc");
             fwrite(tabfile_ptr, tabfile_ptr->file_size, 1, fhandle);
