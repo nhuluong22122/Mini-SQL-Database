@@ -1234,9 +1234,13 @@ int sem_insert_record(token_list *t_list)
                 if(tabfile_ptr->record_size <= tabfile_ptr->record_offset && tabfile_ptr->num_records == 0){
                   record_ptr = record_ptr - (16 * range  - tabfile_ptr->record_offset);
                 }
+                else if (tabfile_ptr->record_size < tabfile_ptr->record_offset){
+                  record_ptr = record_ptr - (tabfile_ptr->record_offset - tabfile_ptr->record_size);
+                }
                 else {
                   record_ptr = record_ptr - (tabfile_ptr->record_size - tabfile_ptr->record_offset);
                 }
+
                 for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
 								i < new_entry->num_columns; i++, col_entry++)
 						    {
