@@ -1225,7 +1225,6 @@ int sem_insert_record(token_list *t_list)
 
                 //Allocate record size at a time
                 record_ptr = (char*)calloc(0, tabfile_ptr->record_size);
-
                 //Readjust the pointer to point to the correct location
                 //Each pointer is 16 bytes addressable
 
@@ -1413,6 +1412,9 @@ int sem_select_all(token_list *t_list) {
             fstat(fileno(fhandle), &file_stat);
             // tabfile_ptr = get_tabinfo_from_tab(tab_entry->table_name);
             record_ptr = (char*)calloc(1, file_stat.st_size);
+            fread(record_ptr, file_stat.st_size, 1, fhandle);
+            // printf("%p\n",record_ptr);
+            // printf("%s\n", &record_ptr);
 
             if (!record_ptr)
             {
@@ -1420,22 +1422,25 @@ int sem_select_all(token_list *t_list) {
             }
             else
             {
-              //Move the pointer ot the first record
+
+
+              // Move the pointer ot the first record
               printf("ftell: %ld\n", ftell(fhandle));
               fseek(fhandle, 8, SEEK_SET);
               int num_columns;
               fread(&num_columns, sizeof(int), 1, fhandle);
               printf("Num Entry: %d\n",num_columns);
               fseek(fhandle, 12, SEEK_CUR);
-
               //
+              // //
               // printf("ftell: %ld\n", ftell(fhandle));
-              // char c[13];
+              // char c[12];
               // fread(&c, sizeof(char) * 12+1, 1, fhandle);
               // printf("ftell: %ld\n", ftell(fhandle));
               // printf("%s\n",c);
               // char c2[2];
-              // fread(&c2, sizeof(char) + 1 , 1, fhandle);
+              // fseek(fhandle, 1, SEEK_CUR);
+              // fread(&c2, sizeof(char), 1, fhandle);
               // printf("ftell: %ld\n", ftell(fhandle));
               // printf("%s\n",c2);
               // int exam;
@@ -1453,6 +1458,50 @@ int sem_select_all(token_list *t_list) {
               // fread(&total, sizeof(int), 1, fhandle);
               // printf("ftell: %ld\n", ftell(fhandle));
               // printf("%d\n",total);
+              // fseek(fhandle, 3, SEEK_CUR);
+              // printf("NEW ROW\n");
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // fread(&c, sizeof(char) * 12+1, 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%s\n",c);
+              // fread(&c2, sizeof(char) + 1 , 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%s",c2);
+              // // fseek(fhandle, 1, SEEK_CUR); ???
+              // fread(&exam, sizeof(int), 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%d\n",exam);
+              // fseek(fhandle, 1, SEEK_CUR);
+              // fread(&quiz, sizeof(int), 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%d\n",quiz);
+              // fseek(fhandle, 1, SEEK_CUR);
+              // fread(&total, sizeof(int), 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%d\n",total);
+              // fseek(fhandle, 3, SEEK_CUR);
+              // printf("NEW ROW\n");
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // fread(&c, sizeof(char) * 12+1, 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%s\n",c);
+              // fread(&c2, sizeof(char) + 1 , 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%s",c2);
+              // // fseek(fhandle, 1, SEEK_CUR);
+              // fread(&exam, sizeof(int), 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%d\n",exam);
+              // fseek(fhandle, 1, SEEK_CUR);
+              // fread(&quiz, sizeof(int), 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%d\n",quiz);
+              // fseek(fhandle, 1, SEEK_CUR);
+              // fread(&total, sizeof(int), 1, fhandle);
+              // printf("ftell: %ld\n", ftell(fhandle));
+              // printf("%d\n",total);
+
+
 
               //Array of cd_entry
 
@@ -1467,32 +1516,40 @@ int sem_select_all(token_list *t_list) {
                   }
               }
               printf("+-----------------+----------------+---------------+-------------+---------------+\n");
-              // int cur_entry = 0;
-              // for(cur_row = 0; cur_row < num_columns; cur_row++){
-              //     for(i = 0; i < tab_entry->num_columns; i++){
-              //       // printf("%s, %d\n",list_cd_entry[i]->col_name,list_cd_entry[i]->col_len + 1 );
-              //        if(list_cd_entry[i]->col_type == T_CHAR){
-              //          printf("%d\n", list_cd_entry[i]->col_len);
-              //          char temp_char[list_cd_entry[i]->col_len + 1];
-              //          printf("ftell: %ld\n", ftell(fhandle));
-              //          fread(&temp_char,(list_cd_entry[i]->col_len) + 1, 1, fhandle);
-              //          printf("%s            \n",temp_char);
-              //          // free(&temp_char);
-              //        }
-              //        else { //it must be an int
-              //          printf("%d\n", list_cd_entry[i]->col_len);
-              //          printf("ftell: %ld\n", ftell(fhandle));
-              //          int temp_int = 0;
-              //          fseek(fhandle, 1, SEEK_CUR);
-              //          // printf("Length: %d            \n",len_int);
-              //          fread(&temp_int, sizeof(int), 1, fhandle);
-              //          printf("Value: %d            \n",temp_int);
-              //          // free(&temp_int);
-              //        }
-              //     }
-              //     fseek(fhandle, 3, SEEK_CUR);
-              //     printf("\n");
-              // }
+              int cur_entry = 0;
+              for(cur_row = 0; cur_row < num_columns; cur_row++){
+                printf("ROW: %d\n", cur_row + 1);
+                  for(i = 0; i < tab_entry->num_columns; i++){
+                    // printf("%s, %d\n",list_cd_entry[i]->col_name,list_cd_entry[i]->col_len + 1 );
+                     if(list_cd_entry[i]->col_type == T_CHAR){
+                       // printf("%d\n", list_cd_entry[i]->col_len);
+                       int temp_len = 0;
+                       fread(&temp_len, 1, 1, fhandle);
+                       char temp_char[temp_len];
+                       // printf("Saved Length: %d | Column Length: %d\n", temp_len, list_cd_entry[i]->col_len);
+                       // printf("ftell: %ld\n", ftell(fhandle));
+                       // int test = 0;
+                       // for(test = 0; test < list_cd_entry[i]->col_len; test++){
+                       fread(&temp_char,list_cd_entry[i]->col_len, 1, fhandle);
+                       printf("%.*s\n",sizeof(temp_char),temp_char);
+                       // }
+                       // free(&temp_char);
+                     }
+                     else { //it must be an int
+                       // printf("%d\n", list_cd_entry[i]->col_len);
+                       // printf("ftell: %ld\n", ftell(fhandle));
+                       int temp_int = 0;
+                       int temp_len = 0;
+                       fread(&temp_len, 1, 1, fhandle); //read length
+                       printf("Length: %d            \n",temp_len);
+                       fread(&temp_int, sizeof(int), 1, fhandle);
+                       printf("Value: %d            \n",temp_int);
+                       // free(&temp_int);
+                     }
+                  }
+                  fseek(fhandle, 2, SEEK_CUR);
+                  printf("\n");
+              }
               fflush(fhandle);
               fclose(fhandle);
 
