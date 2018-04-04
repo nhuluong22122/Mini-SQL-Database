@@ -1125,12 +1125,9 @@ int sem_create_table(token_list *t_list)
           tabfile_ptr->record_size = tmp_record_size;
           tabfile_ptr->record_offset = tabfile_ptr->file_size;
           /* Intialize everything with starter column defintiion to the tab file */
-          // printf("TABFILE_PTR = %d\n\n", tabfile_ptr);
           fwrite(tabfile_ptr, sizeof(table_file_header), 1, fhandle);
           fflush(fhandle);
           fclose(fhandle);
-          /* Test the new tab file */
-          // table_file_header* testrc = get_tabinfo_from_tab(tab_entry.table_name);
 
 					if (new_entry == NULL)
 					{
@@ -1219,26 +1216,11 @@ int sem_insert_record(token_list *t_list)
                //Go inside the paranthesis
                 cur = cur->next;
                 int record_offset = 0;
-
                 //Get the most recent pointer
                 tabfile_ptr = get_tabinfo_from_tab(tab_entry.table_name);
 
                 //Allocate record size at a time
-                record_ptr = (char*)calloc(0, tabfile_ptr->record_size);
-                //Readjust the pointer to point to the correct location
-                //Each pointer is 16 bytes addressable
-
-                //Only need to change the pointer to the first record
-                int range = tabfile_ptr->record_size / 16 + 1;
-                if(tabfile_ptr->record_size <= tabfile_ptr->record_offset && tabfile_ptr->num_records == 0){
-                  record_ptr = record_ptr - (16 * range  - tabfile_ptr->record_offset);
-                }
-                else if (tabfile_ptr->record_size < tabfile_ptr->record_offset){
-                  record_ptr = record_ptr - (tabfile_ptr->record_offset - tabfile_ptr->record_size);
-                }
-                else {
-                  record_ptr = record_ptr - (tabfile_ptr->record_size - tabfile_ptr->record_offset);
-                }
+                record_ptr = (char*)calloc(0, tabfile_ptr->record_size);        
 
                 for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
 								i < new_entry->num_columns; i++, col_entry++)
@@ -1264,7 +1246,8 @@ int sem_insert_record(token_list *t_list)
 
                                 //Write the length of the data
                                 int temp_len = strlen(cur->tok_string);
-                                int *p_len = &temp_len;
+                                unsigned char temp_len_chr = temp_len;
+                                unsigned char *p_len = &temp_len_chr;
                                 memcpy(record_ptr+record_offset, p_len, 1);
                                 record_offset = record_offset + 1;
 
@@ -1287,6 +1270,11 @@ int sem_insert_record(token_list *t_list)
       																column_done = true;
       															}
                                     cur = cur->next;
+                                    if ((column_done) && (cur->tok_value != EOC))
+                                    {
+                                      rc = INVALID_TABLE_DEFINITION;
+                                      cur->tok_value = INVALID;
+                                    }
                                 }
                             }
                         }
@@ -1299,7 +1287,8 @@ int sem_insert_record(token_list *t_list)
                             }
                             else { // if its a valid int value , parse the int and then check for comma
                               int temp_len = sizeof(int);
-                              int *p_len = &temp_len;
+                              unsigned char temp_len_chr = temp_len;
+                              unsigned char *p_len = &temp_len_chr;
                               memcpy(record_ptr+record_offset, p_len, 1);
                               record_offset = record_offset + 1;
 
@@ -1319,21 +1308,24 @@ int sem_insert_record(token_list *t_list)
                                   rc = INVALID_INSERT_SYNTAX;
                                   cur->tok_value = INVALID;
                               }else { // if it's a comma -> move to the next token
-                                cur = cur->next;
+                                // cur = cur->next;
                                 if (cur->tok_value == S_RIGHT_PAREN)
   															{
   																column_done = true;
-  															}
+                                }
+                                cur=cur->next;
+                                if ((column_done) && (cur->tok_value != EOC))
+                                {
+                                  rc = INVALID_TABLE_DEFINITION;
+                                  cur->tok_value = INVALID;
+                                }
+
                               }
                             }
                         }//End checking for INT
                     }//Check for NOT NULL
                 }//End of for loop
-                if ((column_done) && (cur->tok_value != EOC))
-                {
-                  rc = INVALID_TABLE_DEFINITION;
-                  cur->tok_value = INVALID;
-                }
+
              }//Inside the paren
           }// Go into left paren
 
@@ -1346,10 +1338,10 @@ int sem_insert_record(token_list *t_list)
             fflush(fhandle);
             fclose(fhandle);
 
-            tabfile_ptr->file_size =   tabfile_ptr->file_size + tabfile_ptr->record_size;
+            tabfile_ptr->file_size = tabfile_ptr->file_size + tabfile_ptr->record_size;
             tabfile_ptr->num_records += 1;
             fhandle = fopen(filename,"r+bc");
-            fwrite(tabfile_ptr, tabfile_ptr->file_size, 1, fhandle);
+            fwrite(tabfile_ptr, tabfile_ptr->record_offset, 1, fhandle);
             fflush(fhandle);
             fclose(fhandle);
 
@@ -1410,12 +1402,8 @@ int sem_select_all(token_list *t_list) {
           //Extract pointer from the file
           if((fhandle = fopen(filename, "rbc")) != NULL){
             fstat(fileno(fhandle), &file_stat);
-            // tabfile_ptr = get_tabinfo_from_tab(tab_entry->table_name);
             record_ptr = (char*)calloc(1, file_stat.st_size);
             fread(record_ptr, file_stat.st_size, 1, fhandle);
-            // printf("%p\n",record_ptr);
-            // printf("%s\n", &record_ptr);
-
             if (!record_ptr)
             {
               rc = MEMORY_ERROR;
@@ -1426,83 +1414,14 @@ int sem_select_all(token_list *t_list) {
               int record_size;
 
               // Move the pointer ot the first record
-              printf("ftell: %ld\n", ftell(fhandle));
               fseek(fhandle, 4, SEEK_SET);
               fread(&record_size, sizeof(int), 1, fhandle);
               fread(&num_columns, sizeof(int), 1, fhandle);
               printf("Num Entry: %d\n",num_columns);
               printf("Record Size: %d\n",record_size);
               fseek(fhandle, 12, SEEK_CUR);
-              //
-              // //
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // char c[12];
-              // fread(&c, sizeof(char) * 12+1, 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%s\n",c);
-              // char c2[2];
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&c2, sizeof(char), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%s\n",c2);
-              // int exam;
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&exam, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",exam);
-              // int quiz;
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&quiz, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",quiz);
-              // int total;
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&total, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",total);
-              // fseek(fhandle, 3, SEEK_CUR);
-              // printf("NEW ROW\n");
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // fread(&c, sizeof(char) * 12+1, 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%s\n",c);
-              // fread(&c2, sizeof(char) + 1 , 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%s",c2);
-              // // fseek(fhandle, 1, SEEK_CUR); ???
-              // fread(&exam, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",exam);
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&quiz, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",quiz);
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&total, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",total);
-              // fseek(fhandle, 3, SEEK_CUR);
-              // printf("NEW ROW\n");
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // fread(&c, sizeof(char) * 12+1, 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%s\n",c);
-              // fread(&c2, sizeof(char) + 1 , 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%s",c2);
-              // // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&exam, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",exam);
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&quiz, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",quiz);
-              // fseek(fhandle, 1, SEEK_CUR);
-              // fread(&total, sizeof(int), 1, fhandle);
-              // printf("ftell: %ld\n", ftell(fhandle));
-              // printf("%d\n",total);
-              //Array of cd_entry
+
+              //Start printing out results
               int count = 0;
               for( count = 0; count < tab_entry->num_columns; count++){
                 printf("%s","+----------------");
@@ -1527,41 +1446,28 @@ int sem_select_all(token_list *t_list) {
                 actual_size = 0;
                   for(i = 0; i < tab_entry->num_columns; i++){
                     printf("%s","|");
-                    // printf("%s, %d\n",list_cd_entry[i]->col_name,list_cd_entry[i]->col_len + 1 );
+                    /* If the column type is CHAR*/
                      if(list_cd_entry[i]->col_type == T_CHAR){
-                       // printf("%d\n", list_cd_entry[i]->col_len);
                        int temp_len = 0;
                        fread(&temp_len, 1, 1, fhandle);
                        char temp_char[temp_len];
-                       // printf("Saved Length: %d | Column Length: %d\n", temp_len, list_cd_entry[i]->col_len);
-                       // printf("ftell: %ld\n", ftell(fhandle));
-                       // int test = 0;
-                       // for(test = 0; test < list_cd_entry[i]->col_len; test++){
                        fread(&temp_char,list_cd_entry[i]->col_len, 1, fhandle);
                        printf("%.*s%*s",sizeof(temp_char),temp_char, 16 - sizeof(temp_char), " ");
                        actual_size += list_cd_entry[i]->col_len + 1;
-                       // }
-                       // free(&temp_char);
                      }
-                     else { //it must be an int
-                       // printf("%d\n", list_cd_entry[i]->col_len);
-                       // printf("ftell: %ld\n", ftell(fhandle));
+                     else { //column type is INT
                        int value = 0;
                        int temp_len = 0;
                        fread(&temp_len, 1, 1, fhandle); //read length
-                       // printf("Length: %d            \n",temp_len);
                        fread(&value, sizeof(int), 1, fhandle);
                        int string_length = 0;
                        int temp_int = value;
                        while(temp_int != 0)
                        {
-                            // n = n/10
                             temp_int /= 10;
                             ++string_length;
                        }
-                       // printf("String Length %d\n",string_length );
                        printf("%*s%d",16 - string_length, " ",value);
-                       // free(&temp_int);
                        actual_size += sizeof(int) + 1;
 
                      }
@@ -1575,12 +1481,7 @@ int sem_select_all(token_list *t_list) {
               printf("+\n");
               fflush(fhandle);
               fclose(fhandle);
-
             }
-
-
-
-
           }
           else {
             printf("%s\n", "error");
@@ -1608,7 +1509,6 @@ table_file_header* get_tabinfo_from_tab(char *tabname){
   char filename[20];
   strcpy(filename, tabname);
   strcat(filename, ".tab");
-  // printf("GET Tabfile: %s\n", filename);
   /* Trying to read the fhandle */
   if((fhandle = fopen(filename, "rbc")) != NULL){
       fstat(fileno(fhandle), &file_stat);
@@ -1620,12 +1520,6 @@ table_file_header* get_tabinfo_from_tab(char *tabname){
       else
       {
         fread(test, file_stat.st_size, 1, fhandle);
-        // printf("File Size (file_size) = %d\n", test->file_size);
-        // printf("Record Size (record_size) = %d\n", test->record_size);
-        // printf("Num Record (num_records) = %d\n", test->num_records);
-        // printf("Record Offset (record_offset) = %d\n", test->record_offset);
-        // printf("File Header Flag (file_header_flag) = %d\n", test->file_header_flag);
-        // printf("Pointer (tpd_entry) = %d\n", test->tpd_ptr);
         fflush(fhandle);
         fclose(fhandle);
       }
