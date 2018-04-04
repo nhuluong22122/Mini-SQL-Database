@@ -1422,14 +1422,16 @@ int sem_select_all(token_list *t_list) {
             }
             else
             {
-
+              int num_columns;
+              int record_size;
 
               // Move the pointer ot the first record
               printf("ftell: %ld\n", ftell(fhandle));
-              fseek(fhandle, 8, SEEK_SET);
-              int num_columns;
+              fseek(fhandle, 4, SEEK_SET);
+              fread(&record_size, sizeof(int), 1, fhandle);
               fread(&num_columns, sizeof(int), 1, fhandle);
               printf("Num Entry: %d\n",num_columns);
+              printf("Record Size: %d\n",record_size);
               fseek(fhandle, 12, SEEK_CUR);
               //
               // //
@@ -1500,26 +1502,31 @@ int sem_select_all(token_list *t_list) {
               // fread(&total, sizeof(int), 1, fhandle);
               // printf("ftell: %ld\n", ftell(fhandle));
               // printf("%d\n",total);
-
-
-
               //Array of cd_entry
-
-              printf("+-----------------+----------------+---------------+-------------+---------------+\n");
+              int count = 0;
+              for( count = 0; count < tab_entry->num_columns; count++){
+                printf("%s","+----------------");
+              }
+              printf("+\n");
               for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
                   i < tab_entry->num_columns; i++, col_entry++)
               {
                   list_cd_entry[i] = col_entry;
-                  printf("|%s          ", col_entry->col_name);
+                  printf("|%s%*s", col_entry->col_name, 16 - strlen(col_entry->col_name), " ");
                   if(i == tab_entry->num_columns - 1) {
                     printf("|\n");
                   }
               }
-              printf("+-----------------+----------------+---------------+-------------+---------------+\n");
+              for( count = 0; count < tab_entry->num_columns; count++){
+                printf("%s","+----------------");
+              }
+              printf("+\n");
               int cur_entry = 0;
+              int actual_size = 0;
               for(cur_row = 0; cur_row < num_columns; cur_row++){
-                printf("ROW: %d\n", cur_row + 1);
+                actual_size = 0;
                   for(i = 0; i < tab_entry->num_columns; i++){
+                    printf("%s","|");
                     // printf("%s, %d\n",list_cd_entry[i]->col_name,list_cd_entry[i]->col_len + 1 );
                      if(list_cd_entry[i]->col_type == T_CHAR){
                        // printf("%d\n", list_cd_entry[i]->col_len);
@@ -1531,25 +1538,41 @@ int sem_select_all(token_list *t_list) {
                        // int test = 0;
                        // for(test = 0; test < list_cd_entry[i]->col_len; test++){
                        fread(&temp_char,list_cd_entry[i]->col_len, 1, fhandle);
-                       printf("%.*s\n",sizeof(temp_char),temp_char);
+                       printf("%.*s%*s",sizeof(temp_char),temp_char, 16 - sizeof(temp_char), " ");
+                       actual_size += list_cd_entry[i]->col_len + 1;
                        // }
                        // free(&temp_char);
                      }
                      else { //it must be an int
                        // printf("%d\n", list_cd_entry[i]->col_len);
                        // printf("ftell: %ld\n", ftell(fhandle));
-                       int temp_int = 0;
+                       int value = 0;
                        int temp_len = 0;
                        fread(&temp_len, 1, 1, fhandle); //read length
-                       printf("Length: %d            \n",temp_len);
-                       fread(&temp_int, sizeof(int), 1, fhandle);
-                       printf("Value: %d            \n",temp_int);
+                       // printf("Length: %d            \n",temp_len);
+                       fread(&value, sizeof(int), 1, fhandle);
+                       int string_length = 0;
+                       int temp_int = value;
+                       while(temp_int != 0)
+                       {
+                            // n = n/10
+                            temp_int /= 10;
+                            ++string_length;
+                       }
+                       // printf("String Length %d\n",string_length );
+                       printf("%*s%d",16 - string_length, " ",value);
                        // free(&temp_int);
+                       actual_size += sizeof(int) + 1;
+
                      }
                   }
-                  fseek(fhandle, 2, SEEK_CUR);
-                  printf("\n");
+                  fseek(fhandle, record_size - actual_size, SEEK_CUR);
+                  printf("|\n");
               }
+              for( count = 0; count < tab_entry->num_columns; count++){
+                printf("%s","+----------------");
+              }
+              printf("+\n");
               fflush(fhandle);
               fclose(fhandle);
 
