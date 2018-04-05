@@ -1219,8 +1219,8 @@ int sem_insert_record(token_list *t_list)
                 //Get the most recent pointer
                 tabfile_ptr = get_tabinfo_from_tab(tab_entry.table_name);
 
-                //Allocate record size at a time
-                record_ptr = (char*)calloc(0, tabfile_ptr->record_size);        
+                //Allocate record size one at the time
+                record_ptr = (char*)calloc(0, tabfile_ptr->record_size);
 
                 for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
 								i < new_entry->num_columns; i++, col_entry++)
@@ -1230,56 +1230,76 @@ int sem_insert_record(token_list *t_list)
                         rc = INSERT_NOT_NULL_EXCEPTION;
                         cur->tok_value = INVALID;
                     }
-                    else {
+                    else { //It can accept NULL
+
+                      //If it's NULL -> move to the next token
                       if(cur->tok_value == K_NULL){
+                        record_offset += col_entry->col_len + 1;
                         cur = cur->next;
-                        printf("%s\n", "Null Accepted");
+                        if(cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1){
+                            rc = INVALID_INSERT_SYNTAX;
+                            cur->tok_value = INVALID;
+                        }
+                        //Check for comma
+                        else if(cur->tok_value != S_COMMA && i != new_entry->num_columns - 1){
+                            rc = INVALID_INSERT_SYNTAX;
+                            cur->tok_value = INVALID;
+                        }
+                        else {// if it's a comma or right paren
+                            if (cur->tok_value == S_RIGHT_PAREN)
+                            {
+                              column_done = true;
+                            }
+                            cur = cur->next;
+                        }
                       }
+                      //Reading in CHAR
                       else if(col_entry->col_type == T_CHAR)
-                        {
+                      {
                             if(cur->tok_value != STRING_LITERAL || cur->tok_class != constant)
                             {
                                 rc = INVALID_INSERT_COLUMN_TYPE;
                                 cur->tok_value = INVALID;
+
                             }
                             else { //if it's a valid string value
-
                                 //Write the length of the data
                                 int temp_len = strlen(cur->tok_string);
                                 unsigned char temp_len_chr = temp_len;
                                 unsigned char *p_len = &temp_len_chr;
                                 memcpy(record_ptr+record_offset, p_len, 1);
-                                record_offset = record_offset + 1;
+                                record_offset++;
 
                                 //Write the content of the string
                                 memcpy(record_ptr+record_offset, cur->tok_string, col_entry->col_len);
                                 record_offset = record_offset + col_entry->col_len;
-                                //Check for comma
+
+                                //Check for comma or right paran
                                 cur = cur->next;
-                                //Parse the string and then check for comma
+
+                                //Check for right paren
                                 if(cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1){
                                     rc = INVALID_INSERT_SYNTAX;
                                     cur->tok_value = INVALID;
                                 }
-                                else if(i != new_entry->num_columns - 1 && cur->tok_value != S_COMMA){
+                                //Check for comma
+                                else if(cur->tok_value != S_COMMA && i != new_entry->num_columns - 1){
                                     rc = INVALID_INSERT_SYNTAX;
                                     cur->tok_value = INVALID;
-                                }else {// if it's a comma -> move to the next token
+                                }
+                                else {// if it's a comma or right paren
                                     if (cur->tok_value == S_RIGHT_PAREN)
       															{
       																column_done = true;
       															}
                                     cur = cur->next;
-                                    if ((column_done) && (cur->tok_value != EOC))
-                                    {
-                                      rc = INVALID_TABLE_DEFINITION;
-                                      cur->tok_value = INVALID;
-                                    }
                                 }
                             }
                         }
+                        //Reading in INT
                         else if(col_entry->col_type == T_INT)
                         {
+                            //Check for invalid input
                             if(cur->tok_value != INT_LITERAL || cur->tok_class != constant)
                             {
                                 rc = INVALID_INSERT_COLUMN_TYPE;
@@ -1308,45 +1328,24 @@ int sem_insert_record(token_list *t_list)
                                   rc = INVALID_INSERT_SYNTAX;
                                   cur->tok_value = INVALID;
                               }else { // if it's a comma -> move to the next token
-                                // cur = cur->next;
                                 if (cur->tok_value == S_RIGHT_PAREN)
   															{
   																column_done = true;
                                 }
-                                cur=cur->next;
-                                if ((column_done) && (cur->tok_value != EOC))
-                                {
-                                  rc = INVALID_TABLE_DEFINITION;
-                                  cur->tok_value = INVALID;
-                                }
+                                cur = cur->next;
 
                               }
                             }
                         }//End checking for INT
                     }//Check for NOT NULL
                 }//End of for loop
-
+                if ((column_done) && (cur->tok_value != EOC))
+                {
+                  rc = INVALID_TABLE_DEFINITION;
+                  cur->tok_value = INVALID;
+                }
              }//Inside the paren
           }// Go into left paren
-
-          if (!rc)
-          {
-            /* Now finished building tpd entry and add it to the Table packed descriptor list (tpd) */
-            /* Intialize everything with starter column defintiion to the tab file */
-            fhandle = fopen(filename,"a+bc");
-            fwrite(record_ptr, tabfile_ptr->record_size, 1, fhandle);
-            fflush(fhandle);
-            fclose(fhandle);
-
-            tabfile_ptr->file_size = tabfile_ptr->file_size + tabfile_ptr->record_size;
-            tabfile_ptr->num_records += 1;
-            fhandle = fopen(filename,"r+bc");
-            fwrite(tabfile_ptr, tabfile_ptr->record_offset, 1, fhandle);
-            fflush(fhandle);
-            fclose(fhandle);
-
-            printf("%s size: %d. Number of records: %d\n", filename, tabfile_ptr->file_size, tabfile_ptr->num_records);
-          }
       }// check if table exist
       else
       {
@@ -1354,10 +1353,25 @@ int sem_insert_record(token_list *t_list)
           rc = TABLE_NOT_EXIST;
           cur->tok_value = INVALID;
       }
+      if (!rc)
+      {
+        /* Now finished building tpd entry and add it to the Table packed descriptor list (tpd) */
+        fhandle = fopen(filename,"a+bc");
+        fwrite(record_ptr, tabfile_ptr->record_size, 1, fhandle);
+        fflush(fhandle);
+        fclose(fhandle);
+        free(record_ptr);
 
+        /* Intialize everything with starter column defintiion to the tab file */
+        tabfile_ptr->file_size = tabfile_ptr->file_size + tabfile_ptr->record_size;
+        tabfile_ptr->num_records++;
+        fhandle = fopen(filename,"r+bc");
+        fwrite(tabfile_ptr, tabfile_ptr->record_offset, 1, fhandle);
+        fflush(fhandle);
+        fclose(fhandle);
+        printf("%s size: %d. Number of records: %d\n", filename, tabfile_ptr->file_size, tabfile_ptr->num_records);
+      }
     }
-
-
     return rc;
 }
 
@@ -1404,22 +1418,27 @@ int sem_select_all(token_list *t_list) {
             fstat(fileno(fhandle), &file_stat);
             record_ptr = (char*)calloc(1, file_stat.st_size);
             fread(record_ptr, file_stat.st_size, 1, fhandle);
+
             if (!record_ptr)
             {
               rc = MEMORY_ERROR;
             }
             else
             {
-              int num_columns;
+              int num_record;
               int record_size;
-
-              // Move the pointer ot the first record
-              fseek(fhandle, 4, SEEK_SET);
-              fread(&record_size, sizeof(int), 1, fhandle);
-              fread(&num_columns, sizeof(int), 1, fhandle);
-              printf("Num Entry: %d\n",num_columns);
-              printf("Record Size: %d\n",record_size);
-              fseek(fhandle, 12, SEEK_CUR);
+              int offset_to_record = sizeof(table_file_header_def);
+              // Move the pointer ot the record size
+              fseek(fhandle, sizeof(tabfile_ptr->file_size), SEEK_SET);
+              offset_to_record -= sizeof(int);
+              //Get the record_size
+              fread(&record_size,  sizeof(tabfile_ptr->record_size), 1, fhandle);
+              offset_to_record -= sizeof(int);
+              //Get the num_columns
+              fread(&num_record, sizeof(tabfile_ptr->num_records), 1, fhandle);
+              offset_to_record -= sizeof(int);
+              //Skip 12 to get to the beginning of record area
+              fseek(fhandle, offset_to_record, SEEK_CUR);
 
               //Start printing out results
               int count = 0;
@@ -1427,6 +1446,7 @@ int sem_select_all(token_list *t_list) {
                 printf("%s","+----------------");
               }
               printf("+\n");
+
               for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
                   i < tab_entry->num_columns; i++, col_entry++)
               {
@@ -1436,40 +1456,49 @@ int sem_select_all(token_list *t_list) {
                     printf("|\n");
                   }
               }
+
               for( count = 0; count < tab_entry->num_columns; count++){
                 printf("%s","+----------------");
               }
               printf("+\n");
+
               int cur_entry = 0;
               int actual_size = 0;
-              for(cur_row = 0; cur_row < num_columns; cur_row++){
+
+              //
+              for(cur_row = 0; cur_row < num_record; cur_row++){
                 actual_size = 0;
                   for(i = 0; i < tab_entry->num_columns; i++){
                     printf("%s","|");
+                    int temp_len = 0;
+                    fread(&temp_len, 1, 1, fhandle);
                     /* If the column type is CHAR*/
-                     if(list_cd_entry[i]->col_type == T_CHAR){
-                       int temp_len = 0;
-                       fread(&temp_len, 1, 1, fhandle);
-                       char temp_char[temp_len];
-                       fread(&temp_char,list_cd_entry[i]->col_len, 1, fhandle);
-                       printf("%.*s%*s",sizeof(temp_char),temp_char, 16 - sizeof(temp_char), " ");
-                       actual_size += list_cd_entry[i]->col_len + 1;
+                     if(list_cd_entry[i]->col_type == T_CHAR || list_cd_entry[i]->col_type == T_VARCHAR){
+                       if(temp_len == 0){ //NULL
+                         printf("%-16s","NULL");
+                         fseek(fhandle, list_cd_entry[i]->col_len, SEEK_CUR);
+                         actual_size += list_cd_entry[i]->col_len + 1;
+                       }
+                       else {
+                         char temp_char[temp_len];
+                         fread(&temp_char,list_cd_entry[i]->col_len, 1, fhandle);
+                         printf("%.*s%*s",sizeof(temp_char),temp_char, 16 - sizeof(temp_char), " ");
+                         actual_size += list_cd_entry[i]->col_len + 1;
+                       }
                      }
                      else { //column type is INT
-                       int value = 0;
-                       int temp_len = 0;
-                       fread(&temp_len, 1, 1, fhandle); //read length
-                       fread(&value, sizeof(int), 1, fhandle);
-                       int string_length = 0;
-                       int temp_int = value;
-                       while(temp_int != 0)
-                       {
-                            temp_int /= 10;
-                            ++string_length;
+                       if(temp_len == 0){ //NULL
+                         printf("%16s","NULL");
+                         fseek(fhandle, sizeof(int), SEEK_CUR);
+                         actual_size += sizeof(int) + 1;
                        }
-                       printf("%*s%d",16 - string_length, " ",value);
-                       actual_size += sizeof(int) + 1;
-
+                       else {
+                         int value = 0;
+                         fread(&value, sizeof(int), 1, fhandle);
+                         int string_length = 0;
+                         printf("%16d",value);
+                         actual_size += sizeof(int) + 1;
+                       }
                      }
                   }
                   fseek(fhandle, record_size - actual_size, SEEK_CUR);
@@ -1479,12 +1508,13 @@ int sem_select_all(token_list *t_list) {
                 printf("%s","+----------------");
               }
               printf("+\n");
+              free(record_ptr);
               fflush(fhandle);
               fclose(fhandle);
             }
           }
+
           else {
-            printf("%s\n", "error");
             rc = FILE_OPEN_ERROR;
           }
         }
