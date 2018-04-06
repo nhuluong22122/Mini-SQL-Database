@@ -40,8 +40,8 @@ int main(int argc, char** argv)
     /* Print out token by token */
 		while (tok_ptr != NULL)
 		{
-			printf("%16s \t%d \t %d\n",tok_ptr->tok_string, tok_ptr->tok_class,
-				      tok_ptr->tok_value);
+			// printf("%16s \t%d \t %d\n",tok_ptr->tok_string, tok_ptr->tok_class,
+			// 	      tok_ptr->tok_value);
 			tok_ptr = tok_ptr->next;
 		}
     /* If rc is equal to 0 -> do semantic */
@@ -1418,7 +1418,8 @@ int sem_select_all(token_list *t_list) {
             fstat(fileno(fhandle), &file_stat);
             record_ptr = (char*)calloc(1, file_stat.st_size);
             fread(record_ptr, file_stat.st_size, 1, fhandle);
-
+            tabfile_ptr = (table_file_header*)record_ptr;
+            printf("FILE SIZE: %d\n", tabfile_ptr->file_size);
             if (!record_ptr)
             {
               rc = MEMORY_ERROR;
@@ -1427,18 +1428,15 @@ int sem_select_all(token_list *t_list) {
             {
               int num_record;
               int record_size;
-              int offset_to_record = sizeof(table_file_header_def);
-              // Move the pointer ot the record size
-              fseek(fhandle, sizeof(tabfile_ptr->file_size), SEEK_SET);
-              offset_to_record -= sizeof(int);
-              //Get the record_size
-              fread(&record_size,  sizeof(tabfile_ptr->record_size), 1, fhandle);
-              offset_to_record -= sizeof(int);
-              //Get the num_columns
-              fread(&num_record, sizeof(tabfile_ptr->num_records), 1, fhandle);
-              offset_to_record -= sizeof(int);
-              //Skip 12 to get to the beginning of record area
-              fseek(fhandle, offset_to_record, SEEK_CUR);
+
+              record_ptr = record_ptr + 8;
+              memcpy(&num_record, record_ptr, sizeof(int));
+              record_ptr = record_ptr + 4;
+              memcpy(&record_size, record_ptr, sizeof(int));
+              record_ptr = record_ptr + 12;
+
+              printf("NUM RECORD: %d\n",num_record);
+              printf("RECORD SIZE: %d\n",record_size);
 
               //Start printing out results
               int count = 0;
@@ -1451,7 +1449,7 @@ int sem_select_all(token_list *t_list) {
                   i < tab_entry->num_columns; i++, col_entry++)
               {
                   list_cd_entry[i] = col_entry;
-                  printf("|%s%*s", col_entry->col_name, 16 - strlen(col_entry->col_name), " ");
+                  printf("|%-16s", col_entry->col_name);
                   if(i == tab_entry->num_columns - 1) {
                     printf("|\n");
                   }
@@ -1462,58 +1460,51 @@ int sem_select_all(token_list *t_list) {
               }
               printf("+\n");
 
-              int cur_entry = 0;
-              int actual_size = 0;
-
-              //
+              int record_offset = 0;
               for(cur_row = 0; cur_row < num_record; cur_row++){
-                actual_size = 0;
+                record_offset = 0;
                   for(i = 0; i < tab_entry->num_columns; i++){
                     printf("%s","|");
                     int temp_len = 0;
-                    fread(&temp_len, 1, 1, fhandle);
+                    memcpy(&temp_len, record_ptr, 1);
+                    record_offset++;
                     /* If the column type is CHAR*/
                      if(list_cd_entry[i]->col_type == T_CHAR || list_cd_entry[i]->col_type == T_VARCHAR){
                        if(temp_len == 0){ //NULL
-                         printf("%-16s","NULL");
-                         fseek(fhandle, list_cd_entry[i]->col_len, SEEK_CUR);
-                         actual_size += list_cd_entry[i]->col_len + 1;
+                          printf("%-16s","NULL");
+                          record_offset = record_offset + list_cd_entry[i]->col_len;
                        }
                        else {
-                         char temp_char[temp_len];
-                         fread(&temp_char,list_cd_entry[i]->col_len, 1, fhandle);
-                         printf("%.*s%*s",sizeof(temp_char),temp_char, 16 - sizeof(temp_char), " ");
-                         actual_size += list_cd_entry[i]->col_len + 1;
+                         char* temp_char = (char*)calloc(0,temp_len);
+                         memcpy(temp_char, record_ptr+record_offset, list_cd_entry[i]->col_len);
+                         printf("%-16s", temp_char);
+                         record_offset = record_offset + list_cd_entry[i]->col_len;
                        }
                      }
                      else { //column type is INT
                        if(temp_len == 0){ //NULL
                          printf("%16s","NULL");
-                         fseek(fhandle, sizeof(int), SEEK_CUR);
-                         actual_size += sizeof(int) + 1;
+                         record_offset = record_offset + sizeof(int);
                        }
                        else {
                          int value = 0;
-                         fread(&value, sizeof(int), 1, fhandle);
-                         int string_length = 0;
+                         memcpy(&value, record_ptr+record_offset, sizeof(int));
+                         record_offset = record_offset + sizeof(int);
                          printf("%16d",value);
-                         actual_size += sizeof(int) + 1;
                        }
                      }
                   }
-                  fseek(fhandle, record_size - actual_size, SEEK_CUR);
+                  record_ptr = record_ptr + tabfile_ptr->record_size;
                   printf("|\n");
               }
               for( count = 0; count < tab_entry->num_columns; count++){
                 printf("%s","+----------------");
               }
               printf("+\n");
-              free(record_ptr);
               fflush(fhandle);
               fclose(fhandle);
             }
           }
-
           else {
             rc = FILE_OPEN_ERROR;
           }
