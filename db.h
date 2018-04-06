@@ -7,6 +7,7 @@ db.h - This file contains all the structures, defines, and function
 #define MAX_NUM_COL			16
 #define MAX_TOK_LEN			32
 #define KEYWORD_OFFSET	10
+#define MAX_FILENAME_LENGTH 255
 #define STRING_BREAK		" (),<>="
 #define NUMBER_BREAK		" ),"
 
@@ -184,10 +185,16 @@ typedef enum error_return_codes
 	INVALID_COLUMN_LENGTH,			// -389
   INVALID_REPORT_FILE_NAME,		// -388
   /* Must add all the possible errors from I/U/D + SELECT here */
+	/* INSERT ERROR */
 	INVALID_INSERT_SYNTAX,      // -387
-	INVALID_INSERT_COLUMN_TYPE,  // -386
-	INSERT_NOT_NULL_EXCEPTION,	// -385
-	INVALID_SELECT_ALL_SYNTAX, 	// -384
+	INVALID_SELECT_ALL_SYNTAX = -385,
+	INSERT_MISSING_COMA = -384,
+	INSERT_NOT_NULL_EXCEPTION = -380,
+	INSERT_TYPE_MISMATCH = -382,
+	INSERT_SYNTAX_VALUE = -199,
+
+	/* SELECT ERROR */
+
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299
 	DBFILE_CORRUPTION,					// -298
@@ -216,3 +223,4 @@ int drop_tpd_from_list(char *tabname);
 table_file_header* get_tabinfo_from_tab(char *tabname);
 table_file_header *tabfile_ptr;
 tpd_entry* get_tpd_from_list(char *tabname);
+char* load_data_from_tab(char *tabname);
