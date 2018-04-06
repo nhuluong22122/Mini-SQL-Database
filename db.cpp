@@ -1224,22 +1224,26 @@ int sem_insert_record(token_list *t_list)
                 int record_offset = 0;
                 //Allocate record size one at the time
                 record_ptr = (char *)load_data_from_tab((char *)tab_entry.table_name);
+
                 //Cast to get the table_file_header struc
                 tabfile_ptr = (table_file_header*)record_ptr;
-                record_ptr = record_ptr + tabfile_ptr->record_offset;
+
+                //Create a buffer to insert memory
+                char buffer[tabfile_ptr->record_size];
+                memset(buffer, '\0', tabfile_ptr->record_size);
+
                 int i = 0;
                 for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
 								i < new_entry->num_columns; i++, col_entry++)
 						    {
-                    //If it's NULL but it's not supposed to be NULL
                     if(!rc){
+                      //If it's NULL but it's not supposed to be NULL
                       if(cur->tok_value == K_NULL && col_entry->not_null == 1){
                           rc = INSERT_NOT_NULL_EXCEPTION;
                           printf("%s%s\n", "Not Null constraint exists for column name ", col_entry->col_name );
                           cur->tok_value = INVALID;
                       }
                       else { //It can accept NULL
-
                         //If it's NULL -> move to the next token
                         if(cur->tok_value == K_NULL){
                           record_offset += col_entry->col_len + 1;
@@ -1273,18 +1277,17 @@ int sem_insert_record(token_list *t_list)
                                   rc = INSERT_TYPE_MISMATCH;
                                   printf("%s\n", "Type mismatch");
                                   cur->tok_value = INVALID;
-
                               }
                               else { //if it's a valid string value
                                   //Write the length of the data
                                   int temp_len = strlen(cur->tok_string);
                                   unsigned char temp_len_chr = temp_len;
                                   unsigned char *p_len = &temp_len_chr;
-                                  memcpy(record_ptr+record_offset, p_len, 1);
+                                  memcpy(buffer+record_offset, p_len, 1);
                                   record_offset++;
 
                                   //Write the content of the string
-                                  memcpy(record_ptr+record_offset, cur->tok_string, col_entry->col_len);
+                                  memcpy(buffer+record_offset, cur->tok_string, col_entry->col_len);
                                   record_offset = record_offset + col_entry->col_len;
 
                                   //Check for comma or right paran
@@ -1326,13 +1329,13 @@ int sem_insert_record(token_list *t_list)
                                 int temp_len = sizeof(int);
                                 unsigned char temp_len_chr = temp_len;
                                 unsigned char *p_len = &temp_len_chr;
-                                memcpy(record_ptr+record_offset, p_len, 1);
+                                memcpy(buffer+record_offset, p_len, 1);
                                 record_offset = record_offset + 1;
 
                                 //Write the actual int
                                 int temp_int = atoi(cur->tok_string);
                                 int *p_int = &temp_int;
-                                memcpy(record_ptr+record_offset, p_int, col_entry->col_len );
+                                memcpy(buffer+record_offset, p_int, col_entry->col_len );
                                 record_offset = record_offset + col_entry->col_len ;
 
                                 cur = cur->next;
@@ -1379,7 +1382,7 @@ int sem_insert_record(token_list *t_list)
       {
         /* Now finished building tpd entry and add it to the Table packed descriptor list (tpd) */
         fhandle = fopen(filename,"a+bc");
-        fwrite(record_ptr, tabfile_ptr->record_size, 1, fhandle);
+        fwrite(buffer, tabfile_ptr->record_size, 1, fhandle);
         fflush(fhandle);
         fclose(fhandle);
         // free(record_ptr);

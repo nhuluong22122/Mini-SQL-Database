@@ -110,45 +110,45 @@ db.cpp:648:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-db.cpp:1247:62: warning: '&&' within '||' [-Wlogical-op-parentheses]
+db.cpp:1250:62: warning: '&&' within '||' [-Wlogical-op-parentheses]
                           if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-db.cpp:1247:62: note: place parentheses around the '&&' expression to silence this warning
+db.cpp:1250:62: note: place parentheses around the '&&' expression to silence this warning
                           if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
                                                              ^
                              (                                                                 )
-db.cpp:1248:65: warning: '&&' within '||' [-Wlogical-op-parentheses]
+db.cpp:1251:65: warning: '&&' within '||' [-Wlogical-op-parentheses]
                              || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
                              ~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-db.cpp:1248:65: note: place parentheses around the '&&' expression to silence this warning
+db.cpp:1251:65: note: place parentheses around the '&&' expression to silence this warning
                              || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
                                                                 ^
                                 (                                                                 )
-db.cpp:1293:70: warning: '&&' within '||' [-Wlogical-op-parentheses]
+db.cpp:1296:70: warning: '&&' within '||' [-Wlogical-op-parentheses]
                                   if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-db.cpp:1293:70: note: place parentheses around the '&&' expression to silence this warning
+db.cpp:1296:70: note: place parentheses around the '&&' expression to silence this warning
                                   if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
                                                                      ^
                                      (                                                                 )
-db.cpp:1294:73: warning: '&&' within '||' [-Wlogical-op-parentheses]
+db.cpp:1297:73: warning: '&&' within '||' [-Wlogical-op-parentheses]
                                      || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
                                      ~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-db.cpp:1294:73: note: place parentheses around the '&&' expression to silence this warning
+db.cpp:1297:73: note: place parentheses around the '&&' expression to silence this warning
                                      || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
                                                                         ^
                                         (                                                                 )
-db.cpp:1340:68: warning: '&&' within '||' [-Wlogical-op-parentheses]
+db.cpp:1343:68: warning: '&&' within '||' [-Wlogical-op-parentheses]
                                 if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-db.cpp:1340:68: note: place parentheses around the '&&' expression to silence this warning
+db.cpp:1343:68: note: place parentheses around the '&&' expression to silence this warning
                                 if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
                                                                    ^
                                    (                                                                 )
-db.cpp:1341:71: warning: '&&' within '||' [-Wlogical-op-parentheses]
+db.cpp:1344:71: warning: '&&' within '||' [-Wlogical-op-parentheses]
                                    || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
                                    ~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-db.cpp:1341:71: note: place parentheses around the '&&' expression to silence this warning
+db.cpp:1344:71: note: place parentheses around the '&&' expression to silence this warning
                                    || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
                                                                       ^
                                       (                                                                 )
@@ -163,67 +163,51 @@ CREATE TABLE statement
 
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 56. Number of records: 1
+class.tab size: 1969836803. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 88. Number of records: 2
+class.tab size: 1634906483. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 120. Number of records: 3
+class.tab size: 1927133546. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 152. Number of records: 4
+class.tab size: 1717914218. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 184. Number of records: 5
+class.tab size: 1852397931. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 216. Number of records: 6
+class.tab size: 1986111598. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 248. Number of records: 7
+class.tab size: 1853187429. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 280. Number of records: 8
+class.tab size: 1675347322. Number of records: 1
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 312. Number of records: 9
+class.tab size: -490028183. Number of records: 106
 dbfile.bin size = 228
 INSERT statement
-class.tab size: 344. Number of records: 10
+class.tab size: -740705417. Number of records: 1
 ------------------------------------------------------------------------------------------
 
-total 240
-drwxr-xr-x@ 11 nhuluong  staff    352 Apr  6 15:10 .
-drwxr-xr-x+ 76 nhuluong  staff   2432 Apr  6 15:00 ..
--rw-r--r--@  1 nhuluong  staff   6148 Apr  4 17:08 .DS_Store
-drwxr-xr-x  13 nhuluong  staff    416 Apr  6 00:06 .git
--rw-r--r--   1 nhuluong  staff    344 Apr  6 15:10 class.tab
--rwxr-xr-x   1 nhuluong  staff  27556 Apr  6 15:10 db
--rw-r--r--@  1 nhuluong  staff  48036 Apr  6 15:10 db.cpp
--rw-r--r--@  1 nhuluong  staff   6638 Apr  6 15:10 db.h
--rw-r--r--   1 nhuluong  staff    228 Apr  6 15:10 dbfile.bin
--rw-r--r--   1 nhuluong  staff  13765 Apr  6 15:10 test.out
--rw-r--r--   1 nhuluong  staff   2836 Apr  6 15:00 test.sh
+total 32872
+drwxr-xr-x@ 11 nhuluong  staff       352 Apr  6 15:19 .
+drwxr-xr-x+ 76 nhuluong  staff      2432 Apr  6 15:00 ..
+-rw-r--r--@  1 nhuluong  staff      6148 Apr  4 17:08 .DS_Store
+drwxr-xr-x  13 nhuluong  staff       416 Apr  6 15:12 .git
+-rw-r--r--   1 nhuluong  staff  16711680 Apr  6 15:19 class.tab
+-rwxr-xr-x   1 nhuluong  staff     27556 Apr  6 15:19 db
+-rw-r--r--@  1 nhuluong  staff     48108 Apr  6 15:19 db.cpp
+-rw-r--r--@  1 nhuluong  staff      6638 Apr  6 15:10 db.h
+-rw-r--r--   1 nhuluong  staff       228 Apr  6 15:19 dbfile.bin
+-rw-r--r--   1 nhuluong  staff     13838 Apr  6 15:19 test.out
+-rw-r--r--   1 nhuluong  staff      2836 Apr  6 15:00 test.sh
 ------------------------------------------------------------------------------------------
 
-dbfile.bin size = 228
-SELECT statement
-class.tab
-+----------------+----------------+----------------+----------------+----------------+
-|Student         |Gender          |Exams           |Quiz            |Total           |
-+----------------+----------------+----------------+----------------+----------------+
-|Siu             |M               |             480|              80|             560|
-|Frank           |M               |             600|             100|             700|
-|Jordon          |M               |             450|              75|             525|
-|Jeff            |M               |             455|              60|             515|
-|Ying            |F               |             540|              85|             625|
-|David           |M               |             550|              83|             633|
-|euna            |F               |             460|              75|             535|
-|Victor          |M               |             475|              60|             535|
-|Linawati        |F               |             490|              86|             576|
-|Stephen         |M               |             520|              76|             596|
-+----------------+----------------+----------------+----------------+----------------+
+test.sh: line 30:  1502 Segmentation fault: 11  ./db "select * from class"
 ------------------------------------------------------------------------------------------
 ==========================================================================================
 Error Testing Section
@@ -233,18 +217,16 @@ dbfile.bin size = 228
 CREATE TABLE statement
 dbfile.bin size = 372
 INSERT statement
-test.tab size: 48. Number of records: 1
+test.tab size: 1701736195. Number of records: 67108865
 dbfile.bin size = 372
 INSERT statement
-test.tab size: 72. Number of records: 2
+test.tab size: 1870099459. Number of records: 67108865
 dbfile.bin size = 372
 SELECT statement
 test.tab
 +----------------+----------------+----------------+
 |col1            |col2            |col3            |
 +----------------+----------------+----------------+
-|one             |               1|              11|
-|two             |               2|              22|
 +----------------+----------------+----------------+
 ------------------------------------------------------------------------------------------
 
