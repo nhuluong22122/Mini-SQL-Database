@@ -1,0 +1,258 @@
+TEST1.sh - test driver for CS157B project
+Compile your code
+In file included from db.cpp:5:
+./db.h:150:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+  ^
+./db.h:150:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+         ^
+./db.h:150:18: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                 ^
+./db.h:150:29: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                            ^
+./db.h:150:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                      ^
+./db.h:150:48: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                               ^
+./db.h:150:55: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                      ^
+./db.h:150:63: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                              ^
+./db.h:150:71: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                                      ^
+./db.h:150:79: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                                              ^
+./db.h:151:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+  ^
+./db.h:151:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+         ^
+./db.h:151:16: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+               ^
+./db.h:151:26: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                         ^
+./db.h:151:34: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                 ^
+./db.h:151:44: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                           ^
+./db.h:151:54: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                                     ^
+./db.h:151:62: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                                             ^
+./db.h:152:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+  ^
+./db.h:152:13: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+            ^
+./db.h:152:20: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                   ^
+./db.h:152:30: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                             ^
+./db.h:152:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                      ^
+./db.h:152:45: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                            ^
+./db.h:152:53: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                                    ^
+./db.h:152:59: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                                          ^
+./db.h:152:66: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                                                 ^
+./db.h:153:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "sum", "avg", "count"
+  ^
+./db.h:153:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "sum", "avg", "count"
+         ^
+./db.h:153:17: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "sum", "avg", "count"
+                ^
+db.cpp:165:28: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                        add_to_list(tok_list, "", terminator, EOC);
+                                                              ^
+db.cpp:195:28: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                        add_to_list(tok_list, "", terminator, EOC);
+                                                              ^
+db.cpp:222:27: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                add_to_list(tok_list, "", terminator, EOC);
+                                                      ^
+db.cpp:252:28: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                        add_to_list(tok_list, "", terminator, EOC);
+                                                              ^
+db.cpp:261:27: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                add_to_list(tok_list, "", terminator, EOC);
+                                                      ^
+db.cpp:649:36: warning: format specifies type 'int' but the argument has type 'off_t' (aka 'long long') [-Wformat]
+                printf("dbfile.bin size = %d\n", file_stat.st_size);
+                                          ~~     ^~~~~~~~~~~~~~~~~
+                                          %lld
+36 warnings generated.
+Clean up
+rm: dbfile.bin: No such file or directory
+rm: *.tab: No such file or directory
+==========================================================================================
+
+create table class ( Student char(12) NOT NULL, Gender char(1), Exams int, Quiz int, Total int )
+CREATE TABLE statement
+------------------------------------------------------------------------------------------
+
+dbfile.bin size = 228
+insert into class values ('Siu', 'M', 480, 80, 560)
+INSERT statement
+class.tab size: 56. Number of records: 1
+dbfile.bin size = 228
+insert into class values ('Frank', 'M', 600, 100, 700)
+INSERT statement
+class.tab size: 88. Number of records: 2
+dbfile.bin size = 228
+insert into class values ('Jordon', 'M', 450, 75, 525)
+INSERT statement
+class.tab size: 120. Number of records: 3
+dbfile.bin size = 228
+insert into class values ('Jeff', 'M', 455, 60, 515)
+INSERT statement
+class.tab size: 152. Number of records: 4
+dbfile.bin size = 228
+insert into class values ('Ying', 'F', 540, 85, 625)
+INSERT statement
+class.tab size: 184. Number of records: 5
+dbfile.bin size = 228
+insert into class values ('David', 'M', 550, 83, 633)
+INSERT statement
+class.tab size: 216. Number of records: 6
+dbfile.bin size = 228
+insert into class values ('euna', 'F', 460, 75, 535)
+INSERT statement
+class.tab size: 248. Number of records: 7
+dbfile.bin size = 228
+insert into class values ('Victor', 'M', 475, 60, 535)
+INSERT statement
+class.tab size: 280. Number of records: 8
+dbfile.bin size = 228
+insert into class values ('Linawati', 'F', 490, 86, 576)
+INSERT statement
+class.tab size: 312. Number of records: 9
+dbfile.bin size = 228
+insert into class values ('Stephen', 'M', 520, 76, 596)
+INSERT statement
+class.tab size: 344. Number of records: 10
+------------------------------------------------------------------------------------------
+
+total 232
+drwxr-xr-x@ 11 nhuluong  staff    352 Apr  6 16:25 .
+drwxr-xr-x+ 76 nhuluong  staff   2432 Apr  6 16:16 ..
+-rw-r--r--@  1 nhuluong  staff   6148 Apr  4 17:08 .DS_Store
+drwxr-xr-x  13 nhuluong  staff    416 Apr  6 16:05 .git
+-rw-r--r--   1 nhuluong  staff    344 Apr  6 16:25 class.tab
+-rwxr-xr-x   1 nhuluong  staff  27556 Apr  6 16:25 db
+-rw-r--r--@  1 nhuluong  staff  48006 Apr  6 16:25 db.cpp
+-rw-r--r--@  1 nhuluong  staff   6638 Apr  6 15:10 db.h
+-rw-r--r--   1 nhuluong  staff    228 Apr  6 16:25 dbfile.bin
+-rw-r--r--   1 nhuluong  staff  10566 Apr  6 16:25 test.out
+-rw-r--r--   1 nhuluong  staff   2841 Apr  6 16:16 test.sh
+------------------------------------------------------------------------------------------
+
+dbfile.bin size = 228
+select * from class
+SELECT statement
+AFTER
++----------------+----------------+----------------+----------------+----------------+
+|Student         |Gender          |Exams           |Quiz            |Total           |
++----------------+----------------+----------------+----------------+----------------+
+|Siu             |M               |             480|              80|             560|
+|Frank           |M               |             600|             100|             700|
+|Jordon          |M               |             450|              75|             525|
+|Jeff            |M               |             455|              60|             515|
+|Ying            |F               |             540|              85|             625|
+|David           |M               |             550|              83|             633|
+|euna            |F               |             460|              75|             535|
+|Victor          |M               |             475|              60|             535|
+|Linawati        |F               |             490|              86|             576|
+|Stephen         |M               |             520|              76|             596|
++----------------+----------------+----------------+----------------+----------------+
+------------------------------------------------------------------------------------------
+==========================================================================================
+Error Testing Section
+------------------------------------------------------------------------------------------
+Setup the table
+dbfile.bin size = 228
+create table test (col1 char(10), col2 int, col3 int not null)
+CREATE TABLE statement
+dbfile.bin size = 372
+insert into test values ( 'one', 1, 11 )
+INSERT statement
+test.tab size: 48. Number of records: 1
+dbfile.bin size = 372
+insert into test values ( 'two', 2, 22 )
+INSERT statement
+test.tab size: 72. Number of records: 2
+dbfile.bin size = 372
+select * from test
+SELECT statement
+AFTER
++----------------+----------------+----------------+
+|col1            |col2            |col3            |
++----------------+----------------+----------------+
+|one             |               1|              11|
+|two             |               2|              22|
++----------------+----------------+----------------+
+------------------------------------------------------------------------------------------
+
+
+dbfile.bin size = 372
+insert into test ( 'not_null', 1, '11' )
+INSERT statement
+Keyword VALUES is missing
+Error in the string: (
+rc=-199
+
+dbfile.bin size = 372
+insert into test values ( 'not_null', 1 )
+INSERT statement
+Missing ) or the number of columns and insert values don't match
+Error in the string: )
+rc=-384
+------------------------------------------------------------------------------------------
+
+
+dbfile.bin size = 372
+insert into test values ( 'not_null', 1, 'string' )
+INSERT statement
+Type mismatch
+Error in the string: string
+rc=-382
+------------------------------------------------------------------------------------------
+
+
+dbfile.bin size = 372
+insert into test values ( 'not_null', 1, NULL )
+INSERT statement
+Not Null constraint exists for column name col3
+Error in the string: NULL
+rc=-380
+------------------------------------------------------------------------------------------
+End of test1.sh

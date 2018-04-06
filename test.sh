@@ -42,6 +42,7 @@ echo ---------------------------------------------------------------------------
 echo #5 "syntax errors in various INSERT statement combinations"
 echo
 ./db "insert into test ( 'not_null', 1, '11' )"
+echo
 ./db "insert into test values ( 'not_null', 1 )"
 echo ------------------------------------------------------------------------------------------
 echo #6 "data type mismatch"

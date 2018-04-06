@@ -84,6 +84,7 @@ int main(int argc, char** argv)
  *************************************************************/
 int get_token(char* command, token_list** tok_list)
 {
+  printf("%s\n", command);
 	int rc=0,i,j;
 	char *start, *cur, temp_string[MAX_TOK_LEN];
 	bool done = false;
@@ -1254,25 +1255,31 @@ int sem_insert_record(token_list *t_list)
                         if(cur->tok_value == K_NULL){
                           buffer_offset += col_entry->col_len + 1;
                           cur = cur->next;
-                          if((cur->tok_value == S_RIGHT_PAREN && i < new_entry->num_columns - 1)
-                             || (cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1))
-                           {
-                              rc = INSERT_MISSING_COMA;
-                              printf("%s\n", "Missing ) or the number of columns and insert values don't match");
-                              cur->tok_value = INVALID;
-                          }
-                          //Check for comma
-                          else if(cur->tok_value != S_COMMA && i != new_entry->num_columns - 1){
-                              rc = INSERT_MISSING_COMA;
-                              printf("%s\n", "Missing coma or the number of columns and insert values don't match");
-                              cur->tok_value = INVALID;
-                          }
-                          else {// if it's a comma or right paren
-                              if (cur->tok_value == S_RIGHT_PAREN)
-                              {
-                                column_done = true;
+                          if(i < new_entry->num_columns - 1){
+                              if(cur->tok_value == S_RIGHT_PAREN){
+                                rc = INSERT_MISSING_COMA;
+                                cur->tok_value = INVALID;
+                                printf("%s\n", "Missing ) or the number of columns and insert values don't match");
                               }
-                              cur = cur->next;
+                              else if(cur->tok_value != S_COMMA){
+                                rc = INSERT_MISSING_COMA;
+                                cur->tok_value = INVALID;
+                                printf("%s\n", "Missing coma or the number of columns and insert values don't match");
+                              }
+                              else {
+                                cur = cur->next;
+                              }
+                          }
+                          else { // if its the last column
+                              if(cur->tok_value != S_RIGHT_PAREN || cur->tok_value == S_COMMA){
+                                rc = INSERT_MISSING_COMA;
+                                cur->tok_value = INVALID;
+                                printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                              }
+                              else {
+                                column_done = true;
+                                cur = cur->next;
+                              }
                           }
                         }
                         //Reading in CHAR
@@ -1298,26 +1305,32 @@ int sem_insert_record(token_list *t_list)
 
                                   //Check for comma or right paran
                                   cur = cur->next;
-                                  //Check for right paren
-                                  if((cur->tok_value == S_RIGHT_PAREN && i < new_entry->num_columns - 1)
-                                     || (cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1))
-                                   {
-                                      rc = INSERT_MISSING_COMA;
-                                      printf("%s\n", "Missing ) or the number of columns and insert values don't match");
-                                      cur->tok_value = INVALID;
+                                  // Not the last column
+                                  if(i < new_entry->num_columns - 1){
+                                      if(cur->tok_value == S_RIGHT_PAREN){
+                                        rc = INSERT_MISSING_COMA;
+                                        cur->tok_value = INVALID;
+                                        printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                      }
+                                      else if(cur->tok_value != S_COMMA){
+                                        rc = INSERT_MISSING_COMA;
+                                        cur->tok_value = INVALID;
+                                        printf("%s\n", "Missing coma or the number of columns and insert values don't match");
+                                      }
+                                      else {
+                                        cur = cur->next;
+                                      }
                                   }
-                                  //Check for comma
-                                  else if(cur->tok_value != S_COMMA && i != new_entry->num_columns - 1){
-                                      rc = INSERT_MISSING_COMA;
-                                      printf("%s\n", "Missing coma or the number of columns and insert values don't match");
-                                      cur->tok_value = INVALID;
-                                  }
-                                  else {// if it's a comma or right paren
-                                      if (cur->tok_value == S_RIGHT_PAREN)
-        															{
-        																column_done = true;
-        															}
-                                      cur = cur->next;
+                                  else { // if its the last column
+                                      if(cur->tok_value != S_RIGHT_PAREN || cur->tok_value == S_COMMA){
+                                        rc = INSERT_MISSING_COMA;
+                                        cur->tok_value = INVALID;
+                                        printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                      }
+                                      else {
+                                        column_done = true;
+                                        cur = cur->next;
+                                      }
                                   }
                               }
                           }
@@ -1328,8 +1341,8 @@ int sem_insert_record(token_list *t_list)
                               if(cur->tok_value != INT_LITERAL || cur->tok_class != constant)
                               {
                                   rc = INSERT_TYPE_MISMATCH;
-                                  printf("%s\n", "Type mismatch");
                                   cur->tok_value = INVALID;
+                                  printf("%s\n", "Type mismatch");
                               }
                               else { // if its a valid int value , parse the int and then check for comma
                                 int temp_len = sizeof(int);
@@ -1345,25 +1358,31 @@ int sem_insert_record(token_list *t_list)
                                 buffer_offset = buffer_offset + col_entry->col_len ;
 
                                 cur = cur->next;
-                                //Parse the string and then check for comma
-                                if((cur->tok_value == S_RIGHT_PAREN && i < new_entry->num_columns - 1)
-                                   || (cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1))
-                                 {
-                                    rc = INSERT_MISSING_COMA;
-                                    printf("%s\n", "Missing ) or the number of columns and insert values don't match");
-                                    cur->tok_value = INVALID;
+                                if(i < new_entry->num_columns - 1){
+                                    if(cur->tok_value == S_RIGHT_PAREN){
+                                      rc = INSERT_MISSING_COMA;
+                                      cur->tok_value = INVALID;
+                                      printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                    }
+                                    else if(cur->tok_value != S_COMMA){
+                                      rc = INSERT_MISSING_COMA;
+                                      cur->tok_value = INVALID;
+                                      printf("%s\n", "Missing coma or the number of columns and insert values don't match");
+                                    }
+                                    else {
+                                      cur = cur->next;
+                                    }
                                 }
-                                else if(i != new_entry->num_columns - 1 && cur->tok_value != S_COMMA){
-                                    rc = INSERT_MISSING_COMA;
-                                    printf("%s\n", "Missing coma or the number of columns and insert values don't match");
-                                    cur->tok_value = INVALID;
-                                }else { // if it's a comma -> move to the next token
-                                  if (cur->tok_value == S_RIGHT_PAREN)
-    															{
-    																column_done = true;
-                                  }
-                                  cur = cur->next;
-
+                                else { // if its the last column
+                                    if(cur->tok_value != S_RIGHT_PAREN || cur->tok_value == S_COMMA){
+                                      rc = INSERT_MISSING_COMA;
+                                      cur->tok_value = INVALID;
+                                      printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                    }
+                                    else {
+                                      column_done = true;
+                                      cur = cur->next;
+                                    }
                                 }
                               }
                           }//End checking for INT
@@ -1412,7 +1431,6 @@ int sem_select_all(token_list *t_list) {
 
     struct stat file_stat;
     char* record_ptr = NULL;
-    char filename[MAX_IDENT_LEN+5];
 
     /* Set the current pointer to the token list */
     cur = t_list;
@@ -1432,21 +1450,17 @@ int sem_select_all(token_list *t_list) {
         cur->tok_value = INVALID;
       }
       else { /* Check for table name */
-
         if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
         {
           struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
-          strcpy(filename, cur->tok_string);
-          strcat(filename, ".tab");
-          printf("%s\n",filename);
-          record_ptr = load_data_from_tab(filename);
-          //Check if the file can be open
+          record_ptr = load_data_from_tab(cur->tok_string);
             if (!record_ptr)
             {
               rc = MEMORY_ERROR;
             }
             else
             {
+              printf("%s\n", "AFTER");
               tabfile_ptr = (table_file_header*)record_ptr;
               record_ptr+= tabfile_ptr->record_offset;
 
@@ -1519,7 +1533,8 @@ int sem_select_all(token_list *t_list) {
               fclose(fhandle);
             }
         }
-        if(!rc){
+        if(!rc)
+          {
             cur = cur->next; //Should be the terminator
             if (cur->tok_value != EOC)
               {
