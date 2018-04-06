@@ -7,7 +7,6 @@ db.h - This file contains all the structures, defines, and function
 #define MAX_NUM_COL			16
 #define MAX_TOK_LEN			32
 #define KEYWORD_OFFSET	10
-#define MAX_FILENAME_LENGTH 255
 #define STRING_BREAK		" (),<>="
 #define NUMBER_BREAK		" ),"
 
@@ -186,11 +185,10 @@ typedef enum error_return_codes
   INVALID_REPORT_FILE_NAME,		// -388
   /* Must add all the possible errors from I/U/D + SELECT here */
 	/* INSERT ERROR */
-	INVALID_INSERT_SYNTAX,      // -387
 	INVALID_SELECT_ALL_SYNTAX = -385,
 	INSERT_MISSING_COMA = -384,
-	INSERT_NOT_NULL_EXCEPTION = -380,
 	INSERT_TYPE_MISMATCH = -382,
+	INSERT_NOT_NULL_EXCEPTION = -380,
 	INSERT_SYNTAX_VALUE = -199,
 
 	/* SELECT ERROR */

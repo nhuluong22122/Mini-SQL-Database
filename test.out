@@ -1,94 +1,94 @@
 TEST1.sh - test driver for CS157B project
 Compile your code
 In file included from db.cpp:5:
-./db.h:151:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
   ^
-./db.h:151:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
          ^
-./db.h:151:18: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:18: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                  ^
-./db.h:151:29: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:29: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                             ^
-./db.h:151:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                                       ^
-./db.h:151:48: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:48: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                                                ^
-./db.h:151:55: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:55: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                                                       ^
-./db.h:151:63: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:63: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                                                               ^
-./db.h:151:71: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:71: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                                                                       ^
-./db.h:151:79: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:150:79: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
                                                                               ^
-./db.h:152:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
   ^
-./db.h:152:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
          ^
-./db.h:152:16: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:16: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
                ^
-./db.h:152:26: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:26: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
                          ^
-./db.h:152:34: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:34: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
                                  ^
-./db.h:152:44: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:44: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
                                            ^
-./db.h:152:54: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:54: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
                                                      ^
-./db.h:152:62: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:151:62: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "for", "to", "insert", "into", "values", "delete", "from", "where",
                                                              ^
-./db.h:153:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
   ^
-./db.h:153:13: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:13: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
             ^
-./db.h:153:20: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:20: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
                    ^
-./db.h:153:30: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:30: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
                              ^
-./db.h:153:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
                                       ^
-./db.h:153:45: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:45: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
                                             ^
-./db.h:153:53: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:53: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
                                                     ^
-./db.h:153:59: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:59: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
                                                           ^
-./db.h:153:66: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:152:66: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
                                                                  ^
-./db.h:154:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:153:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "sum", "avg", "count"
   ^
-./db.h:154:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:153:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "sum", "avg", "count"
          ^
-./db.h:154:17: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+./db.h:153:17: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
   "sum", "avg", "count"
                 ^
 db.cpp:164:28: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
@@ -110,7 +110,49 @@ db.cpp:648:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-36 warnings generated.
+db.cpp:1247:62: warning: '&&' within '||' [-Wlogical-op-parentheses]
+                          if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.cpp:1247:62: note: place parentheses around the '&&' expression to silence this warning
+                          if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
+                                                             ^
+                             (                                                                 )
+db.cpp:1248:65: warning: '&&' within '||' [-Wlogical-op-parentheses]
+                             || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                             ~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.cpp:1248:65: note: place parentheses around the '&&' expression to silence this warning
+                             || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                                                                ^
+                                (                                                                 )
+db.cpp:1293:70: warning: '&&' within '||' [-Wlogical-op-parentheses]
+                                  if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
+                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.cpp:1293:70: note: place parentheses around the '&&' expression to silence this warning
+                                  if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
+                                                                     ^
+                                     (                                                                 )
+db.cpp:1294:73: warning: '&&' within '||' [-Wlogical-op-parentheses]
+                                     || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                                     ~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.cpp:1294:73: note: place parentheses around the '&&' expression to silence this warning
+                                     || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                                                                        ^
+                                        (                                                                 )
+db.cpp:1340:68: warning: '&&' within '||' [-Wlogical-op-parentheses]
+                                if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.cpp:1340:68: note: place parentheses around the '&&' expression to silence this warning
+                                if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
+                                                                   ^
+                                   (                                                                 )
+db.cpp:1341:71: warning: '&&' within '||' [-Wlogical-op-parentheses]
+                                   || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                                   ~~ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.cpp:1341:71: note: place parentheses around the '&&' expression to silence this warning
+                                   || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                                                                      ^
+                                      (                                                                 )
+42 warnings generated.
 Clean up
 rm: dbfile.bin: No such file or directory
 rm: *.tab: No such file or directory
@@ -151,18 +193,18 @@ INSERT statement
 class.tab size: 344. Number of records: 10
 ------------------------------------------------------------------------------------------
 
-total 232
-drwxr-xr-x@ 11 nhuluong  staff    352 Apr  6 00:05 .
-drwxr-xr-x+ 76 nhuluong  staff   2432 Apr  5 21:01 ..
+total 240
+drwxr-xr-x@ 11 nhuluong  staff    352 Apr  6 15:10 .
+drwxr-xr-x+ 76 nhuluong  staff   2432 Apr  6 15:00 ..
 -rw-r--r--@  1 nhuluong  staff   6148 Apr  4 17:08 .DS_Store
-drwxr-xr-x  13 nhuluong  staff    416 Apr  5 22:20 .git
--rw-r--r--   1 nhuluong  staff    344 Apr  6 00:05 class.tab
--rwxr-xr-x   1 nhuluong  staff  27556 Apr  6 00:05 db
--rw-r--r--@  1 nhuluong  staff  46874 Apr  6 00:05 db.cpp
--rw-r--r--@  1 nhuluong  staff   6709 Apr  5 23:40 db.h
--rw-r--r--   1 nhuluong  staff    228 Apr  6 00:05 dbfile.bin
--rw-r--r--   1 nhuluong  staff   9926 Apr  6 00:05 test.out
--rw-r--r--   1 nhuluong  staff   2836 Apr  4 15:51 test.sh
+drwxr-xr-x  13 nhuluong  staff    416 Apr  6 00:06 .git
+-rw-r--r--   1 nhuluong  staff    344 Apr  6 15:10 class.tab
+-rwxr-xr-x   1 nhuluong  staff  27556 Apr  6 15:10 db
+-rw-r--r--@  1 nhuluong  staff  48036 Apr  6 15:10 db.cpp
+-rw-r--r--@  1 nhuluong  staff   6638 Apr  6 15:10 db.h
+-rw-r--r--   1 nhuluong  staff    228 Apr  6 15:10 dbfile.bin
+-rw-r--r--   1 nhuluong  staff  13765 Apr  6 15:10 test.out
+-rw-r--r--   1 nhuluong  staff   2836 Apr  6 15:00 test.sh
 ------------------------------------------------------------------------------------------
 
 dbfile.bin size = 228
@@ -214,9 +256,9 @@ Error in the string: (
 rc=-199
 dbfile.bin size = 372
 INSERT statement
-Type mismatch
+Missing ) or the number of columns and insert values don't match
 Error in the string: )
-rc=-382
+rc=-384
 ------------------------------------------------------------------------------------------
 
 
