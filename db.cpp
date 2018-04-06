@@ -1177,7 +1177,6 @@ int sem_insert_record(token_list *t_list)
     tabfile_ptr = NULL;
     FILE *fhandle = NULL;
     char filename[MAX_IDENT_LEN+5];
-    char* record_ptr = NULL;
 
     /* Set the current pointer to the token list */
     cur = t_list;
@@ -1193,7 +1192,11 @@ int sem_insert_record(token_list *t_list)
     else /* There is a valid class */
     {
       /* if the table alerady existed then we can insert */
-      if ((new_entry = get_tpd_from_list(cur->tok_string)) != NULL)
+      if ((new_entry = get_tpd_from_list(cur->tok_string)) == NULL){
+          rc = TABLE_NOT_EXIST;
+          cur->tok_value = INVALID;
+      }
+      else
       {
           strcpy(tab_entry.table_name, cur->tok_string);
           strcpy(filename, cur->tok_string);
@@ -1221,9 +1224,10 @@ int sem_insert_record(token_list *t_list)
              else {
                //Go inside the paranthesis
                 cur = cur->next;
-                int record_offset = 0;
+                //Keep track of offset where buffer start
+                int buffer_offset = 0;
                 //Allocate record size one at the time
-                record_ptr = (char *)load_data_from_tab((char *)tab_entry.table_name);
+                char* record_ptr = (char *)load_data_from_tab((char *)tab_entry.table_name);
 
                 //Cast to get the table_file_header struc
                 tabfile_ptr = (table_file_header*)record_ptr;
@@ -1232,6 +1236,7 @@ int sem_insert_record(token_list *t_list)
                 char buffer[tabfile_ptr->record_size];
                 memset(buffer, '\0', tabfile_ptr->record_size);
 
+                //Loop through the all the columns of selected table
                 int i = 0;
                 for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
 								i < new_entry->num_columns; i++, col_entry++)
@@ -1240,16 +1245,17 @@ int sem_insert_record(token_list *t_list)
                       //If it's NULL but it's not supposed to be NULL
                       if(cur->tok_value == K_NULL && col_entry->not_null == 1){
                           rc = INSERT_NOT_NULL_EXCEPTION;
-                          printf("%s%s\n", "Not Null constraint exists for column name ", col_entry->col_name );
                           cur->tok_value = INVALID;
+                          printf("%s%s\n", "Not Null constraint exists for column name ", col_entry->col_name );
                       }
                       else { //It can accept NULL
+
                         //If it's NULL -> move to the next token
                         if(cur->tok_value == K_NULL){
-                          record_offset += col_entry->col_len + 1;
+                          buffer_offset += col_entry->col_len + 1;
                           cur = cur->next;
-                          if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
-                             || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                          if((cur->tok_value == S_RIGHT_PAREN && i < new_entry->num_columns - 1)
+                             || (cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1))
                            {
                               rc = INSERT_MISSING_COMA;
                               printf("%s\n", "Missing ) or the number of columns and insert values don't match");
@@ -1283,18 +1289,18 @@ int sem_insert_record(token_list *t_list)
                                   int temp_len = strlen(cur->tok_string);
                                   unsigned char temp_len_chr = temp_len;
                                   unsigned char *p_len = &temp_len_chr;
-                                  memcpy(buffer+record_offset, p_len, 1);
-                                  record_offset++;
+                                  memcpy(buffer+buffer_offset, p_len, 1);
+                                  buffer_offset++;
 
                                   //Write the content of the string
-                                  memcpy(buffer+record_offset, cur->tok_string, col_entry->col_len);
-                                  record_offset = record_offset + col_entry->col_len;
+                                  memcpy(buffer+buffer_offset, cur->tok_string, col_entry->col_len);
+                                  buffer_offset = buffer_offset + col_entry->col_len;
 
                                   //Check for comma or right paran
                                   cur = cur->next;
                                   //Check for right paren
-                                  if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
-                                     || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                                  if((cur->tok_value == S_RIGHT_PAREN && i < new_entry->num_columns - 1)
+                                     || (cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1))
                                    {
                                       rc = INSERT_MISSING_COMA;
                                       printf("%s\n", "Missing ) or the number of columns and insert values don't match");
@@ -1329,19 +1335,19 @@ int sem_insert_record(token_list *t_list)
                                 int temp_len = sizeof(int);
                                 unsigned char temp_len_chr = temp_len;
                                 unsigned char *p_len = &temp_len_chr;
-                                memcpy(buffer+record_offset, p_len, 1);
-                                record_offset = record_offset + 1;
+                                memcpy(buffer+buffer_offset, p_len, 1);
+                                buffer_offset = buffer_offset + 1;
 
                                 //Write the actual int
                                 int temp_int = atoi(cur->tok_string);
                                 int *p_int = &temp_int;
-                                memcpy(buffer+record_offset, p_int, col_entry->col_len );
-                                record_offset = record_offset + col_entry->col_len ;
+                                memcpy(buffer+buffer_offset, p_int, col_entry->col_len );
+                                buffer_offset = buffer_offset + col_entry->col_len ;
 
                                 cur = cur->next;
                                 //Parse the string and then check for comma
-                                if(cur->tok_value == S_RIGHT_PAREN && i != new_entry->num_columns - 1
-                                   || cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1)
+                                if((cur->tok_value == S_RIGHT_PAREN && i < new_entry->num_columns - 1)
+                                   || (cur->tok_value != S_RIGHT_PAREN && i == new_entry->num_columns - 1))
                                  {
                                     rc = INSERT_MISSING_COMA;
                                     printf("%s\n", "Missing ) or the number of columns and insert values don't match");
@@ -1362,39 +1368,32 @@ int sem_insert_record(token_list *t_list)
                               }
                           }//End checking for INT
                       }//Check for NOT NULL
-                    }
+                    }//Check for invalid rc
                 }//End of for loop
                 if ((column_done) && (cur->tok_value != EOC))
                 {
                   rc = INVALID_TABLE_DEFINITION;
                   cur->tok_value = INVALID;
                 }
-             }//Inside the paren
-          }// Go into left paren
-      }// check if table exist
-      else
-      {
-          /* This is not working because the table must exist for insertion */
-          rc = TABLE_NOT_EXIST;
-          cur->tok_value = INVALID;
-      }
-      if (!rc)
-      {
-        /* Now finished building tpd entry and add it to the Table packed descriptor list (tpd) */
-        fhandle = fopen(filename,"a+bc");
-        fwrite(buffer, tabfile_ptr->record_size, 1, fhandle);
-        fflush(fhandle);
-        fclose(fhandle);
-        // free(record_ptr);
+                if (!rc)
+                {
+                  /* Now finished writing to buffer and write to file */
+                  fhandle = fopen(filename,"a+bc");
+                  fwrite(buffer, tabfile_ptr->record_size, 1, fhandle);
+                  fflush(fhandle);
+                  fclose(fhandle);
 
-        /* Intialize everything with starter column defintiion to the tab file */
-        tabfile_ptr->file_size = tabfile_ptr->file_size + tabfile_ptr->record_size;
-        tabfile_ptr->num_records++;
-        fhandle = fopen(filename,"r+bc");
-        fwrite(tabfile_ptr, tabfile_ptr->record_offset, 1, fhandle);
-        fflush(fhandle);
-        fclose(fhandle);
-        printf("%s size: %d. Number of records: %d\n", filename, tabfile_ptr->file_size, tabfile_ptr->num_records);
+                  /* Update header with correct information  */
+                  tabfile_ptr->file_size = tabfile_ptr->file_size + tabfile_ptr->record_size;
+                  tabfile_ptr->num_records++;
+                  fhandle = fopen(filename,"r+bc");
+                  fwrite(tabfile_ptr, tabfile_ptr->record_offset, 1, fhandle);
+                  fflush(fhandle);
+                  fclose(fhandle);
+                  printf("%s size: %d. Number of records: %d\n", filename, tabfile_ptr->file_size, tabfile_ptr->num_records);
+                }
+             }
+          }
       }
     }
     return rc;
@@ -1440,21 +1439,15 @@ int sem_select_all(token_list *t_list) {
           strcpy(filename, cur->tok_string);
           strcat(filename, ".tab");
           printf("%s\n",filename);
-
+          record_ptr = load_data_from_tab(filename);
           //Check if the file can be open
-          if((fhandle = fopen(filename, "rbc")) != NULL){
-            //Bring the data to memory
-            fstat(fileno(fhandle), &file_stat);
-            record_ptr = (char*)calloc(1, file_stat.st_size);
-            fread(record_ptr, file_stat.st_size, 1, fhandle);
-            tabfile_ptr = (table_file_header*)record_ptr;
-
             if (!record_ptr)
             {
               rc = MEMORY_ERROR;
             }
             else
             {
+              tabfile_ptr = (table_file_header*)record_ptr;
               record_ptr+= tabfile_ptr->record_offset;
 
               //Start printing out results
@@ -1525,10 +1518,6 @@ int sem_select_all(token_list *t_list) {
               fflush(fhandle);
               fclose(fhandle);
             }
-          }
-          else {
-            rc = FILE_OPEN_ERROR;
-          }
         }
         if(!rc){
             cur = cur->next; //Should be the terminator
@@ -1542,35 +1531,6 @@ int sem_select_all(token_list *t_list) {
     }// End checking for invalid table
     return rc;
 }
-
-// table_file_header* get_tabinfo_from_tab(char *tabname){
-//   int rc = 0;
-//   struct stat file_stat;
-//   FILE *fhandle = NULL;
-//   table_file_header_def *test = NULL;
-//   char filename[20];
-//   strcpy(filename, tabname);
-//   strcat(filename, ".tab");
-//   /* Trying to read the fhandle */
-//   if((fhandle = fopen(filename, "rbc")) != NULL){
-//       fstat(fileno(fhandle), &file_stat);
-//       test = (table_file_header_def*)calloc(1, file_stat.st_size);
-//       if (!test)
-//       {
-//         rc = MEMORY_ERROR;
-//       }
-//       else
-//       {
-//         fread(test, file_stat.st_size, 1, fhandle);
-//         fflush(fhandle);
-//         fclose(fhandle);
-//       }
-//   }
-//   else {
-//     rc = FILE_OPEN_ERROR;
-//   }
-//   return test;
-// }
 
 char* load_data_from_tab(char *tablename){
   struct stat file_stat;
