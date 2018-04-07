@@ -1293,8 +1293,8 @@ int sem_insert_record(token_list *t_list)
                               }
                               else { //if it's a valid string value
                                   //Write the length of the data
-                                  int temp_len = strlen(cur->tok_string);
-                                  unsigned char temp_len_chr = temp_len;
+                                  int tok_length = strlen(cur->tok_string);
+                                  unsigned char temp_len_chr = tok_length;
                                   unsigned char *p_len = &temp_len_chr;
                                   memcpy(buffer+buffer_offset, p_len, 1);
                                   buffer_offset++;
@@ -1345,17 +1345,17 @@ int sem_insert_record(token_list *t_list)
                                   printf("%s\n", "Type mismatch");
                               }
                               else { // if its a valid int value , parse the int and then check for comma
-                                int temp_len = sizeof(int);
-                                unsigned char temp_len_chr = temp_len;
+                                int tok_length = sizeof(int);
+                                unsigned char temp_len_chr = tok_length;
                                 unsigned char *p_len = &temp_len_chr;
                                 memcpy(buffer+buffer_offset, p_len, 1);
-                                buffer_offset = buffer_offset + 1;
+                                buffer_offset++;
 
                                 //Write the actual int
                                 int temp_int = atoi(cur->tok_string);
                                 int *p_int = &temp_int;
                                 memcpy(buffer+buffer_offset, p_int, col_entry->col_len );
-                                buffer_offset = buffer_offset + col_entry->col_len ;
+                                buffer_offset += col_entry->col_len ;
 
                                 cur = cur->next;
                                 if(i < new_entry->num_columns - 1){
@@ -1452,80 +1452,86 @@ int sem_select_all(token_list *t_list) {
       else { /* Check for table name */
         if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
         {
-          struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
-          record_ptr = load_data_from_tab(cur->tok_string);
+            struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
+            /* Load file to memory  */
+            record_ptr = load_data_from_tab(cur->tok_string);
             if (!record_ptr)
             {
               rc = MEMORY_ERROR;
             }
             else
             {
-              printf("%s\n", "AFTER");
+              /* Load file to memory  */
               tabfile_ptr = (table_file_header*)record_ptr;
+              /* Jump to the first record  */
               record_ptr+= tabfile_ptr->record_offset;
 
               //Start printing out results
-              int count = 0;
-              for( count = 0; count < tab_entry->num_columns; count++){
+              for(int count = 0; count < tab_entry->num_columns; count++){
                 printf("%s","+----------------");
               }
               printf("+\n");
 
+              /* Print column name  */
               int i = 0;
               for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
                   i < tab_entry->num_columns; i++, col_entry++)
               {
                   list_cd_entry[i] = col_entry;
-                  printf("|%-16s", col_entry->col_name);
+                  printf("|%*s", -FORMAT_LENGTH, col_entry->col_name);
                   if(i == tab_entry->num_columns - 1) {
                     printf("|\n");
                   }
               }
 
-              for( count = 0; count < tab_entry->num_columns; count++){
+              for(int count = 0; count < tab_entry->num_columns; count++){
                 printf("%s","+----------------");
               }
               printf("+\n");
 
               int record_offset = 0;
+              /* For every row in this file */
               for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                 record_offset = 0;
+                  /* For every column in the column */
                   for(i = 0; i < tab_entry->num_columns; i++){
                     printf("%s","|");
-                    int temp_len = 0;
-                    memcpy(&temp_len, record_ptr, 1);
+
+                    int tok_length = 0;
+                    memcpy(&tok_length, record_ptr, 1);
                     record_offset++;
+
                     /* If the column type is CHAR*/
                      if(list_cd_entry[i]->col_type == T_CHAR || list_cd_entry[i]->col_type == T_VARCHAR){
-                       if(temp_len == 0){ //NULL
-                          printf("%-16s","NULL");
+                       if(tok_length == 0){ //NULL
+                          printf("%*s",-FORMAT_LENGTH, "NULL");
                           record_offset = record_offset + list_cd_entry[i]->col_len;
                        }
                        else {
-                         char temp_string[temp_len];
-                         memset(temp_string, '\0', temp_len);
+                         char temp_string[tok_length];
+                         memset(temp_string, '\0', tok_length);
                          memcpy(&temp_string, record_ptr+record_offset, list_cd_entry[i]->col_len);
-                         printf("%-16s", temp_string);
+                         printf("%*s", -FORMAT_LENGTH,temp_string);
                          record_offset = record_offset + list_cd_entry[i]->col_len;
                        }
                      }
                      else { //column type is INT
-                       if(temp_len == 0){ //NULL
-                         printf("%16s","NULL");
+                       if(tok_length == 0){ //NULL
+                         printf("%*s",FORMAT_LENGTH,"NULL");
                          record_offset = record_offset + sizeof(int);
                        }
                        else {
                          int value = 0;
                          memcpy(&value, record_ptr+record_offset, sizeof(int));
                          record_offset = record_offset + sizeof(int);
-                         printf("%16d",value);
+                         printf("%*d",FORMAT_LENGTH,value);
                        }
                      }
                   }
                   record_ptr = record_ptr + tabfile_ptr->record_size;
                   printf("|\n");
               }
-              for( count = 0; count < tab_entry->num_columns; count++){
+              for(int count = 0; count < tab_entry->num_columns; count++){
                 printf("%s","+----------------");
               }
               printf("+\n");
