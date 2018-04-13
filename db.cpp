@@ -84,7 +84,6 @@ int main(int argc, char** argv)
  *************************************************************/
 int get_token(char* command, token_list** tok_list)
 {
-  printf("%s\n", command);
 	int rc=0,i,j;
 	char *start, *cur, temp_string[MAX_TOK_LEN];
 	bool done = false;
@@ -353,6 +352,19 @@ int do_semantic(token_list *tok_list)
     cur_cmd = SELECT;
     cur = cur->next->next;
   }
+  else if ((cur->tok_value == K_DELETE) &&
+        ((cur->next != NULL) && (cur->next->tok_value == K_FROM)))
+  {
+    printf("DELETE statement\n");
+    cur_cmd = DELETE;
+    cur = cur->next->next;
+  }
+  else if (cur->tok_value == K_UPDATE)
+  {
+    printf("UPDATE statement\n");
+    cur_cmd = UPDATE;
+    cur = cur->next;
+  }
 	else
   {
 		printf("Invalid statement\n");
@@ -379,7 +391,13 @@ int do_semantic(token_list *tok_list)
             rc = sem_insert_record(cur);
             break;
       case SELECT:
-            rc = sem_select_all(cur);
+            rc = sem_select(cur);
+            break;
+      case DELETE:
+            rc = sem_delete(cur);
+            break;
+      case UPDATE:
+            rc = sem_update(cur);
             break;
 			default:
 					; /* no action */
@@ -1162,7 +1180,7 @@ int sem_create_table(token_list *t_list)
 }
 
 
-int sem_insert_record(token_list *t_list)
+  int sem_insert_record(token_list *t_list)
 {
     int rc = 0;
     /* The current pointer to the token list */
@@ -1350,9 +1368,16 @@ int sem_insert_record(token_list *t_list)
                                 unsigned char *p_len = &temp_len_chr;
                                 memcpy(buffer+buffer_offset, p_len, 1);
                                 buffer_offset++;
-
-                                //Write the actual int
-                                int temp_int = atoi(cur->tok_string);
+                        				long long temp_ll = atoll(cur->tok_string);
+                        				if(temp_ll > 2147483647)
+                        				{
+                        				    rc = INSERT_INVALID_VALUE;
+                         				    cur->tok_value = INVALID;
+                        				    printf("%s\n", "Exceed max integer value");
+                        				}
+                        				else{
+                        				//Write the actual int
+                        				int temp_int = atoi(cur->tok_string);
                                 int *p_int = &temp_int;
                                 memcpy(buffer+buffer_offset, p_int, col_entry->col_len );
                                 buffer_offset += col_entry->col_len ;
@@ -1383,7 +1408,8 @@ int sem_insert_record(token_list *t_list)
                                       column_done = true;
                                       cur = cur->next;
                                     }
-                                }
+                                  }
+				}
                               }
                           }//End checking for INT
                       }//Check for NOT NULL
@@ -1418,7 +1444,7 @@ int sem_insert_record(token_list *t_list)
     return rc;
 }
 
-int sem_select_all(token_list *t_list) {
+int sem_select(token_list *t_list) {
     token_list *cur;
     tpd_entry *tab_entry = NULL;
     cd_entry *col_entry = NULL;
@@ -1531,10 +1557,13 @@ int sem_select_all(token_list *t_list) {
                   record_ptr = record_ptr + tabfile_ptr->record_size;
                   printf("|\n");
               }
+
               for(int count = 0; count < tab_entry->num_columns; count++){
                 printf("%s","+----------------");
               }
               printf("+\n");
+	             printf("%d rows selected.\n", tabfile_ptr->num_records);
+
               fflush(fhandle);
               fclose(fhandle);
             }
@@ -1551,6 +1580,156 @@ int sem_select_all(token_list *t_list) {
         }//End checking if that table exist
     }// End checking for invalid table
     return rc;
+}
+int sem_delete(token_list *t_list) {
+  int rc = 0;
+  return rc;
+}
+
+int sem_update(token_list *t_list) {
+  int rc = 0;
+  /* The current pointer to the token list */
+  token_list *cur;
+  /* Temp table packed descriptor sturcture */
+  tpd_entry tab_entry;
+  tpd_entry *new_entry = NULL;
+  bool column_done = false;
+  int cur_id = 0;
+  /* Column descriptor sturcture */
+  cd_entry *col_entry;
+  // struct table_file_header_def tabfile;
+  tabfile_ptr = NULL;
+  FILE *fhandle = NULL;
+  char* record_ptr = NULL;
+  char filename[MAX_IDENT_LEN+5];
+
+  /* Set the current pointer to the token list */
+  cur = t_list;
+  /* Check for table name*/
+  if ((cur->tok_class != keyword) &&
+      (cur->tok_class != identifier) &&
+      (cur->tok_class != type_name))
+  {
+      rc = INVALID_TABLE_NAME;
+      cur->tok_value = INVALID;
+  }
+  else {  /* A valid keyword */
+      if ((new_entry = get_tpd_from_list(cur->tok_string)) == NULL){
+          rc = TABLE_NOT_EXIST;
+          cur->tok_value = INVALID;
+      }
+      else  /* If the table exists  */
+      {
+          strcpy(tab_entry.table_name, cur->tok_string);
+          strcpy(filename, cur->tok_string);
+          strcat(filename, ".tab");
+
+          cur = cur->next;
+          /* check the token is SET */
+          if (cur->tok_value != K_SET)
+          {
+              rc = INVALID_UPDATE_SYNTAX;
+              printf("%s\n", "Keyword SET is missing" );
+              cur->tok_value = INVALID;
+          }
+          else{
+              //Supposed to be column
+              cur = cur->next;
+              //Keep track of offset where buffer start
+              int buffer_offset = 0;
+              //Allocate record size one at the time
+              char* record_ptr = (char *)load_data_from_tab((char *)tab_entry.table_name);
+              //Cast to get the table_file_header struc
+              tabfile_ptr = (table_file_header*)record_ptr;
+              cd_entry *match_col = NULL;
+              bool found_column = false;
+              int i = 0;
+              int column_offset = 0;
+              //Loop through all the columns
+              for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
+              i < new_entry->num_columns; i++, col_entry++)
+              {
+                  if(!found_column){
+                      //If there is such column
+                      if(strcasecmp(cur->tok_string, col_entry->col_name) == 0){
+                        found_column = true;
+                        match_col = col_entry;
+                      }
+                      else {
+                        column_offset += col_entry->col_len + 1;
+                      }
+                  }
+              }
+              if(!found_column){
+                rc = UPDATE_NO_COLUMN;
+                printf("No column %s in this table\n", cur->tok_string);
+                cur->tok_value = INVALID;
+              }
+              //Check for equal sign
+              if(!rc){
+                cur = cur->next;
+                if(cur->tok_value != S_EQUAL )
+                {
+                  rc = INVALID_UPDATE_SYNTAX;
+                  printf("%s\n", " = is missing" );
+                  cur->tok_value = INVALID;
+                }
+                else { // check for data value
+                    cur = cur->next;
+                    if(cur->tok_value != STRING_LITERAL && (match_col->col_type == T_VARCHAR || match_col->col_type == T_CHAR))
+                    {
+                        rc = INVALID_UPDATE_DATATYPE;
+                        printf("%s\n", "Type mismatch at SET");
+                        cur->tok_value = INVALID;
+                    }
+                    else if(cur->tok_value != INT_LITERAL && match_col->col_type == T_INT)
+                    {
+                      rc = INVALID_UPDATE_DATATYPE;
+                      printf("%s\n", "Type mismatch at SET");
+                      cur->tok_value = INVALID;
+                    }
+                    if(!rc && cur->next->tok_value != K_WHERE){
+                        int ptr_offset = tabfile_ptr->record_offset  + column_offset;
+                        int cur_row;
+                        for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
+                            printf("%d\n", ptr_offset);
+                            if(cur->tok_value == STRING_LITERAL){ //string
+                              int tok_length = strlen(cur->tok_string);
+                              unsigned char temp_len_chr = tok_length;
+                              unsigned char *p_len = &temp_len_chr;
+                              memcpy(record_ptr + ptr_offset, p_len, 1);
+
+                              //Write the content of the string
+                              memcpy(record_ptr + ptr_offset + 1, cur->tok_string, match_col->col_len);
+                            }
+                            else //int
+                            {
+                                int tok_length = sizeof(int);
+                                unsigned char temp_len_chr = tok_length;
+                                unsigned char *p_len = &temp_len_chr;
+                                memcpy(record_ptr + ptr_offset, p_len, 1);
+
+                                int temp_int = atoi(cur->tok_string);
+                                int *p_int = &temp_int;
+                                memcpy(record_ptr + ptr_offset + 1, p_int, match_col->col_len );
+                            }
+                            ptr_offset += tabfile_ptr->record_size;
+                        }
+                        //Updating all
+                        fhandle = fopen(filename,"r+bc");
+                        fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
+                        fflush(fhandle);
+                        fclose(fhandle);
+                    }
+                }//end checking for data value
+
+              }//at equal sign
+
+          }//Check column
+      }
+
+  }//Check if table exists
+  return rc;
 }
 
 char* load_data_from_tab(char *tablename){

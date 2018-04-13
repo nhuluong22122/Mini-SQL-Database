@@ -186,14 +186,17 @@ typedef enum error_return_codes
   INVALID_REPORT_FILE_NAME,		// -388
   /* Must add all the possible errors from I/U/D + SELECT here */
 	/* INSERT ERROR */
-	INVALID_SELECT_ALL_SYNTAX = -385,
 	INSERT_MISSING_COMA = -384,
 	INSERT_TYPE_MISMATCH = -382,
 	INSERT_NOT_NULL_EXCEPTION = -380,
 	INSERT_SYNTAX_VALUE = -199,
-
+	INSERT_INVALID_VALUE = -198,
 	/* SELECT ERROR */
-
+	INVALID_SELECT_ALL_SYNTAX = -385,
+	/* UPDATE ERROR */
+	INVALID_UPDATE_SYNTAX = -370,
+	UPDATE_NO_COLUMN,
+	INVALID_UPDATE_DATATYPE,
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299
 	DBFILE_CORRUPTION,					// -298
@@ -209,7 +212,9 @@ int sem_drop_table(token_list *t_list);
 int sem_list_tables();
 int sem_list_schema(token_list *t_list);
 int sem_insert_record(token_list *t_list);
-int sem_select_all(token_list *t_list);
+int sem_select(token_list *t_list);
+int sem_delete(token_list *t_list);
+int sem_update(token_list *t_list);
 
 /*
 	Keep a global list of tpd - in real life, this will be stored
