@@ -197,6 +197,8 @@ typedef enum error_return_codes
 	INVALID_UPDATE_SYNTAX = -370,
 	UPDATE_NO_COLUMN,
 	INVALID_UPDATE_DATATYPE,
+	/* DELETE ERROR */
+  INVALID_DELETE_SYNTAX,
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299
 	DBFILE_CORRUPTION,					// -298

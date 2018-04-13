@@ -149,17 +149,17 @@ INSERT statement
 class.tab size: 344. Number of records: 10
 ------------------------------------------------------------------------------------------
 
-total 256
-drwxr-xr-x@ 11 nhuluong  staff    352 Apr 13 12:59 .
+total 264
+drwxr-xr-x@ 11 nhuluong  staff    352 Apr 13 16:56 .
 drwxr-xr-x+ 72 nhuluong  staff   2304 Apr 13 10:02 ..
--rw-r--r--@  1 nhuluong  staff   6148 Apr 13 09:49 .DS_Store
-drwxr-xr-x  13 nhuluong  staff    416 Apr 13 10:08 .git
--rw-r--r--   1 nhuluong  staff    344 Apr 13 12:59 class.tab
--rwxr-xr-x   1 nhuluong  staff  31808 Apr 13 12:59 db
--rw-r--r--@  1 nhuluong  staff  55317 Apr 13 12:59 db.cpp
--rw-r--r--@  1 nhuluong  staff   6862 Apr 13 11:55 db.h
--rw-r--r--   1 nhuluong  staff    228 Apr 13 12:59 dbfile.bin
--rw-r--r--   1 nhuluong  staff   9847 Apr 13 12:59 test.out
+-rw-r--r--@  1 nhuluong  staff   6148 Apr 13 16:24 .DS_Store
+drwxr-xr-x  13 nhuluong  staff    416 Apr 13 13:17 .git
+-rw-r--r--   1 nhuluong  staff    344 Apr 13 16:56 class.tab
+-rwxr-xr-x   1 nhuluong  staff  31808 Apr 13 16:56 db
+-rw-r--r--@  1 nhuluong  staff  58290 Apr 13 16:55 db.cpp
+-rw-r--r--@  1 nhuluong  staff   6909 Apr 13 16:17 db.h
+-rw-r--r--   1 nhuluong  staff    228 Apr 13 16:56 dbfile.bin
+-rw-r--r--   1 nhuluong  staff   9847 Apr 13 16:56 test.out
 -rw-r--r--   1 nhuluong  staff   2836 Apr 13 09:51 test.sh
 ------------------------------------------------------------------------------------------
 
