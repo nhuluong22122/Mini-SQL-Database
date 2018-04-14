@@ -1739,10 +1739,10 @@ int sem_update(token_list *t_list) {
                         int cur_row;
                         for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                             if(cur->tok_value == K_NULL){
-                              if(col_entry->not_null == 1){
+                              if(match_col->not_null == 1){
                                 rc = INSERT_NOT_NULL_EXCEPTION;
                                 cur->tok_value = INVALID;
-                                printf("%s%s\n", "Not Null constraint exists for column name ", col_entry->col_name );
+                                printf("%s%s\n", "Not Null constraint exists for column name ", match_col->col_name );
                               }
                               else {
                                 memset(record_ptr + ptr_offset,'\0', match_col->col_len + 1);
@@ -1771,7 +1771,7 @@ int sem_update(token_list *t_list) {
                                 }
                               }
                             }
-                            else //int
+                            else if(cur->tok_value == INT_LITERAL)  //int
                             {
                                 int tok_length = sizeof(int);
                                 unsigned char temp_len_chr = tok_length;
