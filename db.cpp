@@ -1633,7 +1633,73 @@ int sem_delete(token_list *t_list) {
               printf("DONE DELETING\n"  );
           }
           else if(cur->tok_value == K_WHERE){ //Delete with condition
+              cur = cur->next;
+              //check for valid column name
+              bool found_column = false;
+              int column_offset = 0;
+              int i = 0;
+              cd_entry* match_col = NULL;
+              //Loop through all the columns
+              for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
+              i < new_entry->num_columns; i++, col_entry++)
+              {
+                  if(!found_column){
+                      //If there is such column
+                      if(strcasecmp(cur->tok_string, col_entry->col_name) == 0){
+                        found_column = true;
+                        match_col = col_entry;
+                      }
+                      else {
+                        column_offset += col_entry->col_len + 1;
+                      }
+                  }
+              }
+              if(!rc)
+              {
+                cur = cur->next;
+                if(cur->tok_value != S_EQUAL && cur->tok_value != S_LESS && cur->tok_value != S_GREATER){
+                  rc = INVALID_DELETE_SYNTAX;
+                  printf("%s\n", "Invalid syntax in the WHERE clause" );
+                  cur->tok_value = INVALID;
+                }
+                else {
+                  cur = cur->next; //moving to data value
+                  //Remember to use column_offset
+                  char* end_of_file = record_ptr + tabfile_ptr->file_size;
+                  int record_offset = tabfile_ptr->record_offset + column_offset;
+                  int cur_row = 0;
+                  int num_row_changed = 0;
+                  for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
+                      if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR)
+                      {
+                        char temp_string[match_col->col_len];
+                        memcpy(&temp_string,record_ptr+record_offset+1,match_col->col_len);
+                        printf("Compare: %s %s\n",cur->tok_string, temp_string);
+                        //Found the matching row
+                        if(strcasecmp(cur->tok_string, temp_string) == 0){
+                            //Found the string
+                            num_row_changed++;
+                            printf("%s\n", cur->tok_string);
+                            memcpy(
+                              record_ptr+record_offset-column_offset,
+                              end_of_file-(num_row_changed) * tabfile_ptr->record_size,
+                              tabfile_ptr->record_size);
+                        }
+                      }
+                      record_offset += tabfile_ptr->record_size;
+                  }
+                  if(num_row_changed > 0){
+                      tabfile_ptr->num_records = tabfile_ptr->num_records - num_row_changed;
+                      tabfile_ptr->file_size = tabfile_ptr->file_size - (tabfile_ptr->record_size * num_row_changed);
+                      fhandle = fopen(filename,"r+bc");
+                      fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
+                      fwrite(tabfile_ptr, tabfile_ptr->record_offset, 1, fhandle);
+                      fflush(fhandle);
+                      fclose(fhandle);
+                  }
 
+                }
+              }
           }
           else {
              rc = INVALID_DELETE_SYNTAX;
@@ -1700,9 +1766,10 @@ int sem_update(token_list *t_list) {
               //Cast to get the table_file_header struc
               tabfile_ptr = (table_file_header*)record_ptr;
               cd_entry *match_col = NULL;
+              int column_offset = 0;
+
               bool found_column = false;
               int i = 0;
-              int column_offset = 0;
               //Loop through all the columns
               for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
               i < new_entry->num_columns; i++, col_entry++)
