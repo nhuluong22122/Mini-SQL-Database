@@ -1630,7 +1630,6 @@ int sem_delete(token_list *t_list) {
               fwrite(tabfile_ptr, sizeof(table_file_header), 1, fhandle);
               fflush(fhandle);
               fclose(fhandle);
-              printf("DONE DELETING\n"  );
           }
           else if(cur->tok_value == K_WHERE){ //Delete with condition
               cur = cur->next;
@@ -1654,6 +1653,11 @@ int sem_delete(token_list *t_list) {
                       }
                   }
               }
+              if(!found_column){
+                  rc = COLUMN_NOT_EXIST;
+                  printf("No Column %s Found\n",cur->tok_string);
+                  cur->tok_value = INVALID;
+              }
               if(!rc)
               {
                 cur = cur->next;
@@ -1670,20 +1674,30 @@ int sem_delete(token_list *t_list) {
                   int cur_row = 0;
                   int num_row_changed = 0;
                   for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
-                      if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR)
+                      if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR) // VARCHAR
                       {
                         char temp_string[match_col->col_len];
                         memcpy(&temp_string,record_ptr+record_offset+1,match_col->col_len);
-                        printf("Compare: %s %s\n",cur->tok_string, temp_string);
+                        // printf("Compare: %s %s\n",cur->tok_string, temp_string);
                         //Found the matching row
                         if(strcasecmp(cur->tok_string, temp_string) == 0){
                             //Found the string
                             num_row_changed++;
-                            printf("%s\n", cur->tok_string);
                             memcpy(
                               record_ptr+record_offset-column_offset,
                               end_of_file-(num_row_changed) * tabfile_ptr->record_size,
                               tabfile_ptr->record_size);
+                        }
+                      }
+                      else { //must be an int
+                        int value = 0;
+                        memcpy(&value, record_ptr+record_offset+1, sizeof(int));
+                        if(value == atoi(cur->tok_string)){
+                          num_row_changed++;
+                          memcpy(
+                            record_ptr+record_offset-column_offset,
+                            end_of_file-(num_row_changed) * tabfile_ptr->record_size,
+                            tabfile_ptr->record_size);
                         }
                       }
                       record_offset += tabfile_ptr->record_size;
@@ -1697,10 +1711,9 @@ int sem_delete(token_list *t_list) {
                       fflush(fhandle);
                       fclose(fhandle);
                   }
-
-                }
-              }
-          }
+                } // End change value
+              }//Start parsing more
+          }//End WHERE clause
           else {
              rc = INVALID_DELETE_SYNTAX;
              printf("%s\n", "Invalid syntax" );
