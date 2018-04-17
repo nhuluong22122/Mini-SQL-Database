@@ -223,10 +223,11 @@ int sem_update(token_list *t_list);
 	in shared memory.  Build a set of functions/methods around this.
 */
 tpd_list	*g_tpd_list;
+table_file_header *tabfile_ptr;
 int initialize_tpd_list();
 int add_tpd_to_list(tpd_entry *tpd);
 int drop_tpd_from_list(char *tabname);
 table_file_header* get_tabinfo_from_tab(char *tabname);
-table_file_header *tabfile_ptr;
 tpd_entry* get_tpd_from_list(char *tabname);
 char* load_data_from_tab(char *tabname);
+int update_selected_row(char* read_pointer, char* write_pointer, int read_length, int write_length,  int column_type, token_list *cur2, char value);
