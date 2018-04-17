@@ -230,4 +230,3 @@ int drop_tpd_from_list(char *tabname);
 table_file_header* get_tabinfo_from_tab(char *tabname);
 tpd_entry* get_tpd_from_list(char *tabname);
 char* load_data_from_tab(char *tabname);
-int update_selected_row(char* read_pointer, char* write_pointer, int read_length, int write_length,  int column_type, token_list *cur2, char value);

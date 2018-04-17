@@ -1788,10 +1788,9 @@ int sem_update(token_list *t_list) {
               bool found_column_update = true;
               int column_offset_update = 0;
               bool where_flag = false;
-
               token_list* cur2 = cur->next->next->next; //Should be at column_name
               if(cur2->tok_value == K_WHERE) {
-                printf("WHERE ACCEPTED \n");
+                // printf("WHERE ACCEPTED \n");
                 cur2 = cur2->next;
                 found_column_update = false;
                 where_flag = true;
@@ -1846,7 +1845,9 @@ int sem_update(token_list *t_list) {
                         int num_row_changed = 0;
                         int ptr_offset = tabfile_ptr->record_offset;
                         int cur_row = 0;
-                        cur2 = cur2->next->next;
+                        if(where_flag){
+                            cur2 = cur2->next->next;
+                        }
                         for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                             if(cur->tok_value == K_NULL){
                               if(match_col->not_null == 1){
@@ -1856,21 +1857,34 @@ int sem_update(token_list *t_list) {
                               }
                               else {
                                 if(where_flag){
-                                  //Process WHERE CLAUSE
                                   char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
                                   char* write_pointer = record_ptr + ptr_offset + column_offset;
                                   int read_length = match_col_update->col_len;
                                   int write_length = match_col->col_len + 1;
-                                  char value = '\0';
-                                  num_row_changed = update_selected_row(read_pointer,
-                                                                        write_pointer,
-                                                                        read_length,
-                                                                        write_length,
-                                                                        match_col_update->col_type,
-                                                                        cur2,
-                                                                        value);
+                                  int column_type = match_col_update->col_type;
+                                  //Process WHERE CLAUSE
+                                  if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
+                                  {
+                                    char temp_string[read_length + 1];
+                                    memset(temp_string,'\0', read_length + 1);
+                                    memcpy(&temp_string,read_pointer,read_length);
+                                    //Found the matching row
+                                    if(strcasecmp(cur2->tok_string, temp_string) == 0){
+                                        num_row_changed++;
+                                        memset(write_pointer, '\0', write_length);
+                                    }
+                                  }
+                                  else { //must be an int
+                                    int temp_num = 0;
+                                    memcpy(&temp_num, read_pointer, sizeof(int));
+                                    if(temp_num == atoi(cur2->tok_string)){
+                                      num_row_changed++;
+                                      memset(write_pointer, '\0' ,write_length);
+                                    }
+                                  }
                                 }
                                 else{
+                                  num_row_changed++;
                                   memset(record_ptr + ptr_offset + column_offset,'\0',match_col->col_len + 1);
                                 }
                               }
@@ -1882,12 +1896,49 @@ int sem_update(token_list *t_list) {
                                 cur->tok_value = INVALID;
                               }
                               else {
-                                int tok_length = strlen(cur->tok_string);
-                                unsigned char temp_len_chr = tok_length;
-                                unsigned char *p_len = &temp_len_chr;
-                                memcpy(record_ptr + ptr_offset, p_len, 1);
-                                //Write the content of the string
-                                memcpy(record_ptr + ptr_offset + 1, cur->tok_string, match_col->col_len);
+                                if(where_flag){
+                                  char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
+                                  char* write_pointer = record_ptr + ptr_offset + column_offset;
+                                  int read_length = match_col_update->col_len;
+                                  int write_length = match_col->col_len + 1;
+                                  int column_type = match_col_update->col_type;
+                                  if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
+                                  {
+                                    char temp_string[read_length + 1];
+                                    memset(temp_string,'\0', read_length + 1);
+                                    memcpy(&temp_string,read_pointer,read_length);
+                                    //Found the matching row
+                                    if(strcasecmp(cur2->tok_string, temp_string) == 0){
+                                        num_row_changed++;
+                                        int tok_length = strlen(cur->tok_string);
+                                        unsigned char temp_len_chr = tok_length;
+                                        unsigned char *p_len = &temp_len_chr;
+                                        memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
+                                        memcpy(record_ptr + ptr_offset + column_offset + 1, cur->tok_string, match_col->col_len);
+                                    }
+                                  }
+                                  else { //must be an int
+                                    int temp_num = 0;
+                                    memcpy(&temp_num, read_pointer, sizeof(int));
+                                    if(temp_num == atoi(cur2->tok_string)){
+                                      num_row_changed++;
+                                      int tok_length = strlen(cur->tok_string);
+                                      unsigned char temp_len_chr = tok_length;
+                                      unsigned char *p_len = &temp_len_chr;
+                                      memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
+                                      memcpy(record_ptr + ptr_offset + column_offset + 1, cur->tok_string, match_col->col_len);
+                                    }
+                                  }
+                                }
+                                else {
+                                  num_row_changed++;
+                                  int tok_length = strlen(cur->tok_string);
+                                  unsigned char temp_len_chr = tok_length;
+                                  unsigned char *p_len = &temp_len_chr;
+                                  memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
+                                  //Write the content of the string
+                                  memcpy(record_ptr + ptr_offset + column_offset + 1, cur->tok_string, match_col->col_len);
+                                }
                               }
                             }
                             else if(cur->tok_value == INT_LITERAL)  //int
@@ -1897,18 +1948,64 @@ int sem_update(token_list *t_list) {
                                   printf("%s\n", "Type mismatch at SET");
                                   cur->tok_value = INVALID;
                                 }
-                                int tok_length = sizeof(int);
-                                unsigned char temp_len_chr = tok_length;
-                                unsigned char *p_len = &temp_len_chr;
-                                memcpy(record_ptr + ptr_offset, p_len, 1);
+                                else {
+                                  if(where_flag){
+                                    char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
+                                    char* write_pointer = record_ptr + ptr_offset + column_offset;
+                                    int read_length = match_col_update->col_len;
+                                    int write_length = match_col->col_len + 1;
+                                    int column_type = match_col_update->col_type;
+                                    if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
+                                    {
+                                      char temp_string[read_length + 1];
+                                      memset(temp_string,'\0', read_length + 1);
+                                      memcpy(&temp_string,read_pointer,read_length);
+                                      //Found the matching row
+                                      if(strcasecmp(cur2->tok_string, temp_string) == 0){
+                                          num_row_changed++;
+                                          int tok_length = sizeof(int);
+                                          unsigned char temp_len_chr = tok_length;
+                                          unsigned char *p_len = &temp_len_chr;
+                                          memcpy(write_pointer, p_len, 1);
 
-                                int temp_int = atoi(cur->tok_string);
-                                int *p_int = &temp_int;
-                                memcpy(record_ptr + ptr_offset + 1, p_int, match_col->col_len );
+                                          int temp_int = atoi(cur->tok_string);
+                                          int *p_int = &temp_int;
+                                          memcpy(write_pointer+1, p_int, match_col->col_len );
+                                      }
+                                    }
+                                    else { //must be an int
+                                      int temp_num = 0;
+                                      memcpy(&temp_num, read_pointer, sizeof(int));
+                                      if(temp_num == atoi(cur2->tok_string)){
+                                        num_row_changed++;
+                                        int tok_length = sizeof(int);
+                                        unsigned char temp_len_chr = tok_length;
+                                        unsigned char *p_len = &temp_len_chr;
+                                        memcpy(write_pointer, p_len, 1);
+
+                                        int temp_int = atoi(cur->tok_string);
+                                        int *p_int = &temp_int;
+                                        memcpy(write_pointer + 1, p_int, match_col->col_len );
+                                      }
+                                    }
+                                  }
+                                  else{
+                                    num_row_changed++;
+                                    int tok_length = sizeof(int);
+                                    unsigned char temp_len_chr = tok_length;
+                                    unsigned char *p_len = &temp_len_chr;
+                                    memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
+
+                                    int temp_int = atoi(cur->tok_string);
+                                    int *p_int = &temp_int;
+                                    memcpy(record_ptr + ptr_offset + column_offset + 1, p_int, match_col->col_len );
+                                  }
+                                }
                             }
                             ptr_offset += tabfile_ptr->record_size;
                         }
                         //Updating all
+                        printf("Updated %d rows.\n", num_row_changed);
                         fhandle = fopen(filename,"r+bc");
                         fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
                         fflush(fhandle);
@@ -1958,30 +2055,4 @@ char* load_data_from_tab(char *tablename){
     rc = FILE_OPEN_ERROR;
   }
   return result;
-}
-
-int update_selected_row(char* read_pointer, char* write_pointer, int read_length, int write_length, int column_type, token_list *cur2, char value){
-  int num_row_changed = 0;
-  if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
-  {
-    char temp_string[read_length+1];
-    memset((void*)temp_string, value, read_length);
-    memcpy(&temp_string,read_pointer,read_length);
-    //Found the matching row
-    if(strcasecmp(cur2->tok_string, temp_string) == 0){
-        num_row_changed++;
-        printf("%s\n", temp_string);
-        memset(write_pointer, value, write_length);
-    }
-  }
-  else { //must be an int
-    int temp_num = 0;
-    memcpy(&temp_num, read_pointer, sizeof(int));
-    if(temp_num == atoi(cur2->tok_string)){
-      num_row_changed++;
-      printf("%d\n", value);
-      memset(write_pointer, value,write_length);
-    }
-  }
-  return num_row_changed;
 }
