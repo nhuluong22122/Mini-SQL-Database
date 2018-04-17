@@ -1667,6 +1667,7 @@ int sem_delete(token_list *t_list) {
                   cur->tok_value = INVALID;
                 }
                 else {
+                  int sign = cur->tok_value;
                   cur = cur->next; //moving to data value
                   //Remember to use column_offset
                   char* end_of_file = record_ptr + tabfile_ptr->file_size;
@@ -1692,7 +1693,21 @@ int sem_delete(token_list *t_list) {
                       else { //must be an int
                         int value = 0;
                         memcpy(&value, record_ptr+record_offset+1, sizeof(int));
-                        if(value == atoi(cur->tok_string)){
+                        if(sign == S_EQUAL && value == atoi(cur->tok_string)){
+                          num_row_changed++;
+                          memcpy(
+                            record_ptr+record_offset-column_offset,
+                            end_of_file-(num_row_changed) * tabfile_ptr->record_size,
+                            tabfile_ptr->record_size);
+                        }
+                        if(sign == S_LESS && value < atoi(cur->tok_string)){
+                          num_row_changed++;
+                          memcpy(
+                            record_ptr+record_offset-column_offset,
+                            end_of_file-(num_row_changed) * tabfile_ptr->record_size,
+                            tabfile_ptr->record_size);
+                        }
+                        if(sign == S_GREATER && value > atoi(cur->tok_string)){
                           num_row_changed++;
                           memcpy(
                             record_ptr+record_offset-column_offset,
