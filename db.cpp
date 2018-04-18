@@ -1860,83 +1860,90 @@ int sem_update(token_list *t_list) {
                         int num_row_changed = 0;
                         int ptr_offset = tabfile_ptr->record_offset;
                         int cur_row = 0;
+                        int sign = 0;
                         if(where_flag){
+                            sign = cur2->next->tok_value;
                             cur2 = cur2->next->next;
                         }
                         for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
-                            if(cur->tok_value == K_NULL){
-                              if(match_col->not_null == 1){
-                                rc = INSERT_NOT_NULL_EXCEPTION;
-                                cur->tok_value = INVALID;
-                                printf("%s%s\n", "Not Null constraint exists for column name ", match_col->col_name );
-                              }
-                              else {
-                                if(where_flag){
-                                  char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
-                                  char* write_pointer = record_ptr + ptr_offset + column_offset;
-                                  int read_length = match_col_update->col_len;
-                                  int write_length = match_col->col_len + 1;
-                                  int column_type = match_col_update->col_type;
-                                  //Process WHERE CLAUSE
-                                  if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
-                                  {
-                                    char temp_string[read_length + 1];
-                                    memset(temp_string,'\0', read_length + 1);
-                                    memcpy(&temp_string,read_pointer,read_length);
-                                    //Found the matching row
-                                    if(strcasecmp(cur2->tok_string, temp_string) == 0){
-                                        num_row_changed++;
-                                        memset(write_pointer, '\0', write_length);
-                                    }
-                                  }
-                                  else { //must be an int
-                                    int temp_num = 0;
-                                    memcpy(&temp_num, read_pointer, sizeof(int));
-                                    if(temp_num == atoi(cur2->tok_string)){
-                                      num_row_changed++;
-                                      memset(write_pointer, '\0' ,write_length);
-                                    }
-                                  }
-                                }
-                                else{
+                            if(where_flag){//UPDATE WHERE
+                              char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
+                              char* write_pointer = record_ptr + ptr_offset + column_offset;
+                              int read_length = match_col_update->col_len;
+                              int write_length = match_col->col_len + 1;
+                              int column_type = match_col_update->col_type;
+                              if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
+                              {
+                                char temp_string[read_length + 1];
+                                memset(temp_string,'\0', read_length + 1);
+                                memcpy(&temp_string,read_pointer,read_length);
+                                if(strcasecmp(cur2->tok_string, temp_string) == 0){
                                   num_row_changed++;
-                                  memset(record_ptr + ptr_offset + column_offset,'\0',match_col->col_len + 1);
-                                }
-                              }
-                            }
-                            else if(cur->tok_value == STRING_LITERAL){ //string
-                              if(match_col->col_type != T_CHAR && match_col->col_type != T_VARCHAR){
-                                rc = INVALID_UPDATE_DATATYPE;
-                                printf("%s\n", "Type mismatch at SET");
-                                cur->tok_value = INVALID;
-                              }
-                              else {
-                                if(where_flag){
-                                  char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
-                                  char* write_pointer = record_ptr + ptr_offset + column_offset;
-                                  int read_length = match_col_update->col_len;
-                                  int write_length = match_col->col_len + 1;
-                                  int column_type = match_col_update->col_type;
-                                  if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
-                                  {
-                                    char temp_string[read_length + 1];
-                                    memset(temp_string,'\0', read_length + 1);
-                                    memcpy(&temp_string,read_pointer,read_length);
-                                    //Found the matching row
-                                    if(strcasecmp(cur2->tok_string, temp_string) == 0){
-                                        num_row_changed++;
-                                        int tok_length = strlen(cur->tok_string);
-                                        unsigned char temp_len_chr = tok_length;
-                                        unsigned char *p_len = &temp_len_chr;
-                                        memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
-                                        memcpy(record_ptr + ptr_offset + column_offset + 1, cur->tok_string, match_col->col_len);
+                                  if(cur->tok_value == K_NULL){ //NULL
+                                    if(match_col->not_null == 1){
+                                      rc = INSERT_NOT_NULL_EXCEPTION;
+                                      cur->tok_value = INVALID;
+                                      printf("%s%s\n", "Not Null constraint exists for column name ", match_col->col_name );
+
+                                    }else{
+                                      memset(write_pointer, '\0', write_length);
                                     }
                                   }
-                                  else { //must be an int
-                                    int temp_num = 0;
-                                    memcpy(&temp_num, read_pointer, sizeof(int));
-                                    if(temp_num == atoi(cur2->tok_string)){
-                                      num_row_changed++;
+                                  else if(cur->tok_value == STRING_LITERAL){ //STRING
+                                    if(match_col->col_type != T_CHAR && match_col->col_type != T_VARCHAR){
+                                      rc = INVALID_UPDATE_DATATYPE;
+                                      printf("%s\n", "Type mismatch at SET");
+                                      cur->tok_value = INVALID;
+                                    }
+                                    else {
+                                      int tok_length = strlen(cur->tok_string);
+                                      unsigned char temp_len_chr = tok_length;
+                                      unsigned char *p_len = &temp_len_chr;
+                                      memcpy(write_pointer, p_len, 1);
+                                      memcpy(write_pointer + 1, cur->tok_string, match_col->col_len);
+                                    }
+                                  }
+                                  else if(cur->tok_value == INT_LITERAL) { //INT
+                                    if(match_col->col_type != T_INT){
+                                      rc = INVALID_UPDATE_DATATYPE;
+                                      printf("%s\n", "Type mismatch at SET");
+                                      cur->tok_value = INVALID;
+                                    }
+                                    else {
+                                      int tok_length = sizeof(int);
+                                      unsigned char temp_len_chr = tok_length;
+                                      unsigned char *p_len = &temp_len_chr;
+                                      memcpy(write_pointer, p_len, 1);
+
+                                      int temp_int = atoi(cur->tok_string);
+                                      int *p_int = &temp_int;
+                                      memcpy(write_pointer + 1, p_int, match_col->col_len );
+                                    }
+                                  }
+                                } // End compare String
+                              }
+                              else { //Int
+                                int temp_num = 0;
+                                memcpy(&temp_num, read_pointer, sizeof(int));
+                                if(temp_num == atoi(cur2->tok_string)){
+                                  num_row_changed++;
+                                  if(cur->tok_value == K_NULL){ //NULL
+                                    if(match_col->not_null == 1){
+                                      rc = INSERT_NOT_NULL_EXCEPTION;
+                                      cur->tok_value = INVALID;
+                                      printf("%s%s\n", "Not Null constraint exists for column name ", match_col->col_name );
+
+                                    }else{
+                                      memset(write_pointer, '\0', write_length);
+                                    }
+                                  }
+                                  else if(cur->tok_value == STRING_LITERAL){ //STRING
+                                    if(match_col->col_type != T_CHAR && match_col->col_type != T_VARCHAR){
+                                      rc = INVALID_UPDATE_DATATYPE;
+                                      printf("%s\n", "Type mismatch at SET");
+                                      cur->tok_value = INVALID;
+                                    }
+                                    else {
                                       int tok_length = strlen(cur->tok_string);
                                       unsigned char temp_len_chr = tok_length;
                                       unsigned char *p_len = &temp_len_chr;
@@ -1944,78 +1951,68 @@ int sem_update(token_list *t_list) {
                                       memcpy(record_ptr + ptr_offset + column_offset + 1, cur->tok_string, match_col->col_len);
                                     }
                                   }
+                                  else if(cur->tok_value == INT_LITERAL) { //INT
+                                    if(match_col->col_type != T_INT){
+                                      rc = INVALID_UPDATE_DATATYPE;
+                                      printf("%s\n", "Type mismatch at SET");
+                                      cur->tok_value = INVALID;
+                                    }
+                                    else {
+                                      int tok_length = sizeof(int);
+                                      unsigned char temp_len_chr = tok_length;
+                                      unsigned char *p_len = &temp_len_chr;
+                                      memcpy(write_pointer, p_len, 1);
+
+                                      int temp_int = atoi(cur->tok_string);
+                                      int *p_int = &temp_int;
+                                      memcpy(write_pointer + 1, p_int, match_col->col_len );
+                                    }
+                                  }
+                                }//End compare Int
+                              }
+                            }
+                            else { //UPDATE ALL
+                              num_row_changed++;
+                              if(cur->tok_value == K_NULL){ //NULL
+                                if(match_col->not_null == 1){
+                                  rc = INSERT_NOT_NULL_EXCEPTION;
+                                  cur->tok_value = INVALID;
+                                  printf("%s%s\n", "Not Null constraint exists for column name ", match_col->col_name );
+
+                                }else{
+                                  memset(record_ptr + ptr_offset + column_offset,'\0',match_col->col_len + 1);                                }
+                              }
+                              else if(cur->tok_value == STRING_LITERAL){ //STRING
+                                if(match_col->col_type != T_CHAR && match_col->col_type != T_VARCHAR){
+                                  rc = INVALID_UPDATE_DATATYPE;
+                                  printf("%s\n", "Type mismatch at SET");
+                                  cur->tok_value = INVALID;
                                 }
                                 else {
-                                  num_row_changed++;
                                   int tok_length = strlen(cur->tok_string);
                                   unsigned char temp_len_chr = tok_length;
                                   unsigned char *p_len = &temp_len_chr;
                                   memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
-                                  //Write the content of the string
                                   memcpy(record_ptr + ptr_offset + column_offset + 1, cur->tok_string, match_col->col_len);
                                 }
                               }
-                            }
-                            else if(cur->tok_value == INT_LITERAL)  //int
-                            {
+                              else if(cur->tok_value == INT_LITERAL) { //INT
                                 if(match_col->col_type != T_INT){
                                   rc = INVALID_UPDATE_DATATYPE;
                                   printf("%s\n", "Type mismatch at SET");
                                   cur->tok_value = INVALID;
                                 }
                                 else {
-                                  if(where_flag){
-                                    char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
-                                    char* write_pointer = record_ptr + ptr_offset + column_offset;
-                                    int read_length = match_col_update->col_len;
-                                    int write_length = match_col->col_len + 1;
-                                    int column_type = match_col_update->col_type;
-                                    if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
-                                    {
-                                      char temp_string[read_length + 1];
-                                      memset(temp_string,'\0', read_length + 1);
-                                      memcpy(&temp_string,read_pointer,read_length);
-                                      //Found the matching row
-                                      if(strcasecmp(cur2->tok_string, temp_string) == 0){
-                                          num_row_changed++;
-                                          int tok_length = sizeof(int);
-                                          unsigned char temp_len_chr = tok_length;
-                                          unsigned char *p_len = &temp_len_chr;
-                                          memcpy(write_pointer, p_len, 1);
+                                   int tok_length = sizeof(int);
+                                   unsigned char temp_len_chr = tok_length;
+                                   unsigned char *p_len = &temp_len_chr;
+                                   memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
 
-                                          int temp_int = atoi(cur->tok_string);
-                                          int *p_int = &temp_int;
-                                          memcpy(write_pointer+1, p_int, match_col->col_len );
-                                      }
-                                    }
-                                    else { //must be an int
-                                      int temp_num = 0;
-                                      memcpy(&temp_num, read_pointer, sizeof(int));
-                                      if(temp_num == atoi(cur2->tok_string)){
-                                        num_row_changed++;
-                                        int tok_length = sizeof(int);
-                                        unsigned char temp_len_chr = tok_length;
-                                        unsigned char *p_len = &temp_len_chr;
-                                        memcpy(write_pointer, p_len, 1);
-
-                                        int temp_int = atoi(cur->tok_string);
-                                        int *p_int = &temp_int;
-                                        memcpy(write_pointer + 1, p_int, match_col->col_len );
-                                      }
-                                    }
-                                  }
-                                  else{
-                                    num_row_changed++;
-                                    int tok_length = sizeof(int);
-                                    unsigned char temp_len_chr = tok_length;
-                                    unsigned char *p_len = &temp_len_chr;
-                                    memcpy(record_ptr + ptr_offset + column_offset, p_len, 1);
-
-                                    int temp_int = atoi(cur->tok_string);
-                                    int *p_int = &temp_int;
-                                    memcpy(record_ptr + ptr_offset + column_offset + 1, p_int, match_col->col_len );
-                                  }
+                                   int temp_int = atoi(cur->tok_string);
+                                   int *p_int = &temp_int;
+                                   memcpy(record_ptr + ptr_offset + column_offset + 1, p_int, match_col->col_len );
                                 }
+                              }
                             }
                             ptr_offset += tabfile_ptr->record_size;
                         }
