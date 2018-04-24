@@ -1674,20 +1674,38 @@ int sem_delete(token_list *t_list) {
                   int record_offset = tabfile_ptr->record_offset + column_offset;
                   int cur_row = 0;
                   int num_row_changed = 0;
+                  int count = 0;
                   for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                       if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR) // VARCHAR
                       {
-                        char temp_string[match_col->col_len];
+                        char temp_string[match_col->col_len+1];
+                        char replace_string[match_col->col_len+1];
+                        memset(temp_string,'\0',match_col->col_len+1);
                         memcpy(&temp_string,record_ptr+record_offset+1,match_col->col_len);
-                        // printf("Compare: %s %s\n",cur->tok_string, temp_string);
                         //Found the matching row
+                        char* eof_offset;
                         if(strcasecmp(cur->tok_string, temp_string) == 0){
                             //Found the string
-                            num_row_changed++;
-                            memcpy(
-                              record_ptr+record_offset-column_offset,
-                              end_of_file-(num_row_changed) * tabfile_ptr->record_size,
-                              tabfile_ptr->record_size);
+                            // num_row_changed++;
+                            printf("Current Row %d Count from End %d \n",cur_row, count);
+                            count++;
+                            eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                            memset(replace_string,'\0',match_col->col_len+1); //empty the string
+                            memcpy(&replace_string,eof_offset,match_col->col_len);
+                            while(strcasecmp(cur->tok_string, replace_string) == 0){
+                              count++;
+                              eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                              memset(replace_string,'\0',match_col->col_len+1); //empty the string
+                              memcpy(&replace_string,eof_offset,match_col->col_len);
+                            }
+                            if(strcasecmp(cur->tok_string, replace_string) != 0) {
+                              // printf("Column Offset %d Replace String: %s Token String %s\n", column_offset, replace_string, cur->tok_string);
+                              num_row_changed++;
+                              memcpy(
+                                record_ptr+record_offset-column_offset,
+                                end_of_file-(count) * tabfile_ptr->record_size,
+                                tabfile_ptr->record_size);
+                            }
                         }
                       }
                       else { //must be an int
@@ -1718,6 +1736,7 @@ int sem_delete(token_list *t_list) {
                       record_offset += tabfile_ptr->record_size;
                   }
                   if(num_row_changed > 0){
+                      printf("Delete %d rows. \n", num_row_changed);
                       tabfile_ptr->num_records = tabfile_ptr->num_records - num_row_changed;
                       tabfile_ptr->file_size = tabfile_ptr->file_size - (tabfile_ptr->record_size * num_row_changed);
                       fhandle = fopen(filename,"r+bc");
@@ -1860,10 +1879,10 @@ int sem_update(token_list *t_list) {
                         int num_row_changed = 0;
                         int ptr_offset = tabfile_ptr->record_offset;
                         int cur_row = 0;
-                        int sign = 0;
+                        int rel_op = 0;
                         if(where_flag){
-                            sign = cur2->next->tok_value;
-                            cur2 = cur2->next->next;
+                            rel_op = cur2->next->tok_value; //relational operator
+                            cur2 = cur2->next->next; // move to the comparable value
                         }
                         for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                             if(where_flag){//UPDATE WHERE
@@ -1922,7 +1941,7 @@ int sem_update(token_list *t_list) {
                                   }
                                 } // End compare String
                               }
-                              else { //Int
+                              else { //Int - need to process sign
                                 int temp_num = 0;
                                 memcpy(&temp_num, read_pointer, sizeof(int));
                                 if(temp_num == atoi(cur2->tok_string)){
