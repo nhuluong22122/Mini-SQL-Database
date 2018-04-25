@@ -1739,9 +1739,9 @@ int sem_delete(token_list *t_list) {
                       printf("Delete %d rows. \n", num_row_changed);
                       tabfile_ptr->num_records = tabfile_ptr->num_records - num_row_changed;
                       tabfile_ptr->file_size = tabfile_ptr->file_size - (tabfile_ptr->record_size * num_row_changed);
-                      fhandle = fopen(filename,"r+bc");
+                      printf("Num_Records %d File Size: %d\n",tabfile_ptr->num_records,tabfile_ptr->file_size);
+                      fhandle = fopen(filename,"wbc");
                       fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
-                      fwrite(tabfile_ptr, tabfile_ptr->record_offset, 1, fhandle);
                       fflush(fhandle);
                       fclose(fhandle);
                   }
