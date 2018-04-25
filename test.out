@@ -150,16 +150,16 @@ class.tab size: 344. Number of records: 10
 ------------------------------------------------------------------------------------------
 
 total 408
-drwxr-xr-x@ 11 nhuluong  staff    352 Apr 24 19:35 .
+drwxr-xr-x@ 11 nhuluong  staff    352 Apr 24 20:33 .
 drwxr-xr-x+ 74 nhuluong  staff   2368 Apr 22 01:10 ..
 -rw-r--r--@  1 nhuluong  staff   6148 Apr 14 08:41 .DS_Store
-drwxr-xr-x  13 nhuluong  staff    416 Apr 24 14:43 .git
--rw-r--r--   1 nhuluong  staff    344 Apr 24 19:35 class.tab
--rwxr-xr-x   1 nhuluong  staff  35904 Apr 24 19:35 db
--rw-r--r--@  1 nhuluong  staff  73051 Apr 24 19:34 db.cpp
+drwxr-xr-x  13 nhuluong  staff    416 Apr 24 19:36 .git
+-rw-r--r--   1 nhuluong  staff    344 Apr 24 20:33 class.tab
+-rwxr-xr-x   1 nhuluong  staff  35904 Apr 24 20:33 db
+-rw-r--r--@  1 nhuluong  staff  74893 Apr 24 20:33 db.cpp
 -rw-r--r--@  1 nhuluong  staff   6909 Apr 17 15:38 db.h
--rw-r--r--   1 nhuluong  staff    228 Apr 24 19:35 dbfile.bin
--rw-r--r--   1 nhuluong  staff   9847 Apr 24 19:35 test.out
+-rw-r--r--   1 nhuluong  staff    228 Apr 24 20:33 dbfile.bin
+-rw-r--r--   1 nhuluong  staff   9847 Apr 24 20:33 test.out
 -rw-r--r--   1 nhuluong  staff   2836 Apr 13 09:51 test.sh
 ------------------------------------------------------------------------------------------
 

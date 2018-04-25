@@ -1676,6 +1676,7 @@ int sem_delete(token_list *t_list) {
                   int num_row_changed = 0;
                   int count = 0;
                   for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
+                      char* eof_offset;
                       if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR) // VARCHAR
                       {
                         char temp_string[match_col->col_len+1];
@@ -1683,11 +1684,7 @@ int sem_delete(token_list *t_list) {
                         memset(temp_string,'\0',match_col->col_len+1);
                         memcpy(&temp_string,record_ptr+record_offset+1,match_col->col_len);
                         //Found the matching row
-                        char* eof_offset;
                         if(strcasecmp(cur->tok_string, temp_string) == 0){
-                            //Found the string
-                            // num_row_changed++;
-                            printf("Current Row %d Count from End %d \n",cur_row, count);
                             count++;
                             eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
                             memset(replace_string,'\0',match_col->col_len+1); //empty the string
@@ -1699,7 +1696,6 @@ int sem_delete(token_list *t_list) {
                               memcpy(&replace_string,eof_offset,match_col->col_len);
                             }
                             if(strcasecmp(cur->tok_string, replace_string) != 0) {
-                              // printf("Column Offset %d Replace String: %s Token String %s\n", column_offset, replace_string, cur->tok_string);
                               num_row_changed++;
                               memcpy(
                                 record_ptr+record_offset-column_offset,
@@ -1710,27 +1706,65 @@ int sem_delete(token_list *t_list) {
                       }
                       else { //must be an int
                         int value = 0;
+                        int replace_value = 0;
                         memcpy(&value, record_ptr+record_offset+1, sizeof(int));
+
                         if(sign == S_EQUAL && value == atoi(cur->tok_string)){
-                          num_row_changed++;
-                          memcpy(
-                            record_ptr+record_offset-column_offset,
-                            end_of_file-(num_row_changed) * tabfile_ptr->record_size,
-                            tabfile_ptr->record_size);
+                          count++;
+                          eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                          memcpy(&replace_value, eof_offset, sizeof(int));
+
+                          while(replace_value == atoi(cur->tok_string)){
+                            count++;
+                            eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                            memcpy(&replace_value, eof_offset, sizeof(int));
+                          }
+                          printf("Replace Value %d\n", replace_value);
+                          if(replace_value != atoi(cur->tok_string)){
+                            num_row_changed++;
+                            memcpy(
+                              record_ptr+record_offset-column_offset,
+                              end_of_file-(count) * tabfile_ptr->record_size,
+                              tabfile_ptr->record_size);
+                          }
                         }
                         if(sign == S_LESS && value < atoi(cur->tok_string)){
-                          num_row_changed++;
-                          memcpy(
-                            record_ptr+record_offset-column_offset,
-                            end_of_file-(num_row_changed) * tabfile_ptr->record_size,
-                            tabfile_ptr->record_size);
+                          count++;
+                          eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                          memcpy(&replace_value, eof_offset, sizeof(int));
+
+                          while(replace_value < atoi(cur->tok_string)){
+                            count++;
+                            eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                            memcpy(&replace_value, eof_offset, sizeof(int));
+                          }
+                          printf("Replace Value %d\n", replace_value);
+                          if(replace_value >= atoi(cur->tok_string)){
+                            num_row_changed++;
+                            memcpy(
+                              record_ptr+record_offset-column_offset,
+                              end_of_file-(count) * tabfile_ptr->record_size,
+                              tabfile_ptr->record_size);
+                          }
                         }
                         if(sign == S_GREATER && value > atoi(cur->tok_string)){
-                          num_row_changed++;
-                          memcpy(
-                            record_ptr+record_offset-column_offset,
-                            end_of_file-(num_row_changed) * tabfile_ptr->record_size,
-                            tabfile_ptr->record_size);
+                          count++;
+                          eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                          memcpy(&replace_value, eof_offset, sizeof(int));
+
+                          while(replace_value > atoi(cur->tok_string)){
+                            count++;
+                            eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                            memcpy(&replace_value, eof_offset, sizeof(int));
+                          }
+                          printf("Replace Value %d\n", replace_value);
+                          if(replace_value <= atoi(cur->tok_string)){
+                            num_row_changed++;
+                            memcpy(
+                              record_ptr+record_offset-column_offset,
+                              end_of_file-(count) * tabfile_ptr->record_size,
+                              tabfile_ptr->record_size);
+                          }
                         }
                       }
                       record_offset += tabfile_ptr->record_size;
