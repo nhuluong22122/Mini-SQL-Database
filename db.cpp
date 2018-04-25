@@ -1716,10 +1716,9 @@ int sem_delete(token_list *t_list) {
 
                           while(replace_value == atoi(cur->tok_string)){
                             count++;
-                            eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                            eof_offset = eof_offset-tabfile_ptr->record_size;
                             memcpy(&replace_value, eof_offset, sizeof(int));
                           }
-                          printf("Replace Value %d\n", replace_value);
                           if(replace_value != atoi(cur->tok_string)){
                             num_row_changed++;
                             memcpy(
@@ -1735,10 +1734,9 @@ int sem_delete(token_list *t_list) {
 
                           while(replace_value < atoi(cur->tok_string)){
                             count++;
-                            eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                            eof_offset = eof_offset-tabfile_ptr->record_size;
                             memcpy(&replace_value, eof_offset, sizeof(int));
                           }
-                          printf("Replace Value %d\n", replace_value);
                           if(replace_value >= atoi(cur->tok_string)){
                             num_row_changed++;
                             memcpy(
@@ -1754,10 +1752,9 @@ int sem_delete(token_list *t_list) {
 
                           while(replace_value > atoi(cur->tok_string)){
                             count++;
-                            eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
+                            eof_offset = eof_offset-tabfile_ptr->record_size;
                             memcpy(&replace_value, eof_offset, sizeof(int));
                           }
-                          printf("Replace Value %d\n", replace_value);
                           if(replace_value <= atoi(cur->tok_string)){
                             num_row_changed++;
                             memcpy(
@@ -1773,7 +1770,6 @@ int sem_delete(token_list *t_list) {
                       printf("Delete %d rows. \n", num_row_changed);
                       tabfile_ptr->num_records = tabfile_ptr->num_records - num_row_changed;
                       tabfile_ptr->file_size = tabfile_ptr->file_size - (tabfile_ptr->record_size * num_row_changed);
-                      printf("Num_Records %d File Size: %d\n",tabfile_ptr->num_records,tabfile_ptr->file_size);
                       fhandle = fopen(filename,"wbc");
                       fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
                       fflush(fhandle);
@@ -1898,10 +1894,10 @@ int sem_update(token_list *t_list) {
                 printf("No column %s in this table\n", cur2->tok_string);
                 cur2->tok_value = INVALID;
               }
-              //Check for equal sign
+              //Check for sign for ints
               if(!rc){
                 cur = cur->next;
-                if(cur->tok_value != S_EQUAL )
+                if(cur->tok_value != S_EQUAL && cur->tok_value != S_LESS && cur->tok_value != S_GREATER )
                 {
                   rc = INVALID_UPDATE_SYNTAX;
                   printf("%s\n", " = is missing" );
@@ -1978,7 +1974,9 @@ int sem_update(token_list *t_list) {
                               else { //Int - need to process sign
                                 int temp_num = 0;
                                 memcpy(&temp_num, read_pointer, sizeof(int));
-                                if(temp_num == atoi(cur2->tok_string)){
+                                if( (temp_num == atoi(cur2->tok_string) && rel_op == S_EQUAL)
+                                  || (temp_num < atoi(cur2->tok_string) && rel_op == S_LESS)
+                                  || (temp_num > atoi(cur2->tok_string) && rel_op == S_GREATER)){
                                   num_row_changed++;
                                   if(cur->tok_value == K_NULL){ //NULL
                                     if(match_col->not_null == 1){
@@ -2069,15 +2067,14 @@ int sem_update(token_list *t_list) {
                             }
                             ptr_offset += tabfile_ptr->record_size;
                         }
+                        if(!rc){
+                          printf("Updated %d rows.\n", num_row_changed);
+                          fhandle = fopen(filename,"r+bc");
+                          fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
+                          fflush(fhandle);
+                          fclose(fhandle);
+                        }
                         //Updating all
-                        printf("Updated %d rows.\n", num_row_changed);
-                        fhandle = fopen(filename,"r+bc");
-                        fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
-                        fflush(fhandle);
-                        fclose(fhandle);
-                    }
-                    else { //UPDATE WITH CONDITION
-
                     }
                 }//end checking for data value
 
@@ -2086,8 +2083,6 @@ int sem_update(token_list *t_list) {
           }//Check column
       }  //Check if table exists
       return rc;
-
-
 }
 
 char* load_data_from_tab(char *tablename){
