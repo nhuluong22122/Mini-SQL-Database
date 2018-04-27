@@ -110,126 +110,211 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-36 warnings generated.
+db.cpp:2124:34: warning: format specifies type 'int' but the argument has type 'off_t' (aka 'long long') [-Wformat]
+        printf("File Size: %d\n",file_stat.st_size );
+                           ~~    ^~~~~~~~~~~~~~~~~
+                           %lld
+37 warnings generated.
 Clean up
 ==========================================================================================
-
+01 Test setup - create table + insert data
 CREATE TABLE statement
-------------------------------------------------------------------------------------------
-
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 56. Number of records: 1
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 88. Number of records: 2
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 120. Number of records: 3
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 152. Number of records: 4
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 184. Number of records: 5
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 216. Number of records: 6
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 248. Number of records: 7
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 280. Number of records: 8
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 312. Number of records: 9
-dbfile.bin size = 228
-INSERT statement
-class.tab size: 344. Number of records: 10
-------------------------------------------------------------------------------------------
-
-total 408
-drwxr-xr-x@ 11 nhuluong  staff    352 Apr 24 21:26 .
-drwxr-xr-x+ 74 nhuluong  staff   2368 Apr 22 01:10 ..
--rw-r--r--@  1 nhuluong  staff   6148 Apr 14 08:41 .DS_Store
-drwxr-xr-x  13 nhuluong  staff    416 Apr 24 20:59 .git
--rw-r--r--   1 nhuluong  staff    344 Apr 24 21:26 class.tab
--rwxr-xr-x   1 nhuluong  staff  35904 Apr 24 21:26 db
--rw-r--r--@  1 nhuluong  staff  74756 Apr 24 21:26 db.cpp
--rw-r--r--@  1 nhuluong  staff   6909 Apr 24 21:23 db.h
--rw-r--r--   1 nhuluong  staff    228 Apr 24 21:26 dbfile.bin
--rw-r--r--   1 nhuluong  staff   9847 Apr 24 21:26 test.out
--rw-r--r--   1 nhuluong  staff   2836 Apr 13 09:51 test.sh
-------------------------------------------------------------------------------------------
-
-dbfile.bin size = 228
-SELECT statement
-+----------------+----------------+----------------+----------------+----------------+
-|Student         |Gender          |Exams           |Quiz            |Total           |
-+----------------+----------------+----------------+----------------+----------------+
-|Siu             |M               |             480|              80|             560|
-|Frank           |M               |             600|             100|             700|
-|Jordon          |M               |             450|              75|             525|
-|Jeff            |M               |             455|              60|             515|
-|Ying            |F               |             540|              85|             625|
-|David           |M               |             550|              83|             633|
-|euna            |F               |             460|              75|             535|
-|Victor          |M               |             475|              60|             535|
-|Linawati        |F               |             490|              86|             576|
-|Stephen         |M               |             520|              76|             596|
-+----------------+----------------+----------------+----------------+----------------+
-10 rows selected.
-------------------------------------------------------------------------------------------
 ==========================================================================================
-Error Testing Section
-------------------------------------------------------------------------------------------
-Setup the table
+02 Insert 15 rows of data
 dbfile.bin size = 228
-CREATE TABLE statement
-dbfile.bin size = 372
 INSERT statement
-test.tab size: 48. Number of records: 1
-dbfile.bin size = 372
+File Size: 24
+class.tab size: 64. Number of records: 1
+dbfile.bin size = 228
 INSERT statement
-test.tab size: 72. Number of records: 2
-dbfile.bin size = 372
+File Size: 64
+class.tab size: 104. Number of records: 2
+dbfile.bin size = 228
+INSERT statement
+File Size: 104
+class.tab size: 144. Number of records: 3
+dbfile.bin size = 228
+INSERT statement
+File Size: 144
+class.tab size: 184. Number of records: 4
+dbfile.bin size = 228
+INSERT statement
+File Size: 184
+class.tab size: 224. Number of records: 5
+dbfile.bin size = 228
+INSERT statement
+File Size: 224
+class.tab size: 264. Number of records: 6
+dbfile.bin size = 228
+INSERT statement
+File Size: 264
+class.tab size: 304. Number of records: 7
+dbfile.bin size = 228
+INSERT statement
+File Size: 304
+class.tab size: 344. Number of records: 8
+dbfile.bin size = 228
+INSERT statement
+File Size: 344
+class.tab size: 384. Number of records: 9
+dbfile.bin size = 228
+INSERT statement
+File Size: 384
+class.tab size: 424. Number of records: 10
+------------------------------------------------------------------------------------------
+01: Simple select class.tab db db.cpp db.h dbfile.bin test.out test.sh test2.sh
+test2.sh: line 27: verify: command not found
+test2.sh: line 27: verify: command not found
+dbfile.bin size = 228
 SELECT statement
-+----------------+----------------+----------------+
-|col1            |col2            |col3            |
-+----------------+----------------+----------------+
-|one             |               1|              11|
-|two             |               2|              22|
-+----------------+----------------+----------------+
-2 rows selected.
-------------------------------------------------------------------------------------------
-
-
-dbfile.bin size = 372
-INSERT statement
-Keyword VALUES is missing
-Error in the string: (
-rc=-199
-dbfile.bin size = 372
-INSERT statement
-Missing ) or the number of columns and insert values don't match
-Error in the string: )
-rc=-384
-------------------------------------------------------------------------------------------
-
-
-dbfile.bin size = 372
-INSERT statement
-Type mismatch
-Error in the string: string
-rc=-382
-------------------------------------------------------------------------------------------
-
-
-dbfile.bin size = 372
-INSERT statement
-Not Null constraint exists for column name col3
-Error in the string: NULL
-rc=-380
-------------------------------------------------------------------------------------------
-End of test1.sh
+File Size: 424
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Siu                 |M                   |                 480|                  80|                 560|
+|Frank               |M                   |                 600|                 100|                 700|
+|Jordon              |M                   |                 450|                  75|                 525|
+|Jeff                |M                   |                 455|                  60|                 515|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|euna                |F                   |                 460|                  75|                 535|
+|Victor              |M                   |                 475|                  60|                 535|
+|Linawati            |F                   |                 490|                  86|                 576|
+|Stephen             |M                   |                 520|                  76|                 596|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+10 rows selected.
+==========================================================================================
+02: Delete from class where Student_Name = Bad_Student
+dbfile.bin size = 228
+DELETE statement
+File Size: 424
+Delete 1 rows. 
+dbfile.bin size = 228
+SELECT statement
+File Size: 384
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Siu                 |M                   |                 480|                  80|                 560|
+|Frank               |M                   |                 600|                 100|                 700|
+|Jordon              |M                   |                 450|                  75|                 525|
+|Jeff                |M                   |                 455|                  60|                 515|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|euna                |F                   |                 460|                  75|                 535|
+|Victor              |M                   |                 475|                  60|                 535|
+|Linawati            |F                   |                 490|                  86|                 576|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+9 rows selected.
+==========================================================================================
+03: Delete from class where no row is found
+dbfile.bin size = 228
+Invalid statement
+dbfile.bin size = 228
+SELECT statement
+File Size: 384
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Siu                 |M                   |                 480|                  80|                 560|
+|Frank               |M                   |                 600|                 100|                 700|
+|Jordon              |M                   |                 450|                  75|                 525|
+|Jeff                |M                   |                 455|                  60|                 515|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|euna                |F                   |                 460|                  75|                 535|
+|Victor              |M                   |                 475|                  60|                 535|
+|Linawati            |F                   |                 490|                  86|                 576|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+9 rows selected.
+==========================================================================================
+04: Delete multi-row 3 rows
+dbfile.bin size = 228
+DELETE statement
+File Size: 384
+dbfile.bin size = 228
+SELECT statement
+File Size: 384
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Siu                 |M                   |                 480|                  80|                 560|
+|Frank               |M                   |                 600|                 100|                 700|
+|Jordon              |M                   |                 450|                  75|                 525|
+|Jeff                |M                   |                 455|                  60|                 515|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|euna                |F                   |                 460|                  75|                 535|
+|Victor              |M                   |                 475|                  60|                 535|
+|Linawati            |F                   |                 490|                  86|                 576|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+9 rows selected.
+==========================================================================================
+05: Test single row update, e.g. update class set Quiz_Total=350 where Student_Name=’David’.
+dbfile.bin size = 228
+UPDATE statement
+File Size: 384
+Updated 0 rows.
+dbfile.bin size = 228
+SELECT statement
+File Size: 384
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Siu                 |M                   |                 480|                  80|                 560|
+|Frank               |M                   |                 600|                 100|                 700|
+|Jordon              |M                   |                 450|                  75|                 525|
+|Jeff                |M                   |                 455|                  60|                 515|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|euna                |F                   |                 460|                  75|                 535|
+|Victor              |M                   |                 475|                  60|                 535|
+|Linawati            |F                   |                 490|                  86|                 576|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+9 rows selected.
+==========================================================================================
+06: Test update when no rows is found
+dbfile.bin size = 228
+UPDATE statement
+File Size: 384
+Updated 0 rows.
+dbfile.bin size = 228
+SELECT statement
+File Size: 384
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Siu                 |M                   |                 480|                  80|                 560|
+|Frank               |M                   |                 600|                 100|                 700|
+|Jordon              |M                   |                 450|                  75|                 525|
+|Jeff                |M                   |                 455|                  60|                 515|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|euna                |F                   |                 460|                  75|                 535|
+|Victor              |M                   |                 475|                  60|                 535|
+|Linawati            |F                   |                 490|                  86|                 576|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+9 rows selected.
+==========================================================================================
+07: Multi-row update 4 rows
+dbfile.bin size = 228
+UPDATE statement
+File Size: 384
+Updated 0 rows.
+dbfile.bin size = 228
+SELECT statement
+File Size: 384
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Siu                 |M                   |                 480|                  80|                 560|
+|Frank               |M                   |                 600|                 100|                 700|
+|Jordon              |M                   |                 450|                  75|                 525|
+|Jeff                |M                   |                 455|                  60|                 515|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|euna                |F                   |                 460|                  75|                 535|
+|Victor              |M                   |                 475|                  60|                 535|
+|Linawati            |F                   |                 490|                  86|                 576|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+9 rows selected.

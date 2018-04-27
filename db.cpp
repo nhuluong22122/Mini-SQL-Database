@@ -1491,10 +1491,9 @@ int sem_select(token_list *t_list) {
               tabfile_ptr = (table_file_header*)record_ptr;
               /* Jump to the first record  */
               record_ptr+= tabfile_ptr->record_offset;
-
               //Start printing out results
               for(int count = 0; count < tab_entry->num_columns; count++){
-                printf("%s","+----------------");
+                printf("%s","+--------------------");
               }
               printf("+\n");
 
@@ -1511,34 +1510,37 @@ int sem_select(token_list *t_list) {
               }
 
               for(int count = 0; count < tab_entry->num_columns; count++){
-                printf("%s","+----------------");
+                printf("%s","+--------------------");
               }
               printf("+\n");
 
               int record_offset = 0;
               /* For every row in this file */
               for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
-                record_offset = 0;
+              record_offset = 0;
                   /* For every column in the column */
-                  for(i = 0; i < tab_entry->num_columns; i++){
+                  int j = 0;
+                  for(j = 0; j < tab_entry->num_columns; j++){
+                    struct cd_entry_def *column_address = list_cd_entry[j];
                     printf("%s","|");
                     int tok_length = 0;
-                    memcpy(&tok_length, record_ptr+record_offset, 1);
+                    memcpy(&tok_length, record_ptr + record_offset, 1);
                     record_offset++;
-
                     /* If the column type is CHAR*/
-                     if(list_cd_entry[i]->col_type == T_CHAR || list_cd_entry[i]->col_type == T_VARCHAR){
-                       // printf("%d ",tok_length);
+
+                     if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
+                       int col_len = column_address->col_len;
                        if(tok_length == 0){ //NULL
                           printf("%*s",-FORMAT_LENGTH, "NULL");
-                          record_offset = record_offset + list_cd_entry[i]->col_len;
+                          record_offset = record_offset + col_len;
                        }
                        else {
                          char temp_string[tok_length];
-                         memset(temp_string, '\0', tok_length+1);
-                         memcpy(&temp_string, record_ptr+record_offset, list_cd_entry[i]->col_len);
+                         memset(temp_string, '\0', tok_length +1);
+                         memcpy(&temp_string, record_ptr+record_offset, col_len);
                          printf("%*s", -FORMAT_LENGTH ,temp_string);
-                         record_offset = record_offset + list_cd_entry[i]->col_len;
+                         record_offset = record_offset + col_len;
+
                        }
                      }
                      else { //column type is INT
@@ -1553,16 +1555,18 @@ int sem_select(token_list *t_list) {
                          printf("%*d",FORMAT_LENGTH,value);
                        }
                      }
+                     list_cd_entry[j] = column_address;
                   }
-                  record_ptr = record_ptr + tabfile_ptr->record_size;
+                  //At the end of each column
+                  record_ptr = record_ptr + tabfile_ptr->record_size;                  // printf("%p\n", record_ptr);
                   printf("|\n");
               }
-
-              for(int count = 0; count < tab_entry->num_columns; count++){
-                printf("%s","+----------------");
+              int count = 0;
+              for(count = 0; count < tab_entry->num_columns; count++){
+                printf("%s","+--------------------");
               }
               printf("+\n");
-	             printf("%d rows selected.\n", tabfile_ptr->num_records);
+              printf("%d rows selected.\n", tabfile_ptr->num_records);
 
               fflush(fhandle);
               fclose(fhandle);
@@ -2106,6 +2110,7 @@ char* load_data_from_tab(char *tablename){
       }
       else
       {
+        printf("File Size: %d\n",file_stat.st_size );
         fread(result, file_stat.st_size, 1, fhandle);
         fflush(fhandle);
         fclose(fhandle);
