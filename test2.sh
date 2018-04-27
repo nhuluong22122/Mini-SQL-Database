@@ -36,28 +36,32 @@ echo ===========================================================================
 echo 02: Delete from class where Student_Name = 'Bad_Student'
 ./db "delete from class where Student_Name = 'Stephen'"
 ./db "select * from class"
+echo delete from class where Student_Name = 'Stephen'
 
 echo ==========================================================================================
 echo 03: Delete from class where no row is found
 ./db "detele from class where Student_Name = 'Hi'"
 ./db "select * from class"
-
+echo delte from class where Student_Name = 'Hi'
 echo ==========================================================================================
 echo 04: Delete multi-row 3 rows
 ./db "delete from class where Total < 75"
 ./db "select * from class"
+echo delete from class where Total < 75
+
 
 echo ==========================================================================================
 echo 05: Test single row update, e.g. update class set Quiz_Total=350 where Student_Name=’David’.
 ./db "update class set Quiz_Total = 350 where Student_Name = 'Natalie'"
 ./db "select * from class"
-
+echo update class set Quiz_Total = 350 where Student_Name = 'Natalie'
 echo ==========================================================================================
 echo 06: Test update when no rows is found
 ./db "update class set Quiz_Total = 350 where Student_Name = 'Nhu'"
 ./db "select * from class"
-
+echo update class set Quiz_Total = 350 where Student_Name = 'Nhu'
 echo ==========================================================================================
 echo 07: Multi-row update 4 rows
-./db "update class set Quiz_Total = 350 where Quiz_Total > 350" 
+./db "update class set Quiz_Total = 350 where Quiz_Total > 95" 
 ./db "select * from class"
+echo update class set Quiz_Total = 350 where Quiz_Total > 95

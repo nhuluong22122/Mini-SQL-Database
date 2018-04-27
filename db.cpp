@@ -346,18 +346,18 @@ int do_semantic(token_list *tok_list)
     cur = cur->next->next;
   }
   else if ((cur->tok_value == K_SELECT) &&
-        ((cur->next != NULL) && (cur->next->tok_value == S_STAR)))
+        (cur->next != NULL))
   {
     printf("SELECT statement\n");
     cur_cmd = SELECT;
-    cur = cur->next->next;
+    cur = cur->next;
   }
   else if ((cur->tok_value == K_DELETE) &&
         ((cur->next != NULL) && (cur->next->tok_value == K_FROM)))
   {
     printf("DELETE statement\n");
     cur_cmd = DELETE;
-    cur = cur->next->next;
+    cur = cur->next;
   }
   else if (cur->tok_value == K_UPDATE)
   {
@@ -1460,128 +1460,183 @@ int sem_select(token_list *t_list) {
 
     /* Set the current pointer to the token list */
     cur = t_list;
-    /* Check if it has the valid syntax - FROM */
-    if(cur->tok_value != K_FROM){
-      rc = INVALID_SELECT_ALL_SYNTAX;
-      cur->tok_value = INVALID;
+
+    token_list *cur_projection;
+    int count_proj = 0;
+    char proj_col[MAX_NUM_COL][MAX_TOK_LEN];
+
+    bool select_all = false;
+    if(cur->tok_value == S_STAR){
+        select_all = true;
+        cur = cur->next;
     }
-    else {
-      cur = cur->next;
-       /* Check for table name */
-      if ((cur->tok_class != keyword) &&
-          (cur->tok_class != identifier) &&
-          (cur->tok_class != type_name))
-      {
-        rc = INVALID_TABLE_NAME;
+    else { //must be other values
+      if(cur->tok_value == K_FROM){
+        rc = INVALID_SELECT_ALL_SYNTAX;
         cur->tok_value = INVALID;
       }
-      else { /* Check for table name */
-        if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
-        {
-            /* Load file to memory  */
-            record_ptr = load_data_from_tab(cur->tok_string);
-            if (!record_ptr)
-            {
-              rc = MEMORY_ERROR;
-            }
-            else
-            {
-              /* Load file to memory  */
-              tabfile_ptr = (table_file_header*)record_ptr;
-              /* Jump to the first record  */
-              record_ptr+= tabfile_ptr->record_offset;
-              //Start printing out results
-              for(int count = 0; count < tab_entry->num_columns; count++){
-                printf("%s","+--------------------");
-              }
-              printf("+\n");
-
-              struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
-
-              /* Print column name  */
-              int i = 0;
-              for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
-                  i < tab_entry->num_columns; i++, col_entry++)
-              {
-                  list_cd_entry[i] = col_entry;
-                  printf("|%*s", -FORMAT_LENGTH, col_entry->col_name);
-                  if(i == tab_entry->num_columns - 1) {
-                    printf("|\n");
-                  }
-              }
-
-              for(int count = 0; count < tab_entry->num_columns; count++){
-                printf("%s","+--------------------");
-              }
-              printf("+\n");
-              int j = 0;
-              int record_offset = 0;
-              struct cd_entry_def *column_address;
-              /* For every row in this file */
-              for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
-              record_offset = 0;
-                  /* For every column in the column */
-                  for(j = 0; j < tab_entry->num_columns; j++){
-                    column_address = list_cd_entry[j];
-                    printf("%s","|");
-                    unsigned char tok_length = NULL;
-                    memcpy(&tok_length, record_ptr + record_offset, 1);
-                    record_offset++;
-                    /* If the column type is CHAR*/
-
-                     if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
-                       int col_len = column_address->col_len;
-                       if(tok_length == 0){ //NULL
-                          printf("%*s",-FORMAT_LENGTH, "NULL");
-                          record_offset = record_offset + col_len;
-                       }
-                       else {
-                         char temp_string[tok_length + 1];
-                         memset(temp_string, '\0', tok_length + 1);
-                         memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                         printf("%*s", -FORMAT_LENGTH ,temp_string);
-                         record_offset = record_offset + col_len;
-                       }
-                     }
-                     else { //column type is INT
-                       if(tok_length == 0){ //NULL
-                         printf("%*s",FORMAT_LENGTH,"NULL");
-                         record_offset = record_offset + sizeof(int);
-                       }
-                       else {
-                         int value = 0;
-                         memcpy(&value, record_ptr+record_offset, sizeof(int));
-                         record_offset = record_offset + sizeof(int);
-                         printf("%*d",FORMAT_LENGTH,value);
-                       }
-                     }
-                  }
-                  //At the end of each column
-                  record_ptr = record_ptr + tabfile_ptr->record_size;                  // printf("%p\n", record_ptr);
-                  printf("|\n");
-              }
-              int count = 0;
-              for(count = 0; count < tab_entry->num_columns; count++){
-                printf("%s","+--------------------");
-              }
-              printf("+\n");
-              printf("%d rows selected.\n", tabfile_ptr->num_records);
-
-              fflush(fhandle);
-              fclose(fhandle);
-            }
-        }
-        if(!rc)
-          {
-            cur = cur->next; //Should be the terminator
-            if (cur->tok_value != EOC)
-              {
-                rc = INVALID_TABLE_DEFINITION;
-                cur->tok_value = INVALID;
-              }//End checking for terminator
+      else {
+        cur_projection = cur;
+        /* Check for projection column */
+        while(cur->tok_value != K_FROM){
+          strcpy(proj_col[count_proj], cur->tok_string);
+          // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
+          count_proj++;
+          cur = cur->next;
+          if(cur->tok_value == S_COMMA && cur->next != NULL){
+            cur = cur->next;
           }
-        }//End checking if that table exist
-    }// End checking for invalid table
+        }
+      }
+    }
+    if(!rc){
+      /* Check if it has the valid syntax - FROM */
+      // if(cur->tok_value != K_FROM){
+      //   rc = INVALID_SELECT_ALL_SYNTAX;
+      //   cur->tok_value = INVALID;
+      // }
+      // else {
+
+        cur = cur->next;
+         /* Check for table name */
+        if ((cur->tok_class != keyword) &&
+            (cur->tok_class != identifier) &&
+            (cur->tok_class != type_name))
+        {
+          rc = INVALID_TABLE_NAME;
+          cur->tok_value = INVALID;
+        }
+        else { /* Check for table name */
+          if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
+          {
+              /* Load file to memory  */
+              record_ptr = load_data_from_tab(cur->tok_string);
+              if (!record_ptr)
+              {
+                rc = MEMORY_ERROR;
+              }
+              else
+              {
+                /* Load file to memory  */
+                tabfile_ptr = (table_file_header*)record_ptr;
+                /* Jump to the first record  */
+                record_ptr+= tabfile_ptr->record_offset;
+                struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
+                int i = 0;
+                for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
+                    i < tab_entry->num_columns; i++, col_entry++)
+                {
+                  list_cd_entry[i] = col_entry;
+                }
+
+                int col = 0;
+                bool match = false;
+                for (col = 0; col < count_proj; col++){ // check all the projection column
+                  match = false;
+                  for(i = 0; i < tab_entry->num_columns; i++) // against all the column in table
+                  {
+                    if(strcasecmp(proj_col[col], list_cd_entry[i]->col_name)==0){
+                      match = true;
+                    }
+                  }
+                  if(!match){
+                    rc = INVALID_SELECT_ALL_SYNTAX;
+                    cur_projection->tok_value = INVALID;
+                    return rc;
+                  }
+                  if(cur_projection != NULL){
+                    cur_projection = cur_projection->next->next;
+                  }
+                }
+
+                for(int count = 0; count < tab_entry->num_columns; count++){
+                  printf("%s","+--------------------");
+                }
+                printf("+\n");
+
+                /* Print column name  */
+                for(i = 0; i < tab_entry->num_columns; i++)
+                {
+                      //Start printing out results
+                      printf("|%*s", -FORMAT_LENGTH, list_cd_entry[i]->col_name);
+                      if(i == tab_entry->num_columns - 1) {
+                        printf("|\n");
+                      }
+                }
+
+                for(int count = 0; count < tab_entry->num_columns; count++){
+                  printf("%s","+--------------------");
+                }
+                printf("+\n");
+                int j = 0;
+                int record_offset = 0;
+                struct cd_entry_def *column_address;
+                /* For every row in this file */
+                for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
+                record_offset = 0;
+                    /* For every column in the column */
+                    for(j = 0; j < tab_entry->num_columns; j++){
+                      column_address = list_cd_entry[j];
+                      printf("%s","|");
+                      unsigned char tok_length = NULL;
+                      memcpy(&tok_length, record_ptr + record_offset, 1);
+                      record_offset++;
+                      /* If the column type is CHAR*/
+
+                       if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
+                         int col_len = column_address->col_len;
+                         if(tok_length == 0){ //NULL
+                            printf("%*s",-FORMAT_LENGTH, "NULL");
+                            record_offset = record_offset + col_len;
+                         }
+                         else {
+                           char temp_string[tok_length + 1];
+                           memset(temp_string, '\0', tok_length + 1);
+                           memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                           printf("%*s", -FORMAT_LENGTH ,temp_string);
+                           record_offset = record_offset + col_len;
+                         }
+                       }
+                       else { //column type is INT
+                         if(tok_length == 0){ //NULL
+                           printf("%*s",FORMAT_LENGTH,"NULL");
+                           record_offset = record_offset + sizeof(int);
+                         }
+                         else {
+                           int value = 0;
+                           memcpy(&value, record_ptr+record_offset, sizeof(int));
+                           record_offset = record_offset + sizeof(int);
+                           printf("%*d",FORMAT_LENGTH,value);
+                         }
+                       }
+                    }
+                    //At the end of each column
+                    record_ptr = record_ptr + tabfile_ptr->record_size;                  // printf("%p\n", record_ptr);
+                    printf("|\n");
+                }
+                int count = 0;
+                for(count = 0; count < tab_entry->num_columns; count++){
+                  printf("%s","+--------------------");
+                }
+                printf("+\n");
+                printf("%d rows selected.\n", tabfile_ptr->num_records);
+
+                fflush(fhandle);
+                fclose(fhandle);
+              }
+          }
+          if(!rc)
+            {
+              cur = cur->next; //Should be the terminator
+              if (cur->tok_value != EOC)
+                {
+                  rc = INVALID_TABLE_DEFINITION;
+                  cur->tok_value = INVALID;
+                }//End checking for terminator
+            }
+          }//End checking if that table exist
+      }// End checking for invalid table
+
     return rc;
 }
 int sem_delete(token_list *t_list) {

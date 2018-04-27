@@ -214,6 +214,7 @@ SELECT statement
 |Hector              |M                   |                 590|                  86|                 482|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 14 rows selected.
+delete from class where Student_Name = Stephen
 ==========================================================================================
 03: Delete from class where no row is found
 dbfile.bin size = 228
@@ -239,6 +240,7 @@ SELECT statement
 |Hector              |M                   |                 590|                  86|                 482|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 14 rows selected.
+delte from class where Student_Name = Hi
 ==========================================================================================
 04: Delete multi-row 3 rows
 dbfile.bin size = 228
@@ -265,6 +267,7 @@ SELECT statement
 |Hector              |M                   |                 590|                  86|                 482|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 14 rows selected.
+test2.sh: line 50: 75: No such file or directory
 ==========================================================================================
 05: Test single row update, e.g. update class set Quiz_Total=350 where Student_Name=’David’.
 dbfile.bin size = 228
@@ -291,6 +294,7 @@ SELECT statement
 |Hector              |M                   |                 590|                  86|                 482|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 14 rows selected.
+update class set Quiz_Total = 350 where Student_Name = Natalie
 ==========================================================================================
 06: Test update when no rows is found
 dbfile.bin size = 228
@@ -317,18 +321,19 @@ SELECT statement
 |Hector              |M                   |                 590|                  86|                 482|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 14 rows selected.
+update class set Quiz_Total = 350 where Student_Name = Nhu
 ==========================================================================================
 07: Multi-row update 4 rows
 dbfile.bin size = 228
 UPDATE statement
-Updated 0 rows.
+Updated 2 rows.
 dbfile.bin size = 228
 SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Siu                 |M                   |                 480|                  80|                 560|
-|Frank               |M                   |                 600|                 100|                 700|
+|Frank               |M                   |                 600|                 350|                 700|
 |Jordon              |M                   |                 450|                  75|                 525|
 |Jeff                |M                   |                 455|                  60|                 515|
 |Ying                |F                   |                 540|                  85|                 625|
