@@ -1478,7 +1478,6 @@ int sem_select(token_list *t_list) {
       else { /* Check for table name */
         if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
         {
-            struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
             /* Load file to memory  */
             record_ptr = load_data_from_tab(cur->tok_string);
             if (!record_ptr)
@@ -1497,6 +1496,8 @@ int sem_select(token_list *t_list) {
               }
               printf("+\n");
 
+              struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
+
               /* Print column name  */
               int i = 0;
               for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
@@ -1513,17 +1514,17 @@ int sem_select(token_list *t_list) {
                 printf("%s","+--------------------");
               }
               printf("+\n");
-
+              int j = 0;
               int record_offset = 0;
+              struct cd_entry_def *column_address;
               /* For every row in this file */
               for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
               record_offset = 0;
                   /* For every column in the column */
-                  int j = 0;
                   for(j = 0; j < tab_entry->num_columns; j++){
-                    struct cd_entry_def *column_address = list_cd_entry[j];
+                    column_address = list_cd_entry[j];
                     printf("%s","|");
-                    int tok_length = 0;
+                    unsigned char tok_length = NULL;
                     memcpy(&tok_length, record_ptr + record_offset, 1);
                     record_offset++;
                     /* If the column type is CHAR*/
@@ -1535,12 +1536,11 @@ int sem_select(token_list *t_list) {
                           record_offset = record_offset + col_len;
                        }
                        else {
-                         char temp_string[tok_length];
-                         memset(temp_string, '\0', tok_length +1);
-                         memcpy(&temp_string, record_ptr+record_offset, col_len);
+                         char temp_string[tok_length + 1];
+                         memset(temp_string, '\0', tok_length + 1);
+                         memcpy(&temp_string, record_ptr+record_offset, tok_length);
                          printf("%*s", -FORMAT_LENGTH ,temp_string);
                          record_offset = record_offset + col_len;
-
                        }
                      }
                      else { //column type is INT
@@ -1555,7 +1555,6 @@ int sem_select(token_list *t_list) {
                          printf("%*d",FORMAT_LENGTH,value);
                        }
                      }
-                     list_cd_entry[j] = column_address;
                   }
                   //At the end of each column
                   record_ptr = record_ptr + tabfile_ptr->record_size;                  // printf("%p\n", record_ptr);
@@ -1776,9 +1775,12 @@ int sem_delete(token_list *t_list) {
                       tabfile_ptr->file_size = tabfile_ptr->file_size - (tabfile_ptr->record_size * num_row_changed);
                       fhandle = fopen(filename,"wbc");
                       fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
-                      fflush(fhandle);
-                      fclose(fhandle);
                   }
+                  else {
+                    printf("Delete %d rows. \n", num_row_changed);
+                  }
+                  fflush(fhandle);
+                  fclose(fhandle);
                 } // End change value
               }//Start parsing more
           }//End WHERE clause
@@ -2110,7 +2112,6 @@ char* load_data_from_tab(char *tablename){
       }
       else
       {
-        printf("File Size: %d\n",file_stat.st_size );
         fread(result, file_stat.st_size, 1, fhandle);
         fflush(fhandle);
         fclose(fhandle);
