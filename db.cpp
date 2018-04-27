@@ -1469,6 +1469,11 @@ int sem_select(token_list *t_list) {
     if(cur->tok_value == S_STAR){
         select_all = true;
         cur = cur->next;
+        if(cur->tok_value != K_FROM){
+          rc = INVALID_SELECT_ALL_SYNTAX;
+          cur->tok_value = INVALID;
+          return rc;
+        }
     }
     else { //must be other values
       if(cur->tok_value == K_FROM){
@@ -1523,99 +1528,145 @@ int sem_select(token_list *t_list) {
                 record_ptr+= tabfile_ptr->record_offset;
                 struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
                 int i = 0;
+
+                //Get all the column information from file
                 for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
                     i < tab_entry->num_columns; i++, col_entry++)
                 {
                   list_cd_entry[i] = col_entry;
                 }
-
-                int col = 0;
-                bool match = false;
-                for (col = 0; col < count_proj; col++){ // check all the projection column
-                  match = false;
-                  for(i = 0; i < tab_entry->num_columns; i++) // against all the column in table
-                  {
-                    if(strcasecmp(proj_col[col], list_cd_entry[i]->col_name)==0){
-                      match = true;
+                int print_column = tab_entry->num_columns;
+                //Check agaisnt projection columns
+                if(!select_all){
+                  int col = 0;
+                  bool match = false;
+                  for (col = 0; col < count_proj; col++){ // check all the projection column
+                    match = false;
+                    for(i = 0; i < tab_entry->num_columns; i++) // against all the column in table
+                    {
+                      if(strcasecmp(proj_col[col], list_cd_entry[i]->col_name)==0){
+                        match = true;
+                      }
+                    }
+                    if(!match){
+                      rc = INVALID_SELECT_ALL_SYNTAX;
+                      cur_projection->tok_value = INVALID;
+                      return rc;
+                    }
+                    if(cur_projection != NULL){
+                      cur_projection = cur_projection->next->next;
                     }
                   }
-                  if(!match){
-                    rc = INVALID_SELECT_ALL_SYNTAX;
-                    cur_projection->tok_value = INVALID;
-                    return rc;
-                  }
-                  if(cur_projection != NULL){
-                    cur_projection = cur_projection->next->next;
-                  }
+                  print_column = count_proj;
                 }
-
-                for(int count = 0; count < tab_entry->num_columns; count++){
+                //If everything is ok -> start printing
+                for(int count = 0; count < print_column; count++){
                   printf("%s","+--------------------");
                 }
                 printf("+\n");
 
                 /* Print column name  */
-                for(i = 0; i < tab_entry->num_columns; i++)
+                for(i = 0; i < print_column; i++)
                 {
-                      //Start printing out results
+                    //Start printing out results
+                    if(!select_all){
+                      printf("|%*s", -FORMAT_LENGTH, proj_col[i]);
+                    }
+                    else {
                       printf("|%*s", -FORMAT_LENGTH, list_cd_entry[i]->col_name);
-                      if(i == tab_entry->num_columns - 1) {
-                        printf("|\n");
-                      }
+                    }
+                    // if(i == print_column - 1) {
+                    // }
                 }
+                printf("|\n");
 
-                for(int count = 0; count < tab_entry->num_columns; count++){
+                for(int count = 0; count < print_column; count++){
                   printf("%s","+--------------------");
                 }
                 printf("+\n");
+
+                //Start printing data
                 int j = 0;
                 int record_offset = 0;
                 struct cd_entry_def *column_address;
+                int print_count = 0;
                 /* For every row in this file */
                 for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                 record_offset = 0;
                     /* For every column in the column */
                     for(j = 0; j < tab_entry->num_columns; j++){
                       column_address = list_cd_entry[j];
-                      printf("%s","|");
                       unsigned char tok_length = NULL;
                       memcpy(&tok_length, record_ptr + record_offset, 1);
                       record_offset++;
-                      /* If the column type is CHAR*/
-
-                       if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
-                         int col_len = column_address->col_len;
-                         if(tok_length == 0){ //NULL
-                            printf("%*s",-FORMAT_LENGTH, "NULL");
-                            record_offset = record_offset + col_len;
+                      if(!select_all){ //If projection
+                        for(int i = 0; i < count_proj; i++){
+                            //If one of these projection matches the current row from table
+                            if(strcasecmp(proj_col[i], column_address->col_name) == 0){
+                              printf("%s","|");
+                              /* If the column type is CHAR*/
+                               if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
+                                 int col_len = column_address->col_len;
+                                 if(tok_length == 0){ //NULL
+                                    printf("%*s",-FORMAT_LENGTH, "NULL");
+                                 }
+                                 else {
+                                   char temp_string[tok_length + 1];
+                                   memset(temp_string, '\0', tok_length + 1);
+                                   memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                                   printf("%*s", -FORMAT_LENGTH ,temp_string);
+                                 }
+                               }
+                               else { //column type is INT
+                                 if(tok_length == 0){ //NULL
+                                   printf("%*s",FORMAT_LENGTH,"NULL");
+                                 }
+                                 else {
+                                   int value = 0;
+                                   memcpy(&value, record_ptr+record_offset, sizeof(int));
+                                   printf("%*d",FORMAT_LENGTH,value);
+                                 }
+                               }
+                            }
+                        }
+                      }
+                      else { // SELECT ALL
+                        /* If the column type is CHAR*/
+                          printf("%s","|");
+                         if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
+                           int col_len = column_address->col_len;
+                           if(tok_length == 0){ //NULL
+                              printf("%*s",-FORMAT_LENGTH, "NULL");
+                           }
+                           else {
+                             char temp_string[tok_length + 1];
+                             memset(temp_string, '\0', tok_length + 1);
+                             memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                             printf("%*s", -FORMAT_LENGTH ,temp_string);
+                           }
                          }
-                         else {
-                           char temp_string[tok_length + 1];
-                           memset(temp_string, '\0', tok_length + 1);
-                           memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                           printf("%*s", -FORMAT_LENGTH ,temp_string);
-                           record_offset = record_offset + col_len;
+                         else { //column type is INT
+                           if(tok_length == 0){ //NULL
+                             printf("%*s",FORMAT_LENGTH,"NULL");
+                           }
+                           else {
+                             int value = 0;
+                             memcpy(&value, record_ptr+record_offset, sizeof(int));
+                             printf("%*d",FORMAT_LENGTH,value);
+                           }
                          }
-                       }
-                       else { //column type is INT
-                         if(tok_length == 0){ //NULL
-                           printf("%*s",FORMAT_LENGTH,"NULL");
-                           record_offset = record_offset + sizeof(int);
-                         }
-                         else {
-                           int value = 0;
-                           memcpy(&value, record_ptr+record_offset, sizeof(int));
-                           record_offset = record_offset + sizeof(int);
-                           printf("%*d",FORMAT_LENGTH,value);
-                         }
-                       }
+                      }
+                      record_offset = record_offset + column_address->col_len;
                     }
                     //At the end of each column
-                    record_ptr = record_ptr + tabfile_ptr->record_size;                  // printf("%p\n", record_ptr);
+                    record_ptr = record_ptr + tabfile_ptr->record_size;
+                    // printf("Print Count %d Count Proj %d", print_count, count_proj);
                     printf("|\n");
+
+
                 }
                 int count = 0;
-                for(count = 0; count < tab_entry->num_columns; count++){
+                for(count = 0; count < print_column; count++){
                   printf("%s","+--------------------");
                 }
                 printf("+\n");
