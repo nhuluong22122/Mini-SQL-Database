@@ -1866,17 +1866,16 @@ int sem_select(token_list *t_list) {
                                 }
                                 else if(!select_all) {
                                   int record_offset2 = 0;
-                                  for(int i = 0; i < count_proj; i++){ // for all projection row
-                                    for(j = 0; j < tab_entry->num_columns; j++)
+                                  for(int i = 0; i < count_proj; i++){ // for all projection column
+                                    for(j = 0; j < tab_entry->num_columns; j++) //search through all 5 columns
                                     {
+                                      int tok_length2 = NULL;
+                                      memcpy(&tok_length2, record_ptr+record_offset2, 1);
+                                      record_offset2++;
                                      /* If the column type is CHAR*/
                                      if(strcasecmp(proj_col[i], list_cd_entry[j]->col_name) == 0){
-                                       unsigned char tok_length2 = NULL;
-                                       memcpy(&tok_length2, record_ptr+record_offset2, 1);
-                                       record_offset2++;
                                        printf("%s","|");
                                        if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
-                                        int col_len2 = list_cd_entry[j]->col_len;
                                         if(tok_length2 == 0){ //NULL
                                            printf("%*s",-FORMAT_LENGTH, "NULL");
                                         }
@@ -1897,12 +1896,15 @@ int sem_select(token_list *t_list) {
                                           printf("%*d",FORMAT_LENGTH,value);
                                         }
                                       }
-                                      record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                                      i++;
                                      }
+                                     record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                                     // printf("%d\n", record_offset2);
                                     }
                                  }
                                 }
                                 printf("|\n");
+                              }//end checking for null
                                  // printf("%s\n", "display");
                                  // if(!select_all){ //If projection
                                  //   for(int i = 0; i < count_proj; i++){
@@ -1920,7 +1922,6 @@ int sem_select(token_list *t_list) {
                                  //   }
                                  // }
 
-                              }
                               // if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
                               //   if(*cond_relation_operator[0] == K_NOT && tok_length != 0){ //when its null
                               //      printf("%s\n", "display");
