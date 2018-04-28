@@ -1525,7 +1525,7 @@ int sem_select(token_list *t_list) {
                 //Store the column name
                 token_list *cond_column[2];
                 //Store the signs or null
-                int *cond_relation_operator[2];
+                token_list *cond_relation_operator[2];
                 //Store the data value
                 char *cond_value[2];
                 token_list *orderby_column;
@@ -1534,11 +1534,12 @@ int sem_select(token_list *t_list) {
                 bool where_flag = false;
                 bool orderby_flag = false;
                 bool multi_cond = false;
+                token_list *and_or = NULL;
+
                 /*Check for WHERE Clause */
                 token_list *cur2 = NULL;
                 if(cur->next != NULL && cur->next->tok_value == K_WHERE){
                     where_flag = true;
-                    token_list *and_or = NULL;
                     cur = cur->next;
                     if(cur->next == NULL || cur->next->tok_value == EOC){
                       rc = INVALID_SELECT_ALL_SYNTAX;
@@ -1556,8 +1557,8 @@ int sem_select(token_list *t_list) {
                               if(cur2->tok_value == S_EQUAL || cur2->tok_value == S_LESS || cur2->tok_value == S_GREATER){
                                   //belong to the signs
                                   printf("%s\n", "Sign");
-                                  cond_relation_operator[count_cond] = &cur2->tok_value;
-                                  printf("%d\n", *cond_relation_operator[count_cond]);
+                                  cond_relation_operator[count_cond] = cur2;
+                                  printf("%d\n", cond_relation_operator[count_cond]->tok_value);
                                   if(cur2->next != NULL && cur2->next->tok_value != EOC){
                                       cur2 = cur2->next;
                                       if(cur2->tok_value == STRING_LITERAL){ //char
@@ -1595,8 +1596,8 @@ int sem_select(token_list *t_list) {
                                   if(cur2->next != NULL && cur2->next->tok_value == K_NULL)
                                   {
                                     printf("%s\n", "Is Not Null");
-                                    cond_relation_operator[count_cond] = &cur2->tok_value;
-                                    printf("%d\n", *cond_relation_operator[count_cond]);
+                                    cond_relation_operator[count_cond] = cur2;
+                                    printf("%d\n", cond_relation_operator[count_cond]->tok_value);
                                     cur2 = cur2->next;
                                   }
                                   else {
@@ -1610,8 +1611,8 @@ int sem_select(token_list *t_list) {
                                 else if(cur2->next != NULL && cur2->next->tok_value == K_NULL)
                                 {
                                   printf("%s\n", "Is Null");
-                                  cond_relation_operator[count_cond] = &cur2->next->tok_value;
-                                  printf("%d\n", *cond_relation_operator[count_cond]);
+                                  cond_relation_operator[count_cond] = cur2->next;
+                                  printf("%d\n", cond_relation_operator[count_cond]->tok_value);
                                   cur2 = cur2->next;
 
                                 }
@@ -1810,8 +1811,13 @@ int sem_select(token_list *t_list) {
                 int j = 0;
                 int record_offset = 0;
                 int print_count = 0;
+                int total_row = 0;
                 int row_select = 0;
+                int row_select2 = 0;
                 struct cd_entry_def *column_address;
+                char* record_to_print[tabfile_ptr->num_records]; //Array of all possible records to print;
+                char* record_to_print2[tabfile_ptr->num_records]; //Array of all possible records to print;
+                char* record_to_print_final[tabfile_ptr->num_records];
                 /* For every row in this file */
                 for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                 record_offset = 0;
@@ -1821,191 +1827,251 @@ int sem_select(token_list *t_list) {
                       unsigned char tok_length = NULL;
                       memcpy(&tok_length, record_ptr+record_offset, 1);
                       record_offset++;
-                      if(where_flag){
-                         if(multi_cond){//if both condition
 
-                         }
-                         else { //one condition
-                            if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
-                              if(*cond_relation_operator[0] == K_NULL && tok_length == 0){ //when its null & check if is null
-                                // printf("%p\n", record_ptr);
-                                row_select++;
-                                if(select_all) { // SELECT ALL
-                                   int record_offset2 = 0;
-                                   for(j = 0; j < tab_entry->num_columns; j++)
-                                   {
-                                    /* If the column type is CHAR*/
-                                    unsigned char tok_length2 = NULL;
-                                    memcpy(&tok_length2, record_ptr+record_offset2, 1);
-                                    record_offset2++;
-                                    printf("%s","|");
-                                    if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
-                                     int col_len2 = list_cd_entry[j]->col_len;
-                                     if(tok_length2 == 0){ //NULL
-                                        printf("%*s",-FORMAT_LENGTH, "NULL");
-                                     }
-                                     else {
-                                       char temp_string[tok_length2 + 1];
-                                       memset(temp_string, '\0', tok_length2 + 1);
-                                       memcpy(&temp_string, record_ptr+record_offset2, tok_length2);
-                                       printf("%*s", -FORMAT_LENGTH ,temp_string);
-                                     }
-                                   }
-                                   else { //column type is INT
-                                     if(tok_length2 == 0){ //NULL
-                                       printf("%*s",FORMAT_LENGTH,"NULL");
-                                     }
-                                     else {
-                                       int value = 0;
-                                       memcpy(&value, record_ptr+record_offset2, sizeof(int));
-                                       printf("%*d",FORMAT_LENGTH,value);
-                                     }
-                                   }
-                                   record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                      //If there is a where flag
+                      if(where_flag){
+                        if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
+                          if(cond_relation_operator[0]->tok_value == K_NULL && tok_length == 0){ //when its null & check if is null
+                            record_to_print[row_select] = record_ptr;
+                            row_select++;
+                          }//end checking for null
+                          else if(cond_relation_operator[0]->tok_value == K_NOT && tok_length != 0){
+                            record_to_print[row_select] = record_ptr;
+                            row_select++;
+                          }
+                          else { // must be relational
+                            if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
+                            {
+                              char temp_string[tok_length + 1];
+                              memset(temp_string, '\0', tok_length + 1);
+                              memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                                  // printf("%s\n", temp_string);
+                              if(cond_relation_operator[0]->tok_value == S_EQUAL){
+                                if(strcasecmp(cond_value[0], temp_string) == 0){
+                                    record_to_print[row_select] = record_ptr;
+                                    row_select++;
+                                }
+                              }
+                              else { //REDO - MOVE TO TOP
+                                  rc = INVALID_SELECT_ALL_SYNTAX;
+                                  cond_relation_operator[0]->tok_value = INVALID;
+                                  printf("%s\n", "Can't have > or < for column type String");
+                                  return rc;
+                              }
+                            }
+                            else{ // this must be int
+                              int temp_num = 0;
+                              memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
+                              int *extract_value = (int*)cond_value[0];
+                              if(cond_relation_operator[0]->tok_value == S_EQUAL
+                                && temp_num == *extract_value){
+                                  record_to_print[row_select] = record_ptr;
+                                  row_select++;
+                                }
+                              else if(cond_relation_operator[0]->tok_value == S_GREATER
+                                && temp_num > *extract_value)
+                                {
+                                  record_to_print[row_select] = record_ptr;
+                                  row_select++;
+                                }
+                              else if(cond_relation_operator[0]->tok_value == S_LESS
+                                && temp_num < *extract_value)
+                                {
+                                  record_to_print[row_select] = record_ptr;
+                                  row_select++;
+                                }
+                            }
+                          }
+                        }
+                        if(multi_cond){//if both condition
+                            int boolean = and_or->tok_value;
+                            //If match the column name -> find the matching cell
+                            if(strcasecmp(cond_column[1]->tok_string, column_address->col_name) == 0){
+                              if(cond_relation_operator[1]->tok_value == K_NULL && tok_length == 0){ //when its null & check if is null
+                                record_to_print2[row_select2] = record_ptr;
+                                row_select2++;
+                              }//end checking for null
+                              else if(cond_relation_operator[1]->tok_value == K_NOT && tok_length != 0){
+                                record_to_print2[row_select2] = record_ptr;
+                                row_select2++;
+                              }
+                              else { // must be relational
+                                if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
+                                {
+                                  char temp_string[tok_length + 1];
+                                  memset(temp_string, '\0', tok_length + 1);
+                                  memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                                      // printf("%s\n", temp_string);
+                                  if(cond_relation_operator[1]->tok_value == S_EQUAL){
+                                    if(strcasecmp(cond_value[1], temp_string) == 0){
+                                        record_to_print2[row_select2] = record_ptr;
+                                        row_select2++;
+                                    }
+                                  }
+                                  else { //REDO - MOVE TO TOP
+                                      rc = INVALID_SELECT_ALL_SYNTAX;
+                                      cond_relation_operator[1]->tok_value = INVALID;
+                                      printf("%s\n", "Can't have > or < for column type String");
+                                      return rc;
                                   }
                                 }
-                                else if(!select_all) {
-                                  int record_offset2 = 0;
-                                  for(int i = 0; i < count_proj; i++){ // for all projection column
-                                    for(j = 0; j < tab_entry->num_columns; j++) //search through all 5 columns
-                                    {
-                                      int tok_length2 = NULL;
-                                      memcpy(&tok_length2, record_ptr+record_offset2, 1);
-                                      record_offset2++;
-                                     /* If the column type is CHAR*/
-                                     if(strcasecmp(proj_col[i], list_cd_entry[j]->col_name) == 0){
-                                       printf("%s","|");
-                                       if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
-                                        if(tok_length2 == 0){ //NULL
-                                           printf("%*s",-FORMAT_LENGTH, "NULL");
-                                        }
-                                        else {
-                                          char temp_string[tok_length2 + 1];
-                                          memset(temp_string, '\0', tok_length2 + 1);
-                                          memcpy(&temp_string, record_ptr+record_offset2, tok_length2);
-                                          printf("%*s", -FORMAT_LENGTH ,temp_string);
-                                        }
-                                      }
-                                      else { //column type is INT
-                                        if(tok_length2 == 0){ //NULL
-                                          printf("%*s",FORMAT_LENGTH,"NULL");
-                                        }
-                                        else {
-                                          int value = 0;
-                                          memcpy(&value, record_ptr+record_offset2, sizeof(int));
-                                          printf("%*d",FORMAT_LENGTH,value);
-                                        }
-                                      }
-                                      i++;
-                                     }
-                                     record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
-                                     // printf("%d\n", record_offset2);
+                                else{ // this must be int
+                                  int temp_num = 0;
+                                  memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
+                                  int *extract_value = (int*)cond_value[1];
+                                  if(cond_relation_operator[1]->tok_value == S_EQUAL
+                                    && temp_num == *extract_value){
+                                      record_to_print2[row_select2] = record_ptr;
+                                      row_select2++;
                                     }
-                                 }
+                                  else if(cond_relation_operator[1]->tok_value == S_GREATER
+                                    && temp_num > *extract_value)
+                                    {
+                                      record_to_print2[row_select2] = record_ptr;
+                                      row_select2++;
+                                    }
+                                  else if(cond_relation_operator[1]->tok_value == S_LESS
+                                    && temp_num < *extract_value)
+                                    {
+                                      record_to_print2[row_select2] = record_ptr;
+                                      row_select2++;
+                                    }
                                 }
-                                printf("|\n");
-                              }//end checking for null
-                                 // printf("%s\n", "display");
-                                 // if(!select_all){ //If projection
-                                 //   for(int i = 0; i < count_proj; i++){
-                                 //     for(j = 0; j < tab_entry->num_columns; j++){
-                                 //       //If one of these projection matches the current row from table
-                                 //       if(strcasecmp(proj_col[i], list_cd_entry[j]->col_name) == 0){
-                                 //        if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
-                                 //          printf("%*s",-FORMAT_LENGTH, "NULL");
-                                 //        }
-                                 //        else{
-                                 //          printf("%*s",FORMAT_LENGTH, "NULL");
-                                 //        }
-                                 //       }
-                                 //     }
-                                 //   }
-                                 // }
-
-                              // if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
-                              //   if(*cond_relation_operator[0] == K_NOT && tok_length != 0){ //when its null
-                              //      printf("%s\n", "display");
-                              //   }
-                              //   char temp_string[tok_length + 1];
-                              //   memset(temp_string, '\0', tok_length + 1);
-                              //   memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                              // }
-                              // else { // int type
-                              //
-                              // }
+                              }
                             }
-                         }
+                        }
+                        else {
+                          total_row=row_select;
+                        }
                       }
-
-                      // if(!select_all){ //If projection
-                      //   for(int i = 0; i < count_proj; i++){
-                      //       //If one of these projection matches the current row from table
-                      //       if(strcasecmp(proj_col[i], column_address->col_name) == 0){
-                      //         printf("%s","|");
-                      //         /* If the column type is CHAR*/
-                      //          if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
-                      //            int col_len = column_address->col_len;
-                      //            if(tok_length == 0){ //NULL
-                      //               printf("%*s",-FORMAT_LENGTH, "NULL");
-                      //            }
-                      //            else {
-                      //              char temp_string[tok_length + 1];
-                      //              memset(temp_string, '\0', tok_length + 1);
-                      //              memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                      //              printf("%*s", -FORMAT_LENGTH ,temp_string);
-                      //            }
-                      //          }
-                      //          else { //column type is INT
-                      //            if(tok_length == 0){ //NULL
-                      //              printf("%*s",FORMAT_LENGTH,"NULL");
-                      //            }
-                      //            else {
-                      //              int value = 0;
-                      //              memcpy(&value, record_ptr+record_offset, sizeof(int));
-                      //              printf("%*d",FORMAT_LENGTH,value);
-                      //            }
-                      //          }
-                      //       }
-                      //   }
-                      // }
-                      // else { // SELECT ALL
-                      //   /* If the column type is CHAR*/
-                      //     printf("%s","|");
-                      //    if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR){
-                      //      int col_len = column_address->col_len;
-                      //      if(tok_length == 0){ //NULL
-                      //         printf("%*s",-FORMAT_LENGTH, "NULL");
-                      //      }
-                      //      else {
-                      //        char temp_string[tok_length + 1];
-                      //        memset(temp_string, '\0', tok_length + 1);
-                      //        memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                      //        printf("%*s", -FORMAT_LENGTH ,temp_string);
-                      //      }
-                      //    }
-                      //    else { //column type is INT
-                      //      if(tok_length == 0){ //NULL
-                      //        printf("%*s",FORMAT_LENGTH,"NULL");
-                      //      }
-                      //      else {
-                      //        int value = 0;
-                      //        memcpy(&value, record_ptr+record_offset, sizeof(int));
-                      //        printf("%*d",FORMAT_LENGTH,value);
-                      //      }
-                      //    }
-                      // }
                       record_offset = record_offset + column_address->col_len;
+                    }
+                    if(!where_flag && !orderby_flag){
+                      record_to_print[row_select] = record_ptr;
+                      row_select++;
                     }
                     //At the end of each column
                     record_ptr = record_ptr + tabfile_ptr->record_size;
                     // printf("Print Count %d Count Proj %d", print_count, count_proj);
+                }
+                if(!multi_cond){
+                  for(int m = 0; m < row_select; m++){
+                    record_to_print_final[m] = record_to_print[m];
+                  }
+                }
+                else{
+                  if(and_or->tok_value == K_AND){
+                      for(int m = 0; m < row_select2; m++){
+                        for(int n = 0; n < row_select; n++){
+                          if(record_to_print2[m] == record_to_print[n]){
+                            record_to_print_final[total_row++] = record_to_print2[m];
+                            m++;
+                          }
+                        }
+                      }
+                  }else if(and_or->tok_value == K_OR){
+                    for(int i = 0; i < row_select; i++){
+                      record_to_print_final[i] = record_to_print[i];
+                      total_row++;
+                    }
+                    for(int m = 0; m < row_select2; m++){
+                      bool found = false;
+                      for(int n = 0; n < row_select; n++){
+                        if(record_to_print2[m] == record_to_print[n]){
+                            found = true;
+                            n++;
+                        }
+                      }
+                      if(!found){
+                        record_to_print_final[total_row++] = record_to_print2[m];
+                      }
+                    }
+                  }
+                }
+
+                for(int z = 0; z < total_row; z++){
+                    record_ptr = record_to_print_final[z];
+                    if(select_all) { // SELECT ALL
+                       int record_offset2 = 0;
+                       for(j = 0; j < tab_entry->num_columns; j++)
+                       {
+                        /* If the column type is CHAR*/
+                        unsigned char tok_length2 = NULL;
+                        memcpy(&tok_length2, record_ptr+record_offset2, 1);
+                        record_offset2++;
+                        printf("%s","|");
+                        if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
+                         int col_len2 = list_cd_entry[j]->col_len;
+                         if(tok_length2 == 0){ //NULL
+                            printf("%*s",-FORMAT_LENGTH, "NULL");
+                         }
+                         else {
+                           char temp_string[tok_length2 + 1];
+                           memset(temp_string, '\0', tok_length2 + 1);
+                           memcpy(&temp_string, record_ptr+record_offset2, tok_length2);
+                           printf("%*s", -FORMAT_LENGTH ,temp_string);
+                         }
+                       }
+                       else { //column type is INT
+                         if(tok_length2 == 0){ //NULL
+                           printf("%*s",FORMAT_LENGTH,"NULL");
+                         }
+                         else {
+                           int value = 0;
+                           memcpy(&value, record_ptr+record_offset2, sizeof(int));
+                           printf("%*d",FORMAT_LENGTH,value);
+                         }
+                       }
+                       record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                      }
+                    }
+                    else if(!select_all) {
+                      int record_offset2 = 0;
+                      for(int i = 0; i < count_proj; i++){ // for all projection column
+                        for(j = 0; j < tab_entry->num_columns; j++) //search through all 5 columns
+                        {
+                          int tok_length2 = NULL;
+                          memcpy(&tok_length2, record_ptr+record_offset2, 1);
+                          record_offset2++;
+                         /* If the column type is CHAR*/
+                         if(strcasecmp(proj_col[i], list_cd_entry[j]->col_name) == 0){
+                           printf("%s","|");
+                           if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
+                            if(tok_length2 == 0){ //NULL
+                               printf("%*s",-FORMAT_LENGTH, "NULL");
+                            }
+                            else {
+                              char temp_string[tok_length2 + 1];
+                              memset(temp_string, '\0', tok_length2 + 1);
+                              memcpy(&temp_string, record_ptr+record_offset2, tok_length2);
+                              printf("%*s", -FORMAT_LENGTH ,temp_string);
+                            }
+                          }
+                          else { //column type is INT
+                            if(tok_length2 == 0){ //NULL
+                              printf("%*s",FORMAT_LENGTH,"NULL");
+                            }
+                            else {
+                              int value = 0;
+                              memcpy(&value, record_ptr+record_offset2, sizeof(int));
+                              printf("%*d",FORMAT_LENGTH,value);
+                            }
+                          }
+                          i++;
+                         }
+                         record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                        }
+                     }
+                    }
+                    printf("|\n");
+
                 }
                 int count = 0;
                 for(count = 0; count < print_column; count++){
                   printf("%s","+--------------------");
                 }
                 printf("+\n");
-                printf("%d rows selected.\n", row_select);
+                printf("%d rows selected.\n", total_row);
 
                 fflush(fhandle);
                 fclose(fhandle);
