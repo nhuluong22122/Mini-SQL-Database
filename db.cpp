@@ -1485,7 +1485,7 @@ int sem_select(token_list *t_list) {
       }
       else {
         //check for aggregate functions
-        if(cur->tok_value == F_SUM || cur->tok_value == F_AVG || cur->tok_value != F_COUNT) { //Has an aggregate
+        if(cur->tok_value == F_SUM || cur->tok_value == F_AVG || cur->tok_value == F_COUNT) { //Has an aggregate
           aggregate_func = cur;
           cur = cur->next; //This must be ()
           if(cur->tok_value != S_LEFT_PAREN){
@@ -1874,7 +1874,9 @@ int sem_select(token_list *t_list) {
                 //   return rc;
                 // }
 
-
+                if(aggregate_func != NULL){
+                  print_column = 1;
+                }
 
                 //If everything is ok -> start printing
                 for(int count = 0; count < print_column; count++){
@@ -1887,7 +1889,27 @@ int sem_select(token_list *t_list) {
                 {
                     //Start printing out results
                     if(!select_all){
-                      printf("|%*s", -FORMAT_LENGTH, proj_col[i]);
+                      if(aggregate_func != NULL){
+                        char *end = ")";
+                        char *start = "";
+                        char combine[MAX_TOK_LEN];
+                        if(aggregate_func->tok_value == F_SUM){
+                             start = "SUM(";
+                        }
+                        else if(aggregate_func->tok_value == F_COUNT){
+                             start = "COUNT(";
+                        }
+                        else if(aggregate_func->tok_value == F_AVG){
+                             start = "AVG(";
+                        }
+                        strcpy(combine, start);
+                        strcat(combine, proj_col[i]);
+                        strcat(combine, end);
+                        printf("|%*s", -FORMAT_LENGTH, combine);
+                      }
+                      else{
+                        printf("|%*s", -FORMAT_LENGTH, proj_col[i]);
+                      }
                     }
                     else {
                       printf("|%*s", -FORMAT_LENGTH, list_cd_entry[i]->col_name);
@@ -2134,7 +2156,7 @@ int sem_select(token_list *t_list) {
                     }//End INT
                   } //End loop
                 }//End order by
-
+                int aggregate_result = 0;
                 // PRINT EVERYTHING
                 for(int z = 0; z < total_row; z++){
                     record_ptr = record_to_print_final[z];
