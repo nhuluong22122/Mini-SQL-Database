@@ -1535,6 +1535,7 @@ int sem_select(token_list *t_list) {
                 bool orderby_flag = false;
                 bool multi_cond = false;
                 token_list *and_or = NULL;
+                bool order_desc = false;
 
                 /*Check for WHERE Clause */
                 token_list *cur2 = NULL;
@@ -1663,6 +1664,9 @@ int sem_select(token_list *t_list) {
                           printf("%d\n", cur->next->next->next->tok_value);
                           if(cur2->next->next->next->tok_value == IDENT){
                               orderby_column = cur2->next->next->next;
+                              if(orderby_column->next->tok_value == K_DESC){
+                                 order_desc = true;
+                              }
                               orderby_flag = true;
                               printf("%s\n", "Order By Clause");
                           }
@@ -1947,19 +1951,15 @@ int sem_select(token_list *t_list) {
                       record_offset = record_offset + column_address->col_len;
                     }
                     if(!where_flag && !orderby_flag){
-                      record_to_print[row_select] = record_ptr;
-                      row_select++;
+                      record_to_print_final[cur_row] = record_ptr;
+                      total_row++;
                     }
                     //At the end of each column
                     record_ptr = record_ptr + tabfile_ptr->record_size;
                     // printf("Print Count %d Count Proj %d", print_count, count_proj);
                 }
-                if(!multi_cond){
-                  for(int m = 0; m < row_select; m++){
-                    record_to_print_final[m] = record_to_print[m];
-                  }
-                }
-                else{
+                //Handle AND and OR statement
+                if(multi_cond){
                   if(and_or->tok_value == K_AND){
                       for(int m = 0; m < row_select2; m++){
                         for(int n = 0; n < row_select; n++){
@@ -1989,6 +1989,13 @@ int sem_select(token_list *t_list) {
                   }
                 }
 
+
+                // if(orderby_flag && order_desc){
+                //
+                // }
+                // else if(orderby_flag && !order_desc){
+                //
+                // }
                 for(int z = 0; z < total_row; z++){
                     record_ptr = record_to_print_final[z];
                     if(select_all) { // SELECT ALL
