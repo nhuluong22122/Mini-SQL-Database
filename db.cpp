@@ -1528,43 +1528,37 @@ int sem_select(token_list *t_list) {
                 int *cond_relation_operator[2];
                 //Store the data value
                 char *cond_value[2];
-
+                char *orderby_column;
                 // int *cond_value_int[2];
 
                 bool where_flag = false;
+                bool orderby_flag = false;
                 bool multi_cond = false;
                 /*Check for WHERE Clause */
                 token_list *cur2 = NULL;
                 if(cur->next != NULL && cur->next->tok_value == K_WHERE){
                     where_flag = true;
                     token_list *and_or = NULL;
-                    cur = cur->next; //Make pointer 1 stay at WHERE
+                    cur = cur->next;
+                    if(cur->next == NULL || cur->next->tok_value == EOC){
+                      rc = INVALID_SELECT_ALL_SYNTAX;
+                      cur->tok_value = INVALID;
+                      printf("%s\n", "Invalid WHERE syntax");
+                      return rc;
+                    }
                     cur2 = cur->next; // jump to column
-                    if(cur2->next->next->next->next != NULL
-                      && (cur2->next->next->next->next->tok_value == K_AND || cur2->next->next->next->next->tok_value == K_OR))
-                    {
-                      and_or = cur2->next->next->next->next;
-                      multi_cond = true;
-                    }
-                    else if(cur2->next->next->next != NULL
-                      && (cur2->next->next->next->tok_value == K_AND || cur2->next->next->next->tok_value == K_OR))
-                    {
-                      and_or = cur2->next->next->next;
-                      multi_cond = true;
-                    }
                     do{ //Check each condition
-                          if(cur2 != NULL){ //Start scanning for column
+                          if(cur2 != NULL && cur2->tok_value == IDENT){ //Start scanning for column
                             cond_column[count_cond] = cur2->tok_string;
-                            // strcpy(, );
                             printf("Column %d: %s\n",count_cond,cond_column[count_cond]); //condition
-                            if(cur2->next != NULL){
+                            if(cur2->next != NULL && cur2->next->tok_value != EOC){
                               cur2 = cur2->next;
                               if(cur2->tok_value == S_EQUAL || cur2->tok_value == S_LESS || cur2->tok_value == S_GREATER){
                                   //belong to the signs
                                   printf("%s\n", "Sign");
                                   cond_relation_operator[count_cond] = &cur2->tok_value;
                                   printf("%d\n", *cond_relation_operator[count_cond]);
-                                  if(cur2->next != NULL){
+                                  if(cur2->next != NULL && cur2->next->tok_value != EOC){
                                       cur2 = cur2->next;
                                       if(cur2->tok_value == STRING_LITERAL){ //char
                                          cond_value[count_cond] = cur2->tok_string;
@@ -1592,11 +1586,13 @@ int sem_select(token_list *t_list) {
                                   cur2 = cur2->next;
                                   if(cur2->next != NULL && cur2->next->tok_value == K_NULL)
                                   {
+                                    cur2 = cur2->next;
                                     printf("%s\n", "Is Not Null");
                                     cond_relation_operator[count_cond] = &cur2->next->tok_value;
                                     printf("%d\n", *cond_relation_operator[count_cond]);
                                   }
                                   else {
+
                                     rc = INVALID_SELECT_ALL_SYNTAX;
                                     cur2->next->tok_value = INVALID;
                                     printf("%s\n", "Syntax doesn't match IS NOT NULL condition");
@@ -1605,6 +1601,7 @@ int sem_select(token_list *t_list) {
                                 }
                                 else if(cur2->next != NULL && cur2->next->tok_value == K_NULL)
                                 {
+                                  cur2 = cur2->next;
                                   printf("%s\n", "Is Null");
                                   cond_relation_operator[count_cond] = &cur2->next->tok_value;
                                   printf("%d\n", *cond_relation_operator[count_cond]);
@@ -1616,7 +1613,7 @@ int sem_select(token_list *t_list) {
                                   return rc;
                                 }
                               }
-                              if(cur2->next->tok_value == EOC){
+                              if(cur2->tok_value == EOC){
                                 rc = INVALID_SELECT_ALL_SYNTAX;
                                 cur2->tok_value = INVALID;
                                 printf("%s\n", "Syntax doesn't match any condition");
@@ -1630,20 +1627,56 @@ int sem_select(token_list *t_list) {
                                return rc;
                             }
                           }
-                          if(!rc && and_or != NULL){
-                            cur2 = and_or;
-                            if(cur2->next->tok_value == EOC){
-                              rc = INVALID_SELECT_ALL_SYNTAX;
-                              cur2->tok_value = INVALID;
-                              printf("%s\n", "Incomplete condition");
-                              return rc;
+                          if(!rc && !multi_cond){
+                             if(cur2->next != NULL
+                                && (cur2->next->tok_value == K_AND || cur2->next->tok_value == K_OR))
+                              {
+                                  and_or = cur2->next;
+                                  multi_cond = true;
+                                  cur2 = and_or;
+                                  if(cur2->next->tok_value == EOC){
+                                    rc = INVALID_SELECT_ALL_SYNTAX;
+                                    cur2->tok_value = INVALID;
+                                    printf("%s\n", "Incomplete condition");
+                                    return rc;
+                                  }
+                                  else{
+                                    cur2 = and_or->next;
+                                  }
                             }
-                            else{
-                              cur2 = and_or->next;
-                            }
-                            count_cond++;
                           }
+                          count_cond++;
                     }while(multi_cond && count_cond < 2);
+                }
+                else if(cur->next != NULL && cur->next->tok_value == K_ORDER){
+                    if(cur->next->next != NULL && cur->next->next->tok_value == K_BY){
+                        printf("%d\n", cur->next->next->next->tok_value);
+                        if(cur->next->next->next->tok_value == IDENT){
+                            orderby_column = cur->next->next->next->tok_string;
+                            orderby_flag = true;
+                            printf("%s\n", "Order By Clause");
+                        }
+                        else {
+                          rc = INVALID_SELECT_ALL_SYNTAX;
+                          cur->next->next->next->tok_value = INVALID;
+                          printf("%s\n", "Invalid Column Name");
+                          return rc;
+                        }
+                    }
+                    else {
+                      rc = INVALID_SELECT_ALL_SYNTAX;
+                      cur->next->next->tok_value = INVALID;
+                      printf("%s\n", "Invalid Order By Syntax");
+                      return rc;
+                    }
+                }
+                else {
+                  if(cur->next->tok_value != EOC){
+                    rc = INVALID_SELECT_ALL_SYNTAX;
+                    cur->next->tok_value = INVALID;
+                    printf("%s\n", "Invalid Syntax Error");
+                    return rc;
+                  }
                 }
 
                 int i = 0;
