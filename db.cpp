@@ -1495,13 +1495,6 @@ int sem_select(token_list *t_list) {
       }
     }
     if(!rc){
-      /* Check if it has the valid syntax - FROM */
-      // if(cur->tok_value != K_FROM){
-      //   rc = INVALID_SELECT_ALL_SYNTAX;
-      //   cur->tok_value = INVALID;
-      // }
-      // else {
-
         cur = cur->next;
          /* Check for table name */
         if ((cur->tok_class != keyword) &&
@@ -1527,8 +1520,133 @@ int sem_select(token_list *t_list) {
                 /* Jump to the first record  */
                 record_ptr+= tabfile_ptr->record_offset;
                 struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
-                int i = 0;
 
+                int count_cond = 0;
+                //Store the column name
+                char *cond_column[2];
+                //Store the signs or null
+                int *cond_relation_operator[2];
+                //Store the data value
+                char *cond_value[2];
+
+                // int *cond_value_int[2];
+
+                bool where_flag = false;
+                bool multi_cond = false;
+                /*Check for WHERE Clause */
+                token_list *cur2 = NULL;
+                if(cur->next != NULL && cur->next->tok_value == K_WHERE){
+                    where_flag = true;
+                    token_list *and_or = NULL;
+                    cur = cur->next; //Make pointer 1 stay at WHERE
+                    cur2 = cur->next; // jump to column
+                    if(cur2->next->next->next->next != NULL
+                      && (cur2->next->next->next->next->tok_value == K_AND || cur2->next->next->next->next->tok_value == K_OR))
+                    {
+                      and_or = cur2->next->next->next->next;
+                      multi_cond = true;
+                    }
+                    else if(cur2->next->next->next != NULL
+                      && (cur2->next->next->next->tok_value == K_AND || cur2->next->next->next->tok_value == K_OR))
+                    {
+                      and_or = cur2->next->next->next;
+                      multi_cond = true;
+                    }
+                    do{ //Check each condition
+                          if(cur2 != NULL){ //Start scanning for column
+                            cond_column[count_cond] = cur2->tok_string;
+                            // strcpy(, );
+                            printf("Column %d: %s\n",count_cond,cond_column[count_cond]); //condition
+                            if(cur2->next != NULL){
+                              cur2 = cur2->next;
+                              if(cur2->tok_value == S_EQUAL || cur2->tok_value == S_LESS || cur2->tok_value == S_GREATER){
+                                  //belong to the signs
+                                  printf("%s\n", "Sign");
+                                  cond_relation_operator[count_cond] = &cur2->tok_value;
+                                  printf("%d\n", *cond_relation_operator[count_cond]);
+                                  if(cur2->next != NULL){
+                                      cur2 = cur2->next;
+                                      if(cur2->tok_value == STRING_LITERAL){ //char
+                                         cond_value[count_cond] = cur2->tok_string;
+                                         printf("%s\n", cond_value[count_cond]);
+                                      }
+                                      else{ //must be int
+                                         printf("%s \n", cur2->tok_string);
+                                         int temp_int = atoi(cur2->tok_string);
+                                         int *p_int = &temp_int;
+                                         cond_value[count_cond] = (char*)p_int;
+                                         int *back = (int*)cond_value[count_cond];
+                                         printf("%d\n", *back);
+                                      }
+                                  }
+                                  else{
+                                    rc = INVALID_SELECT_ALL_SYNTAX;
+                                    cur2->tok_value = INVALID;
+                                    printf("%s\n", "Syntax doesn't match any relational operator");
+                                    return rc;
+                                  }
+                              }
+                              else if(cur2->tok_value == K_IS){
+                                // is null
+                                if(cur2->next != NULL && cur2->next->tok_value == K_NOT){
+                                  cur2 = cur2->next;
+                                  if(cur2->next != NULL && cur2->next->tok_value == K_NULL)
+                                  {
+                                    printf("%s\n", "Is Not Null");
+                                    cond_relation_operator[count_cond] = &cur2->next->tok_value;
+                                    printf("%d\n", *cond_relation_operator[count_cond]);
+                                  }
+                                  else {
+                                    rc = INVALID_SELECT_ALL_SYNTAX;
+                                    cur2->next->tok_value = INVALID;
+                                    printf("%s\n", "Syntax doesn't match IS NOT NULL condition");
+                                    return rc;
+                                  }
+                                }
+                                else if(cur2->next != NULL && cur2->next->tok_value == K_NULL)
+                                {
+                                  printf("%s\n", "Is Null");
+                                  cond_relation_operator[count_cond] = &cur2->next->tok_value;
+                                  printf("%d\n", *cond_relation_operator[count_cond]);
+                                }
+                                else {
+                                  rc = INVALID_SELECT_ALL_SYNTAX;
+                                  cur2->next->tok_value = INVALID;
+                                  printf("%s\n", "Syntax doesn't match IS NULL condition");
+                                  return rc;
+                                }
+                              }
+                              if(cur2->next->tok_value == EOC){
+                                rc = INVALID_SELECT_ALL_SYNTAX;
+                                cur2->tok_value = INVALID;
+                                printf("%s\n", "Syntax doesn't match any condition");
+                                return rc;
+                              }
+                            }
+                            else {
+                               rc = INVALID_SELECT_ALL_SYNTAX;
+                               cur2->tok_value = INVALID;
+                               printf("%s\n", "Incomplete condition");
+                               return rc;
+                            }
+                          }
+                          if(!rc && and_or != NULL){
+                            cur2 = and_or;
+                            if(cur2->next->tok_value == EOC){
+                              rc = INVALID_SELECT_ALL_SYNTAX;
+                              cur2->tok_value = INVALID;
+                              printf("%s\n", "Incomplete condition");
+                              return rc;
+                            }
+                            else{
+                              cur2 = and_or->next;
+                            }
+                            count_cond++;
+                          }
+                    }while(multi_cond && count_cond < 2);
+                }
+
+                int i = 0;
                 //Get all the column information from file
                 for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
                     i < tab_entry->num_columns; i++, col_entry++)
@@ -1585,11 +1703,12 @@ int sem_select(token_list *t_list) {
                 }
                 printf("+\n");
 
+
                 //Start printing data
                 int j = 0;
                 int record_offset = 0;
-                struct cd_entry_def *column_address;
                 int print_count = 0;
+                struct cd_entry_def *column_address;
                 /* For every row in this file */
                 for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                 record_offset = 0;
@@ -1676,15 +1795,15 @@ int sem_select(token_list *t_list) {
                 fclose(fhandle);
               }
           }
-          if(!rc)
-            {
-              cur = cur->next; //Should be the terminator
-              if (cur->tok_value != EOC)
-                {
-                  rc = INVALID_TABLE_DEFINITION;
-                  cur->tok_value = INVALID;
-                }//End checking for terminator
-            }
+          // if(!rc)
+          //   {
+          //     cur = cur->next; //Should be the terminator
+          //     if (cur->tok_value != EOC)
+          //       {
+          //         rc = INVALID_TABLE_DEFINITION;
+          //         cur->tok_value = INVALID;
+          //       }//End checking for terminator
+          //   }
           }//End checking if that table exist
       }// End checking for invalid table
 
