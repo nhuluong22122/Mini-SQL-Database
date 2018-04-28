@@ -1461,16 +1461,19 @@ int sem_select(token_list *t_list) {
     /* Set the current pointer to the token list */
     cur = t_list;
 
-    token_list *cur_projection;
+    token_list *cur_projection = NULL;
+    token_list *aggregate_func = NULL;
     int count_proj = 0;
     char proj_col[MAX_NUM_COL][MAX_TOK_LEN];
 
     bool select_all = false;
+    //Check for SELECT ALL
     if(cur->tok_value == S_STAR){
         select_all = true;
         cur = cur->next;
         if(cur->tok_value != K_FROM){
           rc = INVALID_SELECT_ALL_SYNTAX;
+          printf("%s\n", "Invalid SELECT ALL query");
           cur->tok_value = INVALID;
           return rc;
         }
@@ -1481,16 +1484,67 @@ int sem_select(token_list *t_list) {
         cur->tok_value = INVALID;
       }
       else {
-        cur_projection = cur;
-        /* Check for projection column */
-        while(cur->tok_value != K_FROM){
-          strcpy(proj_col[count_proj], cur->tok_string);
-          // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
-          count_proj++;
-          cur = cur->next;
-          if(cur->tok_value == S_COMMA && cur->next != NULL){
-            cur = cur->next;
+        //check for aggregate functions
+        if(cur->tok_value == F_SUM || cur->tok_value == F_AVG || cur->tok_value != F_COUNT) { //Has an aggregate
+          aggregate_func = cur;
+          cur = cur->next; //This must be ()
+          if(cur->tok_value != S_LEFT_PAREN){
+            rc = INVALID_SELECT_ALL_SYNTAX;
+            cur->tok_value = INVALID;
+            printf("%s\n", "Invalid or missing (");
           }
+          else { // continue parsing projection column
+               cur = cur->next;
+               if(cur->tok_value != IDENT){
+                 rc = INVALID_SELECT_ALL_SYNTAX;
+                 cur->tok_value = INVALID;
+                 printf("%s\n", "Invalid or missing column name");
+               }
+               else{
+                 cur_projection = cur;
+                 /* Check for projection column */
+                 while(cur->tok_value != S_RIGHT_PAREN){
+                   strcpy(proj_col[count_proj], cur->tok_string);
+                   // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
+                   count_proj++;
+                   cur = cur->next;
+                   if(cur->tok_value == S_COMMA && cur->next != NULL){
+                     cur = cur->next;
+                   }
+                 }
+                 if(cur->tok_value == S_RIGHT_PAREN){
+                    cur = cur->next; //to move to FROM
+                    if(cur->tok_value != K_FROM){
+                      rc = INVALID_SELECT_ALL_SYNTAX;
+                      cur->tok_value = INVALID;
+                      printf("%s\n", "Invalid or missing FROM");
+                    }
+                 }
+                 else {
+                   rc = INVALID_SELECT_ALL_SYNTAX;
+                   cur->tok_value = INVALID;
+                   printf("%s\n", "Invalid or missing )");
+                 }
+               }
+          }
+        }//End parsing aggregate
+        else if(cur->tok_value == IDENT){
+          cur_projection = cur;
+          /* Check for projection column */
+          while(cur->tok_value != K_FROM){
+            strcpy(proj_col[count_proj], cur->tok_string);
+            // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
+            count_proj++;
+            cur = cur->next;
+            if(cur->tok_value == S_COMMA && cur->next != NULL){
+              cur = cur->next;
+            }
+          }
+        }//End parsing column name
+        else {
+          rc = INVALID_SELECT_ALL_SYNTAX;
+          cur->tok_value = INVALID;
+          printf("%s\n", "Invalid or missing column name");
         }
       }
     }
@@ -1501,6 +1555,7 @@ int sem_select(token_list *t_list) {
             (cur->tok_class != identifier) &&
             (cur->tok_class != type_name))
         {
+
           rc = INVALID_TABLE_NAME;
           cur->tok_value = INVALID;
         }
@@ -1536,7 +1591,7 @@ int sem_select(token_list *t_list) {
                 bool multi_cond = false;
                 token_list *and_or = NULL;
                 bool order_desc = false;
-
+                cd_entry *orderby_col;
                 /*Check for WHERE Clause */
                 token_list *cur2 = NULL;
                 if(cur->next != NULL && cur->next->tok_value == K_WHERE){
@@ -1667,6 +1722,12 @@ int sem_select(token_list *t_list) {
                               if(orderby_column->next->tok_value == K_DESC){
                                  order_desc = true;
                               }
+                              else if(orderby_column->next->tok_value != EOC){
+                                rc = INVALID_SELECT_ALL_SYNTAX;
+                                orderby_column->next->tok_value = INVALID;
+                                printf("%s\n", "Invalid ORDER BY condition");
+                                return rc;
+                              }
                               orderby_flag = true;
                               printf("%s\n", "Order By Clause");
                           }
@@ -1691,6 +1752,21 @@ int sem_select(token_list *t_list) {
                         printf("%d\n", cur->next->next->next->tok_value);
                         if(cur->next->next->next->tok_value == IDENT){
                             orderby_column = cur->next->next->next;
+                            if(orderby_column->next->tok_value == K_DESC){
+                               order_desc = true;
+                               if(orderby_column->next->next->tok_value != EOC){
+                                 rc = INVALID_SELECT_ALL_SYNTAX;
+                                 orderby_column->next->next->tok_value = INVALID;
+                                 printf("%s\n", "Invalid SELECT statement");
+                                 return rc;
+                               }
+                            }
+                            else if(orderby_column->next->tok_value != EOC){
+                              rc = INVALID_SELECT_ALL_SYNTAX;
+                              orderby_column->next->tok_value = INVALID;
+                              printf("%s\n", "Invalid ORDER BY condition");
+                              return rc;
+                            }
                             orderby_flag = true;
                             printf("%s\n", "Order By Clause");
                         }
@@ -1716,6 +1792,7 @@ int sem_select(token_list *t_list) {
                     return rc;
                   }
                 }
+
                 int i = 0;
                 //Get all the column information from file
                 for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
@@ -1724,6 +1801,7 @@ int sem_select(token_list *t_list) {
                   list_cd_entry[i] = col_entry;
                 }
                 int print_column = tab_entry->num_columns;
+
                 //Check agaisnt projection columns
                 if(!select_all){
                   int col = 0;
@@ -1734,6 +1812,14 @@ int sem_select(token_list *t_list) {
                     {
                       if(strcasecmp(proj_col[col], list_cd_entry[i]->col_name)==0){
                         match = true;
+                        if(list_cd_entry[i]->col_type == T_CHAR || list_cd_entry[i]->col_type == T_VARCHAR){
+                          if(aggregate_func != NULL && (aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG)){
+                             rc = INVALID_SELECT_ALL_SYNTAX;
+                             cur_projection->tok_value = INVALID;
+                             printf("%s\n", "Can't apply SUM or AVG to String Column Type");
+                             return rc;
+                          }
+                        }
                       }
                     }
                     if(!match){
@@ -1747,6 +1833,7 @@ int sem_select(token_list *t_list) {
                   }
                   print_column = count_proj;
                 }
+
 
                 //Check where columns
                 // int col = 0;
@@ -1786,6 +1873,9 @@ int sem_select(token_list *t_list) {
                 //   printf("The column %s is invalid\n",invalid_column->tok_string);
                 //   return rc;
                 // }
+
+
+
                 //If everything is ok -> start printing
                 for(int count = 0; count < print_column; count++){
                   printf("%s","+--------------------");
@@ -1818,7 +1908,9 @@ int sem_select(token_list *t_list) {
                 int total_row = 0;
                 int row_select = 0;
                 int row_select2 = 0;
+                bool done = true;
                 struct cd_entry_def *column_address;
+                int orderby_offset = 0;
                 char* record_to_print[tabfile_ptr->num_records]; //Array of all possible records to print;
                 char* record_to_print2[tabfile_ptr->num_records]; //Array of all possible records to print;
                 char* record_to_print_final[tabfile_ptr->num_records];
@@ -1945,12 +2037,20 @@ int sem_select(token_list *t_list) {
                             }
                         }
                         else {
+                          record_to_print_final[row_select-1] = record_to_print[row_select-1];
                           total_row=row_select;
                         }
                       }
-                      record_offset = record_offset + column_address->col_len;
+                      if(orderby_flag){
+                        if(strcasecmp(orderby_column->tok_string, column_address->col_name) == 0){
+                            orderby_col = column_address;
+                            orderby_offset = record_offset;
+                        }
+                      }
+                      record_offset = record_offset + list_cd_entry[j]->col_len;
+                      // printf("Offset %d Length %d\n", record_offset, list_cd_entry[j]->col_len);
                     }
-                    if(!where_flag && !orderby_flag){
+                    if(!where_flag){
                       record_to_print_final[cur_row] = record_ptr;
                       total_row++;
                     }
@@ -1958,6 +2058,8 @@ int sem_select(token_list *t_list) {
                     record_ptr = record_ptr + tabfile_ptr->record_size;
                     // printf("Print Count %d Count Proj %d", print_count, count_proj);
                 }
+
+
                 //Handle AND and OR statement
                 if(multi_cond){
                   if(and_or->tok_value == K_AND){
@@ -1989,13 +2091,51 @@ int sem_select(token_list *t_list) {
                   }
                 }
 
+                //ORDER BY LOGIC
+                if(orderby_flag){
+                  // printf("%d\n", orderby_col->col_type);
+                  // printf("%d\n", orderby_offset);
+                  // printf("%s\n", "here");
+                  for(int i = 0; i < total_row - 1; i++){ // for the first row
+                    //Sort String Now
+                      if(orderby_col->col_type == T_CHAR || orderby_col->col_type == T_VARCHAR){
+                        for(int j = 0; j < total_row - 1; j++){ // for the first row
+                          int result = strcasecmp(record_to_print_final[j]+orderby_offset,record_to_print_final[j+1]+orderby_offset);
+                            if(!order_desc && result > 0){ //the second is greater than the first
+                                  //need to swap
+                                  char *temp = record_to_print_final[j];
+                                  record_to_print_final[j] = record_to_print_final[j+1];
+                                  record_to_print_final[j+1] = temp;
+                            }
+                            else if(order_desc && result < 0){
+                                  char *temp = record_to_print_final[j];
+                                  record_to_print_final[j] = record_to_print_final[j+1];
+                                  record_to_print_final[j+1] = temp;
+                            }
+                          }
+                      }//END String
+                      //Sort Int Now
+                      else if(orderby_col->col_type == T_INT) {
+                        for(int j = 0; j < total_row - 1; j++){ // for the first row
+                           int first = 0;int second = 0;
+                           memcpy(&first, record_to_print_final[j]+orderby_offset, sizeof(int));
+                           memcpy(&second,record_to_print_final[j+1]+orderby_offset,sizeof(int));
+                            if(!order_desc && first < second ){
+                                char *temp = record_to_print_final[j];
+                                record_to_print_final[j] = record_to_print_final[j+1];
+                                record_to_print_final[j+1] = temp;
+                            }
+                            else if(order_desc && second < first){
+                              char *temp  = record_to_print_final[j];
+                              record_to_print_final[j] = record_to_print_final[j+1];
+                              record_to_print_final[j+1] = temp;
+                            }
+                      }
+                    }//End INT
+                  } //End loop
+                }//End order by
 
-                // if(orderby_flag && order_desc){
-                //
-                // }
-                // else if(orderby_flag && !order_desc){
-                //
-                // }
+                // PRINT EVERYTHING
                 for(int z = 0; z < total_row; z++){
                     record_ptr = record_to_print_final[z];
                     if(select_all) { // SELECT ALL
@@ -2006,11 +2146,12 @@ int sem_select(token_list *t_list) {
                         unsigned char tok_length2 = NULL;
                         memcpy(&tok_length2, record_ptr+record_offset2, 1);
                         record_offset2++;
+
                         printf("%s","|");
                         if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
                          int col_len2 = list_cd_entry[j]->col_len;
                          if(tok_length2 == 0){ //NULL
-                            printf("%*s",-FORMAT_LENGTH, "NULL");
+                            printf("%*s",-FORMAT_LENGTH, "-");
                          }
                          else {
                            char temp_string[tok_length2 + 1];
@@ -2021,7 +2162,7 @@ int sem_select(token_list *t_list) {
                        }
                        else { //column type is INT
                          if(tok_length2 == 0){ //NULL
-                           printf("%*s",FORMAT_LENGTH,"NULL");
+                           printf("%*s",FORMAT_LENGTH,"-");
                          }
                          else {
                            int value = 0;
@@ -2045,7 +2186,7 @@ int sem_select(token_list *t_list) {
                            printf("%s","|");
                            if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
                             if(tok_length2 == 0){ //NULL
-                               printf("%*s",-FORMAT_LENGTH, "NULL");
+                               printf("%*s",-FORMAT_LENGTH, "-");
                             }
                             else {
                               char temp_string[tok_length2 + 1];
@@ -2056,7 +2197,7 @@ int sem_select(token_list *t_list) {
                           }
                           else { //column type is INT
                             if(tok_length2 == 0){ //NULL
-                              printf("%*s",FORMAT_LENGTH,"NULL");
+                              printf("%*s",FORMAT_LENGTH,"-");
                             }
                             else {
                               int value = 0;
