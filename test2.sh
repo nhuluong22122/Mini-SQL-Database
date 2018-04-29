@@ -18,7 +18,7 @@ echo 02 Insert 15 rows of data
 ./db "insert into class values ('Jeff', 'M', 455, 60, 515)"
 ./db "insert into class values ('Ying', 'F', 540, 85, 625)"
 ./db "insert into class values ('David', 'M', 550, 83, 633)"
-./db "insert into class values ('euna', 'F', 460, 75, 535)"
+./db "insert into class values ('euna', 'F', 620, 90, 535)"
 ./db "insert into class values ('Victor', 'M', 475, 60, 535)"
 ./db "insert into class values ('Linawati', 'F', 490, 86, 576)"
 ./db "insert into class values ('Stephen', 'M', 520, 76, 596)"

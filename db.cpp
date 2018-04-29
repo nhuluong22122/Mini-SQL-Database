@@ -2149,7 +2149,7 @@ int sem_select(token_list *t_list) {
                     //Sort String Now
                       if(orderby_col->col_type == T_CHAR || orderby_col->col_type == T_VARCHAR){
                         for(int j = 0; j < total_row - 1; j++){ // for the first row
-                          int result = strcasecmp(record_to_print_final[j]+orderby_offset,record_to_print_final[j+1]+orderby_offset);
+                          int result = strcmp(record_to_print_final[j]+orderby_offset,record_to_print_final[j+1]+orderby_offset);
                             if(!order_desc && result > 0){ //the second is greater than the first
                                   //need to swap
                                   char *temp = record_to_print_final[j];
@@ -2319,15 +2319,6 @@ int sem_select(token_list *t_list) {
                 fclose(fhandle);
               }
           }
-          // if(!rc)
-          //   {
-          //     cur = cur->next; //Should be the terminator
-          //     if (cur->tok_value != EOC)
-          //       {
-          //         rc = INVALID_TABLE_DEFINITION;
-          //         cur->tok_value = INVALID;
-          //       }//End checking for terminator
-          //   }
           }//End checking if that table exist
       }// End checking for invalid table
 
