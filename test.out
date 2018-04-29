@@ -110,7 +110,22 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-36 warnings generated.
+db.cpp:1920:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                        char *end = ")";
+                                    ^
+db.cpp:1921:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                        char *start = "";
+                                      ^
+db.cpp:1924:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                             start = "SUM(";
+                                     ^
+db.cpp:1927:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                             start = "COUNT(";
+                                     ^
+db.cpp:1930:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                             start = "AVG(";
+                                     ^
+41 warnings generated.
 Clean up
 ==========================================================================================
 01 Test setup - create table + insert data
@@ -162,10 +177,11 @@ class.tab size: 584. Number of records: 14
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 624. Number of records: 15
-------------------------------------------------------------------------------------------
-01: Simple select class.tab db db.cpp db.h dbfile.bin test.out test.sh test2.sh
-test2.sh: line 32: verify: command not found
-test2.sh: line 32: verify: command not found
+==========================================================================================
+SIMPLE SELECT
+==========================================================================================
+Select All
+Simple select & verify headings & verify NULL display with
 dbfile.bin size = 228
 SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -188,8 +204,64 @@ SELECT statement
 |Natalie             |F                   |                 500|                  54|                 596|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 15 rows selected.
+
+------------------------------------------------------------------------------------------
+Projection
+select Student_Name from class
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|Student_Name        |
++--------------------+
+|Siu                 |
+|Frank               |
+|Jordon              |
+|Jeff                |
+|Ying                |
+|David               |
+|euna                |
+|Victor              |
+|Linawati            |
+|Stephen             |
+|Melody              |
+|Travis              |
+|Sherry              |
+|Hector              |
+|Natalie             |
++--------------------+
+15 rows selected.
+
+------------------------------------------------------------------------------------------
+Projection
+select Student_Name, Quiz_Total from class
+dbfile.bin size = 228
+SELECT statement
++--------------------+--------------------+
+|Student_Name        |Quiz_Total          |
++--------------------+--------------------+
+|Siu                 |                  80|
+|Frank               |                 100|
+|Jordon              |                  75|
+|Jeff                |                  60|
+|Ying                |                  85|
+|David               |                  83|
+|euna                |                  75|
+|Victor              |                  60|
+|Linawati            |                  86|
+|Stephen             |                  76|
+|Melody              |                  83|
+|Travis              |                  75|
+|Sherry              |                  94|
+|Hector              |                  86|
+|Natalie             |                  54|
++--------------------+--------------------+
+15 rows selected.
+
 ==========================================================================================
-02: Delete from class where Student_Name = Bad_Student
+DELETE
+==========================================================================================
+Delete from class where Student_Name = Bad_Student
+delete from class where Student_Name = Stephen
 dbfile.bin size = 228
 DELETE statement
 Delete 1 rows. 
@@ -214,35 +286,10 @@ SELECT statement
 |Hector              |M                   |                 590|                  86|                 482|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 14 rows selected.
-delete from class where Student_Name = Stephen
-==========================================================================================
-03: Delete from class where no row is found
-dbfile.bin size = 228
-Invalid statement
-dbfile.bin size = 228
-SELECT statement
-+--------------------+--------------------+--------------------+--------------------+--------------------+
-|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
-+--------------------+--------------------+--------------------+--------------------+--------------------+
-|Siu                 |M                   |                 480|                  80|                 560|
-|Frank               |M                   |                 600|                 100|                 700|
-|Jordon              |M                   |                 450|                  75|                 525|
-|Jeff                |M                   |                 455|                  60|                 515|
-|Ying                |F                   |                 540|                  85|                 625|
-|David               |M                   |                 550|                  83|                 633|
-|euna                |F                   |                 460|                  75|                 535|
-|Victor              |M                   |                 475|                  60|                 535|
-|Linawati            |F                   |                 490|                  86|                 576|
-|Natalie             |F                   |                 500|                  54|                 596|
-|Melody              |F                   |                 560|                  83|                 633|
-|Travis              |M                   |                 600|                  75|                 534|
-|Sherry              |F                   |                 610|                  94|                 647|
-|Hector              |M                   |                 590|                  86|                 482|
-+--------------------+--------------------+--------------------+--------------------+--------------------+
-14 rows selected.
-delte from class where Student_Name = Hi
-==========================================================================================
-04: Delete multi-row 3 rows
+
+------------------------------------------------------------------------------------------
+Delete from class where no row is found
+delete from class where Student_Name = 'Hi'
 dbfile.bin size = 228
 DELETE statement
 Delete 0 rows. 
@@ -267,9 +314,34 @@ SELECT statement
 |Hector              |M                   |                 590|                  86|                 482|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 14 rows selected.
-test2.sh: line 50: 75: No such file or directory
+
+------------------------------------------------------------------------------------------
+Delete multi-row 3 rows
+delete from class where Exams < 500
+dbfile.bin size = 228
+DELETE statement
+Delete 6 rows. 
+dbfile.bin size = 228
+SELECT statement
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Hector              |M                   |                 590|                  86|                 482|
+|Frank               |M                   |                 600|                 100|                 700|
+|Sherry              |F                   |                 610|                  94|                 647|
+|Travis              |M                   |                 600|                  75|                 534|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                  83|                 633|
+|Melody              |F                   |                 560|                  83|                 633|
+|Natalie             |F                   |                 500|                  54|                 596|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+8 rows selected.
+
 ==========================================================================================
-05: Test single row update, e.g. update class set Quiz_Total=350 where Student_Name=’David’.
+UPDATE
+==========================================================================================
+Test single row update, e.g. update class set Quiz_Total=350 where Student_Name=’David’
+update class set Quiz_Total = 350 where Student_Name = 'Natalie'
 dbfile.bin size = 228
 UPDATE statement
 Updated 1 rows.
@@ -278,25 +350,20 @@ SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Siu                 |M                   |                 480|                  80|                 560|
+|Hector              |M                   |                 590|                  86|                 482|
 |Frank               |M                   |                 600|                 100|                 700|
-|Jordon              |M                   |                 450|                  75|                 525|
-|Jeff                |M                   |                 455|                  60|                 515|
+|Sherry              |F                   |                 610|                  94|                 647|
+|Travis              |M                   |                 600|                  75|                 534|
 |Ying                |F                   |                 540|                  85|                 625|
 |David               |M                   |                 550|                  83|                 633|
-|euna                |F                   |                 460|                  75|                 535|
-|Victor              |M                   |                 475|                  60|                 535|
-|Linawati            |F                   |                 490|                  86|                 576|
-|Natalie             |F                   |                 500|                 350|                 596|
 |Melody              |F                   |                 560|                  83|                 633|
-|Travis              |M                   |                 600|                  75|                 534|
-|Sherry              |F                   |                 610|                  94|                 647|
-|Hector              |M                   |                 590|                  86|                 482|
+|Natalie             |F                   |                 500|                 350|                 596|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-14 rows selected.
-update class set Quiz_Total = 350 where Student_Name = Natalie
-==========================================================================================
-06: Test update when no rows is found
+8 rows selected.
+
+------------------------------------------------------------------------------------------
+Test update when no rows is found
+update class set Quiz_Total = 350 where Student_Name = 'Nhu'
 dbfile.bin size = 228
 UPDATE statement
 Updated 0 rows.
@@ -305,46 +372,414 @@ SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Siu                 |M                   |                 480|                  80|                 560|
+|Hector              |M                   |                 590|                  86|                 482|
 |Frank               |M                   |                 600|                 100|                 700|
-|Jordon              |M                   |                 450|                  75|                 525|
-|Jeff                |M                   |                 455|                  60|                 515|
+|Sherry              |F                   |                 610|                  94|                 647|
+|Travis              |M                   |                 600|                  75|                 534|
 |Ying                |F                   |                 540|                  85|                 625|
 |David               |M                   |                 550|                  83|                 633|
-|euna                |F                   |                 460|                  75|                 535|
-|Victor              |M                   |                 475|                  60|                 535|
-|Linawati            |F                   |                 490|                  86|                 576|
-|Natalie             |F                   |                 500|                 350|                 596|
 |Melody              |F                   |                 560|                  83|                 633|
-|Travis              |M                   |                 600|                  75|                 534|
-|Sherry              |F                   |                 610|                  94|                 647|
-|Hector              |M                   |                 590|                  86|                 482|
+|Natalie             |F                   |                 500|                 350|                 596|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-14 rows selected.
-update class set Quiz_Total = 350 where Student_Name = Nhu
-==========================================================================================
-07: Multi-row update 4 rows
+8 rows selected.
+
+------------------------------------------------------------------------------------------
+Multi-row update 4 rows
+update class set Quiz_Total = 200 where Quiz_Total < 85
 dbfile.bin size = 228
 UPDATE statement
-Updated 2 rows.
+Updated 3 rows.
 dbfile.bin size = 228
 SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Siu                 |M                   |                 480|                  80|                 560|
-|Frank               |M                   |                 600|                 350|                 700|
-|Jordon              |M                   |                 450|                  75|                 525|
-|Jeff                |M                   |                 455|                  60|                 515|
-|Ying                |F                   |                 540|                  85|                 625|
-|David               |M                   |                 550|                  83|                 633|
-|euna                |F                   |                 460|                  75|                 535|
-|Victor              |M                   |                 475|                  60|                 535|
-|Linawati            |F                   |                 490|                  86|                 576|
-|Natalie             |F                   |                 500|                 350|                 596|
-|Melody              |F                   |                 560|                  83|                 633|
-|Travis              |M                   |                 600|                  75|                 534|
-|Sherry              |F                   |                 610|                  94|                 647|
 |Hector              |M                   |                 590|                  86|                 482|
+|Frank               |M                   |                 600|                 100|                 700|
+|Sherry              |F                   |                 610|                  94|                 647|
+|Travis              |M                   |                 600|                 200|                 534|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                 200|                 633|
+|Melody              |F                   |                 560|                 200|                 633|
+|Natalie             |F                   |                 500|                 350|                 596|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-14 rows selected.
+8 rows selected.
+
+==========================================================================================
+COMPLEX SELECT
+==========================================================================================
+Test SELECT with WHERE clause with a single condition.
+select * from class where Exams < 600
+dbfile.bin size = 228
+SELECT statement
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Hector              |M                   |                 590|                  86|                 482|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                 200|                 633|
+|Melody              |F                   |                 560|                 200|                 633|
+|Natalie             |F                   |                 500|                 350|                 596|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+5 rows selected.
+
+Test SELECT with WHERE clause with a single condition.
+select Student_Name from class where Exams < 600
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|Student_Name        |
++--------------------+
+|Hector              |
+|Ying                |
+|David               |
+|Melody              |
+|Natalie             |
++--------------------+
+5 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT with WHERE clause for case sensitive comparison, e.g. Student_Name < 'Good_Student'
+Nhu: There is a bug. I will fix mine to validate these stuffs earlier! 
+dbfile.bin size = 228
+SELECT statement
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+Can't have > or < for column type String
+Error in the string: <
+rc=-385
+
+select * from class where Student_Name = 'frank'
+dbfile.bin size = 228
+SELECT statement
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Frank               |M                   |                 600|                 100|                 700|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT with WHERE clause with columns that is NULL and NOT NULL
+update class set Quiz_Total = NULL where Student_Name = 'Natalie'
+dbfile.bin size = 228
+UPDATE statement
+Updated 1 rows.
+
+select Student_Name, Gender from class where Exams IS NULL
+dbfile.bin size = 228
+SELECT statement
+Is Null
++--------------------+--------------------+
+|Student_Name        |Gender              |
++--------------------+--------------------+
+|Natalie             |F                   |
++--------------------+--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT with two conditions separated by the AND keyword.
+select * from class where Total > 400 AND Exams IS NULL
+dbfile.bin size = 228
+SELECT statement
+Is Null
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Natalie             |F                   |                   -|                 350|                 596|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT with two conditions separated by the OR keyword
+select * from class where Exams IS NULL OR Student_Name ='Frank'
+dbfile.bin size = 228
+SELECT statement
+Is Null
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Natalie             |F                   |                   -|                 350|                 596|
+|Frank               |M                   |                 600|                 100|                 700|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+2 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT with ORDER BY clause.
+select * from class ORDER BY Student_Name DESC
+dbfile.bin size = 228
+SELECT statement
+Order By Clause
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Ying                |F                   |                 540|                  85|                 625|
+|Travis              |M                   |                 600|                 200|                 534|
+|Sherry              |F                   |                 610|                  94|                 647|
+|Natalie             |F                   |                   -|                 350|                 596|
+|Melody              |F                   |                 560|                 200|                 633|
+|Hector              |M                   |                 590|                  86|                 482|
+|Frank               |M                   |                 600|                 100|                 700|
+|David               |M                   |                 550|                 200|                 633|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+8 rows selected.
+
+select * from class ORDER BY Student_Name
+dbfile.bin size = 228
+SELECT statement
+Order By Clause
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|David               |M                   |                 550|                 200|                 633|
+|Frank               |M                   |                 600|                 100|                 700|
+|Hector              |M                   |                 590|                  86|                 482|
+|Melody              |F                   |                 560|                 200|                 633|
+|Natalie             |F                   |                   -|                 350|                 596|
+|Sherry              |F                   |                 610|                  94|                 647|
+|Travis              |M                   |                 600|                 200|                 534|
+|Ying                |F                   |                 540|                  85|                 625|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+8 rows selected.
+
+select * from class ORDER BY Exams DESC
+dbfile.bin size = 228
+SELECT statement
+Order By Clause
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Sherry              |F                   |                 610|                  94|                 647|
+|Frank               |M                   |                 600|                 100|                 700|
+|Travis              |M                   |                 600|                 200|                 534|
+|Hector              |M                   |                 590|                  86|                 482|
+|Melody              |F                   |                 560|                 200|                 633|
+|David               |M                   |                 550|                 200|                 633|
+|Ying                |F                   |                 540|                  85|                 625|
+|Natalie             |F                   |                   -|                 350|                 596|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+8 rows selected.
+
+select * from class ORDER BY Exams
+dbfile.bin size = 228
+SELECT statement
+Order By Clause
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Natalie             |F                   |                   -|                 350|                 596|
+|Ying                |F                   |                 540|                  85|                 625|
+|David               |M                   |                 550|                 200|                 633|
+|Melody              |F                   |                 560|                 200|                 633|
+|Hector              |M                   |                 590|                  86|                 482|
+|Frank               |M                   |                 600|                 100|                 700|
+|Travis              |M                   |                 600|                 200|                 534|
+|Sherry              |F                   |                 610|                  94|                 647|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+8 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT with WHERE and ORDER BY clause.
+select * from class WHERE Student_Name = 'Siu' Or Quiz_Total > 80 ORDER BY Quiz_Total
+dbfile.bin size = 228
+SELECT statement
+Order By Clause
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
++--------------------+--------------------+--------------------+--------------------+--------------------+
+|Ying                |F                   |                 540|                  85|                 625|
+|Hector              |M                   |                 590|                  86|                 482|
+|Sherry              |F                   |                 610|                  94|                 647|
+|Frank               |M                   |                 600|                 100|                 700|
+|Travis              |M                   |                 600|                 200|                 534|
+|David               |M                   |                 550|                 200|                 633|
+|Melody              |F                   |                 560|                 200|                 633|
+|Natalie             |F                   |                   -|                 350|                 596|
++--------------------+--------------------+--------------------+--------------------+--------------------+
+8 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT SUM() function.
+SELECT SUM(Exams) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|SUM(Exams)          |
++--------------------+
+|                4050|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT SUM() function with WHERE clause
+SELECT SUM(Exams) from class WHERE Gender='F'
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|SUM(Exams)          |
++--------------------+
+|                1710|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT AVG() function
+SELECT AVG(Exams) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|AVG(Exams)          |
++--------------------+
+|                 578|
++--------------------+
+1 rows selected.
+
+SELECT AVG(Total) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|AVG(Total)          |
++--------------------+
+|                 606|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT AVG() function with WHERE clause
+SELECT AVG(Total) FROM CLASS WHERE GENDER = 'M'
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|AVG(Total)          |
++--------------------+
+|                 587|
++--------------------+
+1 rows selected.
+
+SELECT AVG(Total) FROM CLASS WHERE GENDER = 'f'
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|AVG(Total)          |
++--------------------+
+|                 625|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT COUNT() function
+SELECT COUNT(Exams) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|COUNT(Exams)        |
++--------------------+
+|                   7|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SELECT COUNT() function with WHERE clause
+SELECT COUNT(Exams) FROM CLASS WHERE GENDER = 'M'
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|COUNT(Exams)        |
++--------------------+
+|                   4|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test SUM(), AVG() when there are NULLs
+--------WHEN THERE ARE NULLS----------
+SELECT SUM(Exams) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|SUM(Exams)          |
++--------------------+
+|                4050|
++--------------------+
+1 rows selected.
+
+SELECT AVG(Exams) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|AVG(Exams)          |
++--------------------+
+|                 578|
++--------------------+
+1 rows selected.
+
+UPDATE CLASS SET EXAMS = 600 WHERE STUDENT_NAME = 'NATALIE'
+dbfile.bin size = 228
+UPDATE statement
+Updated 1 rows.
+
+--------WHEN THERE ARE NO NULLS----------
+SELECT SUM(Exams) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|SUM(Exams)          |
++--------------------+
+|                4650|
++--------------------+
+1 rows selected.
+
+SELECT AVG(Exams) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|AVG(Exams)          |
++--------------------+
+|                 581|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+Test COUNT(*), COUNT(Quiz_Total) when there are NULLs. – this should not include NULLS
+--------WHEN THERE ARE NO NULLS IN EXAM----------
+SELECT COUNT(EXAMS) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|COUNT(EXAMS)        |
++--------------------+
+|                   8|
++--------------------+
+1 rows selected.
+
+--------WHEN THERE ARE NULLS IN EXAM----------
+UPDATE CLASS SET EXAMS = null WHERE STUDENT_NAME = 'NATALIE'
+dbfile.bin size = 228
+UPDATE statement
+Updated 1 rows.
+
+SELECT COUNT(EXAMS) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|COUNT(EXAMS)        |
++--------------------+
+|                   7|
++--------------------+
+1 rows selected.
+
+SELECT COUNT(*) FROM CLASS
+dbfile.bin size = 228
+SELECT statement
++--------------------+
+|COUNT(*)            |
++--------------------+
+|                   8|
++--------------------+
+1 rows selected.
+
+------------------------------------------------------------------------------------------
+==========================================================================================
+END FUNCTIONAL QUERY
+==========================================================================================
