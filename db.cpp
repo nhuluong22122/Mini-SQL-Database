@@ -2576,6 +2576,7 @@ int sem_update(token_list *t_list) {
   else {  /* A valid keyword */
       if ((new_entry = get_tpd_from_list(cur->tok_string)) == NULL){
           rc = TABLE_NOT_EXIST;
+          printf("Table %s does not exist\n", cur->tok_string);
           cur->tok_value = INVALID;
       }
       else  /* If the table exists  */
@@ -2613,10 +2614,26 @@ int sem_update(token_list *t_list) {
               token_list* cur2 = cur->next->next->next; //Should be at column_name
               if(cur2->tok_value == K_WHERE) {
                 // printf("WHERE ACCEPTED \n");
-                cur2 = cur2->next;
+                if(cur2->next != NULL && cur2->next->tok_value == EOC){
+                  rc = INVALID_UPDATE_SYNTAX;
+                  printf("%s\n", "Invalid Update Syntax" );
+                  cur2->next->tok_value = INVALID;
+                  return rc;
+                }
+                else {
+                  cur2 = cur2->next;
+                }
                 found_column_update = false;
                 where_flag = true;
               }
+              else if(cur2->tok_value != EOC){
+                rc = INVALID_UPDATE_SYNTAX;
+                printf("%s\n", "Invalid Update Syntax" );
+                cur2->tok_value = INVALID;
+                return rc;
+              }
+
+
               //Loop through all the columns
               for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
               i < new_entry->num_columns; i++, col_entry++)
@@ -2646,11 +2663,14 @@ int sem_update(token_list *t_list) {
                 rc = UPDATE_NO_COLUMN;
                 printf("No column %s in this table\n", cur->tok_string);
                 cur->tok_value = INVALID;
+                return rc;
+
               }
               if(!found_column_update){
                 rc = UPDATE_NO_COLUMN;
                 printf("No column %s in this table\n", cur2->tok_string);
                 cur2->tok_value = INVALID;
+                return rc;
               }
               //Check for sign for ints
               if(!rc){
@@ -2660,6 +2680,7 @@ int sem_update(token_list *t_list) {
                   rc = INVALID_UPDATE_SYNTAX;
                   printf("%s\n", " = is missing" );
                   cur->tok_value = INVALID;
+                  return rc;
                 }
                 else { // check for data value
                     cur = cur->next;
@@ -2669,8 +2690,18 @@ int sem_update(token_list *t_list) {
                         int cur_row = 0;
                         int rel_op = 0;
                         if(where_flag){
-                            rel_op = cur2->next->tok_value; //relational operator
-                            cur2 = cur2->next->next; // move to the comparable value
+                            if(cur2->next != NULL){
+                              rel_op = cur2->next->tok_value; //relational operator
+                              if(rel_op != S_EQUAL && rel_op != S_LESS && rel_op != S_GREATER  ){
+                                rc = INVALID_UPDATE_SYNTAX;
+                                printf("%s\n", "Missing relational operator or invalid condition");
+                                cur2->next->tok_value= INVALID;
+                                return rc;
+                              }
+                            }
+                            if(cur2->next->next != NULL){
+                              cur2 = cur2->next->next; // move to the comparable value
+                            }
                         }
                         for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                             if(where_flag){//UPDATE WHERE
@@ -2681,6 +2712,12 @@ int sem_update(token_list *t_list) {
                               int column_type = match_col_update->col_type;
                               if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
                               {
+                                if(cur2->tok_value != STRING_LITERAL){
+                                  rc = INVALID_UPDATE_SYNTAX;
+                                  cur2->tok_value = INVALID;
+                                  printf("%s\n", "Mismatch datatype");
+                                  return rc;
+                                }
                                 char temp_string[read_length + 1];
                                 memset(temp_string,'\0', read_length + 1);
                                 memcpy(&temp_string,read_pointer,read_length);
@@ -2691,6 +2728,7 @@ int sem_update(token_list *t_list) {
                                       rc = INSERT_NOT_NULL_EXCEPTION;
                                       cur->tok_value = INVALID;
                                       printf("%s%s\n", "Not Null constraint exists for column name ", match_col->col_name );
+                                      return rc;
 
                                     }else{
                                       memset(write_pointer, '\0', write_length);
@@ -2701,6 +2739,7 @@ int sem_update(token_list *t_list) {
                                       rc = INVALID_UPDATE_DATATYPE;
                                       printf("%s\n", "Type mismatch at SET");
                                       cur->tok_value = INVALID;
+                                      return rc;
                                     }
                                     else {
                                       int tok_length = strlen(cur->tok_string);
@@ -2727,9 +2766,21 @@ int sem_update(token_list *t_list) {
                                       memcpy(write_pointer + 1, p_int, match_col->col_len );
                                     }
                                   }
+                                  else {
+                                    rc = INVALID_UPDATE_DATATYPE;
+                                    printf("%s\n", "Invalid datatype at SET");
+                                    cur->tok_value = INVALID;
+                                    return rc;
+                                  }
                                 } // End compare String
                               }
                               else { //Int - need to process sign
+                                if(cur2->tok_value != INT_LITERAL){
+                                  rc = INVALID_UPDATE_SYNTAX;
+                                  cur2->tok_value = INVALID;
+                                  printf("%s\n", "Mismatch datatype");
+                                  return rc;
+                                }
                                 int temp_num = 0;
                                 memcpy(&temp_num, read_pointer, sizeof(int));
                                 if( (temp_num == atoi(cur2->tok_string) && rel_op == S_EQUAL)
@@ -2781,6 +2832,12 @@ int sem_update(token_list *t_list) {
                               }
                             }
                             else { //UPDATE ALL
+                              if(cur->next != NULL && cur->next->tok_value != EOC){
+                                rc = INVALID_UPDATE_SYNTAX;
+                                printf("%s\n", "Invalid Update Syntax" );
+                                cur->next->tok_value = INVALID;
+                                return rc;
+                              }
                               num_row_changed++;
                               if(cur->tok_value == K_NULL){ //NULL
                                 if(match_col->not_null == 1){
@@ -2821,6 +2878,12 @@ int sem_update(token_list *t_list) {
                                    int *p_int = &temp_int;
                                    memcpy(record_ptr + ptr_offset + column_offset + 1, p_int, match_col->col_len );
                                 }
+                              }
+                              else {
+                                rc = INVALID_UPDATE_DATATYPE;
+                                printf("%s\n", "Type mismatch at SET");
+                                cur->tok_value = INVALID;
+                                return rc;
                               }
                             }
                             ptr_offset += tabfile_ptr->record_size;
