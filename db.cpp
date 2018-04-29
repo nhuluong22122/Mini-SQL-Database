@@ -357,7 +357,7 @@ int do_semantic(token_list *tok_list)
   {
     printf("DELETE statement\n");
     cur_cmd = DELETE;
-    cur = cur->next;
+    cur = cur->next->next;
   }
   else if (cur->tok_value == K_UPDATE)
   {
@@ -1495,7 +1495,7 @@ int sem_select(token_list *t_list) {
           }
           else { // continue parsing projection column
                cur = cur->next;
-               if(cur->tok_value != IDENT){
+               if(cur->tok_value != IDENT && cur->tok_value != S_STAR){
                  rc = INVALID_SELECT_ALL_SYNTAX;
                  cur->tok_value = INVALID;
                  printf("%s\n", "Invalid or missing column name");
@@ -1503,14 +1503,19 @@ int sem_select(token_list *t_list) {
                else{
                  cur_projection = cur;
                  /* Check for projection column */
-                 while(cur->tok_value != S_RIGHT_PAREN){
-                   strcpy(proj_col[count_proj], cur->tok_string);
-                   // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
-                   count_proj++;
-                   cur = cur->next;
-                   if(cur->tok_value == S_COMMA && cur->next != NULL){
+                 if(cur->tok_value != S_STAR){
+                   while(cur->tok_value != S_RIGHT_PAREN){
+                     strcpy(proj_col[count_proj], cur->tok_string);
+                     // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
+                     count_proj++;
                      cur = cur->next;
+                     if(cur->tok_value == S_COMMA && cur->next != NULL){
+                       cur = cur->next;
+                     }
                    }
+                 }
+                 else if(cur->next != NULL){
+                   cur = cur->next;
                  }
                  if(cur->tok_value == S_RIGHT_PAREN){
                     cur = cur->next; //to move to FROM
@@ -2058,7 +2063,7 @@ int sem_select(token_list *t_list) {
                               }
                             }
                         }
-                        else {
+                        else { //Still one condition
                           record_to_print_final[row_select-1] = record_to_print[row_select-1];
                           total_row=row_select;
                         }
@@ -2142,12 +2147,12 @@ int sem_select(token_list *t_list) {
                            int first = 0;int second = 0;
                            memcpy(&first, record_to_print_final[j]+orderby_offset, sizeof(int));
                            memcpy(&second,record_to_print_final[j+1]+orderby_offset,sizeof(int));
-                            if(!order_desc && first < second ){
+                            if(!order_desc && first > second ){
                                 char *temp = record_to_print_final[j];
                                 record_to_print_final[j] = record_to_print_final[j+1];
                                 record_to_print_final[j+1] = temp;
                             }
-                            else if(order_desc && second < first){
+                            else if(order_desc && second > first){
                               char *temp  = record_to_print_final[j];
                               record_to_print_final[j] = record_to_print_final[j+1];
                               record_to_print_final[j+1] = temp;
@@ -2156,8 +2161,10 @@ int sem_select(token_list *t_list) {
                     }//End INT
                   } //End loop
                 }//End order by
-                int aggregate_result = 0;
                 // PRINT EVERYTHING
+                int aggregate_result = 0;
+                int null_count = 0;
+
                 for(int z = 0; z < total_row; z++){
                     record_ptr = record_to_print_final[z];
                     if(select_all) { // SELECT ALL
@@ -2173,23 +2180,36 @@ int sem_select(token_list *t_list) {
                         if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
                          int col_len2 = list_cd_entry[j]->col_len;
                          if(tok_length2 == 0){ //NULL
-                            printf("%*s",-FORMAT_LENGTH, "-");
+                           if(aggregate_func == NULL){
+                             printf("%*s",-FORMAT_LENGTH,"-");
+                           }
+                           null_count++;
                          }
                          else {
                            char temp_string[tok_length2 + 1];
                            memset(temp_string, '\0', tok_length2 + 1);
                            memcpy(&temp_string, record_ptr+record_offset2, tok_length2);
-                           printf("%*s", -FORMAT_LENGTH ,temp_string);
+                           if(aggregate_func == NULL){
+                             printf("%*s", -FORMAT_LENGTH ,temp_string);
+                           }
                          }
                        }
                        else { //column type is INT
                          if(tok_length2 == 0){ //NULL
-                           printf("%*s",FORMAT_LENGTH,"-");
+                           if(aggregate_func == NULL){
+                             printf("%*s",FORMAT_LENGTH,"-");
+                           }
+                           null_count++;
                          }
                          else {
                            int value = 0;
                            memcpy(&value, record_ptr+record_offset2, sizeof(int));
-                           printf("%*d",FORMAT_LENGTH,value);
+                           if(aggregate_func == NULL){
+                             printf("%*d",FORMAT_LENGTH,value);
+                           }
+                           else if(aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG){
+                                   aggregate_result = aggregate_result + value;
+                           }//End parse aggregate                         }
                          }
                        }
                        record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
@@ -2205,37 +2225,67 @@ int sem_select(token_list *t_list) {
                           record_offset2++;
                          /* If the column type is CHAR*/
                          if(strcasecmp(proj_col[i], list_cd_entry[j]->col_name) == 0){
-                           printf("%s","|");
+                           if(aggregate_func == NULL){
+                              printf("%s","|");
+                            }
                            if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
                             if(tok_length2 == 0){ //NULL
-                               printf("%*s",-FORMAT_LENGTH, "-");
+                              if(aggregate_func == NULL){
+                                printf("%*s",-FORMAT_LENGTH,"-");
+                              }
+                              null_count++;
+
                             }
                             else {
                               char temp_string[tok_length2 + 1];
                               memset(temp_string, '\0', tok_length2 + 1);
                               memcpy(&temp_string, record_ptr+record_offset2, tok_length2);
-                              printf("%*s", -FORMAT_LENGTH ,temp_string);
+                              if(aggregate_func == NULL){
+                                printf("%*s", -FORMAT_LENGTH ,temp_string);
+                              }
                             }
-                          }
+                          }//End parse string
                           else { //column type is INT
                             if(tok_length2 == 0){ //NULL
-                              printf("%*s",FORMAT_LENGTH,"-");
+                              if(aggregate_func == NULL){
+                                printf("%*s",FORMAT_LENGTH,"-");
+                              }
+                              null_count++;
                             }
                             else {
                               int value = 0;
                               memcpy(&value, record_ptr+record_offset2, sizeof(int));
-                              printf("%*d",FORMAT_LENGTH,value);
-                            }
-                          }
+                              if(aggregate_func == NULL){
+                                printf("%*d",FORMAT_LENGTH,value);
+                              }
+                              else if(aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG){
+                                      aggregate_result = aggregate_result + value;
+                              }//End parse aggregate
+                            }//End parse valid int
+                          }//End parse int
                           i++;
-                         }
-                         record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                        } // Compare Columns
+                        record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
                         }
                      }
+                  }
+                    if(aggregate_func == NULL){
+                       printf("%s\n","|");
                     }
-                    printf("|\n");
 
                 }
+                //End going through rows
+                if(aggregate_func != NULL){
+                  if(aggregate_func->tok_value == F_SUM) {  printf("|%*d|\n",FORMAT_LENGTH,aggregate_result);total_row=1; }
+                  else if(aggregate_func->tok_value == F_COUNT) {
+                    printf("|%*d|\n",FORMAT_LENGTH,total_row - null_count);
+                    if(cur_projection != NULL && cur_projection->tok_value != S_STAR){
+                      total_row = 1;
+                    }
+                  }
+                  else { printf("|%*d|\n",FORMAT_LENGTH,aggregate_result / (total_row- null_count) );total_row=1;}
+                }
+
                 int count = 0;
                 for(count = 0; count < print_column; count++){
                   printf("%s","+--------------------");
@@ -2293,6 +2343,7 @@ int sem_delete(token_list *t_list) {
       /* if the table alerady existed then we can insert */
       if ((new_entry = get_tpd_from_list(cur->tok_string)) == NULL){
           rc = TABLE_NOT_EXIST;
+          printf("%s\n", "Table Not Found");
           cur->tok_value = INVALID;
       }
       else {
@@ -2346,6 +2397,12 @@ int sem_delete(token_list *t_list) {
                   printf("%s\n", "Invalid syntax in the WHERE clause" );
                   cur->tok_value = INVALID;
                 }
+                if(cur->tok_value != S_EQUAL && (match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR)){
+                  rc = INVALID_DELETE_SYNTAX;
+                  cur->tok_value = INVALID;
+                  printf("Cannot use > or < for column%s\n",match_col->col_name);
+                  return rc;
+                }
                 else {
                   int sign = cur->tok_value;
                   cur = cur->next; //moving to data value
@@ -2359,6 +2416,12 @@ int sem_delete(token_list *t_list) {
                       char* eof_offset;
                       if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR) // VARCHAR
                       {
+                        if(cur->tok_value != STRING_LITERAL) {
+                            rc = INVALID_DELETE_SYNTAX;
+                            cur->tok_value = INVALID;
+                            printf("%s\n", "Mismatch data type");
+                            return rc;
+                        }
                         char temp_string[match_col->col_len+1];
                         char replace_string[match_col->col_len+1];
                         memset(temp_string,'\0',match_col->col_len+1);
@@ -2385,6 +2448,12 @@ int sem_delete(token_list *t_list) {
                         }
                       }
                       else { //must be an int
+                        if(cur->tok_value != INT_LITERAL) {
+                            rc = INVALID_DELETE_SYNTAX;
+                            cur->tok_value = INVALID;
+                            printf("%s\n", "Mismatch data type");
+                            return rc;
+                        }
                         int value = 0;
                         int replace_value = 0;
                         memcpy(&value, record_ptr+record_offset+1, sizeof(int));
@@ -2446,6 +2515,12 @@ int sem_delete(token_list *t_list) {
                       }
                       record_offset += tabfile_ptr->record_size;
                   }
+                  if(cur->next != NULL && cur->next->tok_value != EOC){
+                    rc = INVALID_DELETE_SYNTAX;
+                    printf("%s\n", "Invalid Delete Syntax" );
+                    cur->next->tok_value = INVALID;
+                    return rc;
+                  }
                   if(num_row_changed > 0){
                       printf("Delete %d rows. \n", num_row_changed);
                       tabfile_ptr->num_records = tabfile_ptr->num_records - num_row_changed;
@@ -2463,7 +2538,7 @@ int sem_delete(token_list *t_list) {
           }//End WHERE clause
           else {
              rc = INVALID_DELETE_SYNTAX;
-             printf("%s\n", "Invalid syntax" );
+             printf("%s\n", "Missing WHERE or invalid syntax" );
              cur->tok_value = INVALID;
           }
       }
