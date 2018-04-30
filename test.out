@@ -110,19 +110,19 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-db.cpp:1920:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1927:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *end = ")";
                                     ^
-db.cpp:1921:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1928:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *start = "";
                                       ^
-db.cpp:1924:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1931:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "SUM(";
                                      ^
-db.cpp:1927:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1934:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "COUNT(";
                                      ^
-db.cpp:1930:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1937:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "AVG(";
                                      ^
 41 warnings generated.
@@ -445,6 +445,7 @@ SELECT statement
 ------------------------------------------------------------------------------------------
 Test SELECT with WHERE clause for case sensitive comparison, e.g. Student_Name < 'Good_Student'
 Nhu: There is a bug. I will fix mine to validate these stuffs earlier! 
+select * from class where Student_Name < 'Frank'
 dbfile.bin size = 228
 SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -460,9 +461,8 @@ SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Frank               |M                   |                 600|                 100|                 700|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-1 rows selected.
+0 rows selected.
 
 ------------------------------------------------------------------------------------------
 Test SELECT with WHERE clause with columns that is NULL and NOT NULL
@@ -491,9 +491,8 @@ Is Null
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Natalie             |F                   |                   -|                 350|                 596|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-1 rows selected.
+0 rows selected.
 
 ------------------------------------------------------------------------------------------
 Test SELECT with two conditions separated by the OR keyword
@@ -504,10 +503,9 @@ Is Null
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Natalie             |F                   |                   -|                 350|                 596|
 |Frank               |M                   |                 600|                 100|                 700|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-2 rows selected.
+1 rows selected.
 
 ------------------------------------------------------------------------------------------
 Test SELECT with ORDER BY clause.
@@ -575,7 +573,6 @@ Order By Clause
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Natalie             |F                   |                   -|                 350|                 596|
 |Ying                |F                   |                 540|                  85|                 625|
 |David               |M                   |                 550|                 200|                 633|
 |Melody              |F                   |                 560|                 200|                 633|
@@ -584,6 +581,7 @@ Order By Clause
 |Travis              |M                   |                 600|                 200|                 534|
 |Sherry              |F                   |                 610|                  94|                 647|
 |euna                |F                   |                 620|                  90|                 535|
+|Natalie             |F                   |                   -|                 350|                 596|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 9 rows selected.
 
@@ -672,7 +670,7 @@ SELECT statement
 +--------------------+
 |AVG(Total)          |
 +--------------------+
-|                 607|
+|                   -|
 +--------------------+
 1 rows selected.
 
@@ -723,7 +721,7 @@ SELECT statement
 +--------------------+
 1 rows selected.
 
-UPDATE CLASS SET EXAMS = 600 WHERE STUDENT_NAME = 'NATALIE'
+UPDATE CLASS SET EXAMS = 600 WHERE STUDENT_NAME = 'Natalie'
 dbfile.bin size = 228
 UPDATE statement
 Updated 1 rows.
@@ -763,7 +761,7 @@ SELECT statement
 1 rows selected.
 
 --------WHEN THERE ARE NULLS IN EXAM----------
-UPDATE CLASS SET EXAMS = null WHERE STUDENT_NAME = 'NATALIE'
+UPDATE CLASS SET EXAMS = null WHERE STUDENT_NAME = 'Natalie'
 dbfile.bin size = 228
 UPDATE statement
 Updated 1 rows.

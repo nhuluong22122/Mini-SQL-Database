@@ -1852,6 +1852,7 @@ int sem_select(token_list *t_list) {
                     if(!match){
                       rc = INVALID_SELECT_SYNTAX;
                       cur_projection->tok_value = INVALID;
+                      printf("%s\n", "Invalid Column Name");
                       return rc;
                     }
                     if(cur_projection){
@@ -1863,43 +1864,49 @@ int sem_select(token_list *t_list) {
 
 
                 //Check where columns
-                // int col = 0;
-                // bool valid_column = true;
-                // token_list *invalid_column;
-                // if(where_flag){
-                //   for(i = 0; i < tab_entry->num_columns; i++) // against all the column in table
-                //   {
-                //       if(cond_column[0]){
-                //         if(strcasecmp(cond_column[0]->tok_string, list_cd_entry[i]->col_name) != 0
-                //           && i == tab_entry->num_columns - 1 && valid_column == true){
-                //             valid_column = false;
-                //             invalid_column = cond_column[0];
-                //         }
-                //       }
-                //       if(cond_column[1]){
-                //           if(strcasecmp(cond_column[1]->tok_string, list_cd_entry[i]->col_name ) != 0
-                //             && i == tab_entry->num_columns - 1 && valid_column == true){
-                //             valid_column = false;
-                //             invalid_column = cond_column[1];
-                //           }
-                //       }
-                //       if(orderby_flag) {
-                //         if(strcasecmp(orderby_column->tok_string, list_cd_entry[i]->col_name) != 0
-                //           && i == tab_entry->num_columns - 1  && valid_column == true){
-                //           valid_column = false;
-                //           invalid_column = orderby_column;
-                //
-                //         }
-                //       }
-                //   }
-                // }
+                int col = 0;
+                bool valid_column = false;
+                bool valid_column2 = false;
+                bool valid_orderby_column = false;
+                if(where_flag || orderby_flag){
+                  for(i = 0; i < tab_entry->num_columns; i++) // against all the column in table
+                  {
+                      if(where_flag){
+                        if(strcasecmp(cond_column[0]->tok_string, list_cd_entry[i]->col_name) == 0){
+                            valid_column = true;
+                        }
+                      }
+                      if(multi_cond){
+                          if(strcasecmp(cond_column[1]->tok_string, list_cd_entry[i]->col_name ) == 0){
+                            valid_column2 = true;
+                          }
+                      }
+                      if(orderby_flag) {
+                        if(strcasecmp(orderby_column->tok_string, list_cd_entry[i]->col_name) == 0){
+                          valid_orderby_column = true;
+                        }
+                      }
+                  }
+                }
 
-                // if (!valid_column) {
-                //   rc = INVALID_SELECT_SYNTAX;
-                //   invalid_column->tok_value = INVALID;
-                //   printf("The column %s is invalid\n",invalid_column->tok_string);
-                //   return rc;
-                // }
+                if(multi_cond && !valid_column2){
+                  rc = INVALID_SELECT_SYNTAX;
+                  cond_column[1]->tok_value = INVALID;
+                  printf("The column name is invalid\n");
+                  return rc;
+                }
+                if (where_flag && !valid_column) {
+                  rc = INVALID_SELECT_SYNTAX;
+                  cond_column[0]->tok_value = INVALID;
+                  printf("The column name is invalid\n");
+                  return rc;
+                }
+                if(orderby_flag && !valid_orderby_column){
+                  rc = INVALID_SELECT_SYNTAX;
+                  orderby_column->tok_value = INVALID;
+                  printf("The column name is invalid\n");
+                  return rc;
+                }
 
                 if(aggregate_func != NULL){
                   print_column = 1;
@@ -1950,7 +1957,7 @@ int sem_select(token_list *t_list) {
                 printf("+\n");
 
 
-                //Start printing data
+                //Start the WHERE clause
                 int j = 0;
                 int record_offset = 0;
                 int print_count = 0;
@@ -1975,59 +1982,6 @@ int sem_select(token_list *t_list) {
 
                       //If there is a where flag
                       if(where_flag){
-                        if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
-                          if(cond_relation_operator[0]->tok_value == K_NULL && tok_length == 0){ //when its null & check if is null
-                            record_to_print[row_select] = record_ptr;
-                            row_select++;
-                          }//end checking for null
-                          else if(cond_relation_operator[0]->tok_value == K_NOT && tok_length != 0){
-                            record_to_print[row_select] = record_ptr;
-                            row_select++;
-                          }
-                          else { // must be relational
-                            if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
-                            {
-                              char temp_string[tok_length + 1];
-                              memset(temp_string, '\0', tok_length + 1);
-                              memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                                  // printf("%s\n", temp_string);
-                              if(cond_relation_operator[0]->tok_value == S_EQUAL){
-                                if(strcasecmp(cond_value[0], temp_string) == 0){
-                                    record_to_print[row_select] = record_ptr;
-                                    row_select++;
-                                }
-                              }
-                              else { //REDO - MOVE TO TOP
-                                  rc = INVALID_SELECT_SYNTAX;
-                                  cond_relation_operator[0]->tok_value = INVALID;
-                                  printf("%s\n", "Can't have > or < for column type String");
-                                  return rc;
-                              }
-                            }
-                            else{ // this must be int
-                              int temp_num = 0;
-                              memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
-                              int *extract_value = (int*)cond_value[0];
-                              if(cond_relation_operator[0]->tok_value == S_EQUAL
-                                && temp_num == *extract_value){
-                                  record_to_print[row_select] = record_ptr;
-                                  row_select++;
-                                }
-                              else if(cond_relation_operator[0]->tok_value == S_GREATER
-                                && temp_num > *extract_value)
-                                {
-                                  record_to_print[row_select] = record_ptr;
-                                  row_select++;
-                                }
-                              else if(cond_relation_operator[0]->tok_value == S_LESS
-                                && temp_num < *extract_value)
-                                {
-                                  record_to_print[row_select] = record_ptr;
-                                  row_select++;
-                                }
-                            }
-                          }
-                        }
                         if(multi_cond){//if both condition
                             int boolean = and_or->tok_value;
                             //If match the column name -> find the matching cell
@@ -2048,7 +2002,7 @@ int sem_select(token_list *t_list) {
                                   memcpy(&temp_string, record_ptr+record_offset, tok_length);
                                       // printf("%s\n", temp_string);
                                   if(cond_relation_operator[1]->tok_value == S_EQUAL){
-                                    if(strcasecmp(cond_value[1], temp_string) == 0){
+                                    if(strcmp(cond_value[1], temp_string) == 0){
                                         record_to_print2[row_select2] = record_ptr;
                                         row_select2++;
                                     }
@@ -2085,10 +2039,63 @@ int sem_select(token_list *t_list) {
                               }
                             }
                         }
-                        else { //Still one condition
-                          record_to_print_final[row_select-1] = record_to_print[row_select-1];
-                          total_row=row_select;
+                        else if(!multi_cond){
+                          if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
+                            if(cond_relation_operator[0]->tok_value == K_NULL && tok_length == 0){ //when its null & check if is null
+                              record_to_print[row_select] = record_ptr;
+                              row_select++;
+                            }//end checking for null
+                            else if(cond_relation_operator[0]->tok_value == K_NOT && tok_length != 0){
+                              record_to_print[row_select] = record_ptr;
+                              row_select++;
+                            }
+                            else { // must be relational
+                              if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
+                              {
+                                char temp_string[tok_length + 1];
+                                memset(temp_string, '\0', tok_length + 1);
+                                memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                                    // printf("%s\n", temp_string);
+                                if(cond_relation_operator[0]->tok_value == S_EQUAL){
+                                  if(strcmp(cond_value[0], temp_string) == 0){
+                                      record_to_print[row_select] = record_ptr;
+                                      row_select++;
+                                  }
+                                }
+                                else { //REDO - MOVE TO TOP
+                                    rc = INVALID_SELECT_SYNTAX;
+                                    cond_relation_operator[0]->tok_value = INVALID;
+                                    printf("%s\n", "Can't have > or < for column type String");
+                                    return rc;
+                                }
+                              }
+                              else{ // this must be int
+                                int temp_num = 0;
+                                memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
+                                int *extract_value = (int*)cond_value[0];
+                                if(cond_relation_operator[0]->tok_value == S_EQUAL
+                                  && temp_num == *extract_value){
+                                    record_to_print[row_select] = record_ptr;
+                                    row_select++;
+                                  }
+                                else if(cond_relation_operator[0]->tok_value == S_GREATER
+                                  && temp_num > *extract_value)
+                                  {
+                                    record_to_print[row_select] = record_ptr;
+                                    row_select++;
+                                  }
+                                else if(cond_relation_operator[0]->tok_value == S_LESS
+                                  && temp_num < *extract_value)
+                                  {
+                                    record_to_print[row_select] = record_ptr;
+                                    row_select++;
+                                  }
+                              }
+                            }
+                          }
                         }
+                        record_to_print_final[row_select-1] = record_to_print[row_select-1];
+                        total_row=row_select;
                       }
                       if(orderby_flag){
                         if(strcasecmp(orderby_column->tok_string, column_address->col_name) == 0){
@@ -2109,7 +2116,7 @@ int sem_select(token_list *t_list) {
                 }
 
 
-                //Handle AND and OR statement
+                //AND OR LOGIC
                 if(multi_cond){
                   if(and_or->tok_value == K_AND){
                       for(int m = 0; m < row_select2; m++){
@@ -2142,9 +2149,6 @@ int sem_select(token_list *t_list) {
 
                 //ORDER BY LOGIC
                 if(orderby_flag){
-                  // printf("%d\n", orderby_col->col_type);
-                  // printf("%d\n", orderby_offset);
-                  // printf("%s\n", "here");
                   for(int i = 0; i < total_row - 1; i++){ // for the first row
                     //Sort String Now
                       if(orderby_col->col_type == T_CHAR || orderby_col->col_type == T_VARCHAR){
@@ -2163,26 +2167,51 @@ int sem_select(token_list *t_list) {
                             }
                           }
                       }//END String
+
                       //Sort Int Now
                       else if(orderby_col->col_type == T_INT) {
                         for(int j = 0; j < total_row - 1; j++){ // for the first row
-                           int first = 0;int second = 0;
-                           memcpy(&first, record_to_print_final[j]+orderby_offset, sizeof(int));
-                           memcpy(&second,record_to_print_final[j+1]+orderby_offset,sizeof(int));
-                            if(!order_desc && first > second ){
-                                char *temp = record_to_print_final[j];
+                           unsigned char first_length = 0;
+                           unsigned char second_length = 0;
+                           memcpy(&first_length, record_to_print_final[j]+orderby_offset-1, 1);
+                           memcpy(&second_length,record_to_print_final[j+1]+orderby_offset-1,1);
+                           if(first_length != 0 && second_length != 0){
+                             int first = 0;int second = 0;
+                             memcpy(&first, record_to_print_final[j]+orderby_offset, sizeof(int));
+                             memcpy(&second,record_to_print_final[j+1]+orderby_offset,sizeof(int));
+                              if(!order_desc && first > second ){
+                                  char *temp = record_to_print_final[j];
+                                  record_to_print_final[j] = record_to_print_final[j+1];
+                                  record_to_print_final[j+1] = temp;
+                              }
+                              else if(order_desc && second > first){
+                                char *temp  = record_to_print_final[j];
                                 record_to_print_final[j] = record_to_print_final[j+1];
                                 record_to_print_final[j+1] = temp;
-                            }
-                            else if(order_desc && second > first){
-                              char *temp  = record_to_print_final[j];
-                              record_to_print_final[j] = record_to_print_final[j+1];
-                              record_to_print_final[j+1] = temp;
-                            }
+                              }
+                           }
+
+                           // printf("First %d Second %d\n", first_length, second_length);
+                           // if(first_length < second_length){
+                           //   printf("%s First %d | Value %d - Second %d | Value %d\n", "here1", first_length,first,second_length,second );
+                           //   char *temp = record_to_print_final[j+1];
+                           //   record_to_print_final[j+1] = record_to_print_final[j];
+                           //   record_to_print_final[j] = temp;
+                           // }
+                           // else if (first_length > second_length){
+                           //   printf("%s First %d | Value %d - Second %d | Value %d\n", "here2", first_length,first,second_length,second );
+                           //   char *temp = record_to_print_final[j+1];
+                           //   record_to_print_final[j+1] = record_to_print_final[j];
+                           //   record_to_print_final[j] = temp;
+                           // }
+                           // else if(second_length == first_length){
+
+                           // }
                       }
                     }//End INT
                   } //End loop
                 }//End order by
+
                 // PRINT EVERYTHING
                 int aggregate_result = 0;
                 int null_count = 0;
@@ -2305,7 +2334,15 @@ int sem_select(token_list *t_list) {
                       total_row = 1;
                     }
                   }
-                  else { printf("|%*d|\n",FORMAT_LENGTH,aggregate_result / (total_row- null_count) );total_row=1;}
+                  else {
+                    if(aggregate_result != 0){
+                      printf("|%*d|\n",FORMAT_LENGTH,aggregate_result / (total_row- null_count) );
+                    }
+                    else {
+                      printf("|%*s|\n",FORMAT_LENGTH,"-");
+                    }
+                    total_row=1;
+                  }
                 }
 
                 int count = 0;
@@ -2440,18 +2477,18 @@ int sem_delete(token_list *t_list) {
                         memset(temp_string,'\0',match_col->col_len+1);
                         memcpy(&temp_string,record_ptr+record_offset+1,match_col->col_len);
                         //Found the matching row
-                        if(strcasecmp(cur->tok_string, temp_string) == 0){
+                        if(strcmp(cur->tok_string, temp_string) == 0){
                             count++;
                             eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
                             memset(replace_string,'\0',match_col->col_len+1); //empty the string
                             memcpy(&replace_string,eof_offset,match_col->col_len);
-                            while(strcasecmp(cur->tok_string, replace_string) == 0){
+                            while(strcmp(cur->tok_string, replace_string) == 0){
                               count++;
                               eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
                               memset(replace_string,'\0',match_col->col_len+1); //empty the string
                               memcpy(&replace_string,eof_offset,match_col->col_len);
                             }
-                            if(strcasecmp(cur->tok_string, replace_string) != 0) {
+                            if(strcmp(cur->tok_string, replace_string) != 0) {
                               num_row_changed++;
                               memcpy(
                                 record_ptr+record_offset-column_offset,
@@ -2750,7 +2787,7 @@ int sem_update(token_list *t_list) {
                                 char temp_string[read_length + 1];
                                 memset(temp_string,'\0', read_length + 1);
                                 memcpy(&temp_string,read_pointer,read_length);
-                                if(strcasecmp(cur2->tok_string, temp_string) == 0){
+                                if(strcmp(cur2->tok_string, temp_string) == 0){
                                   num_row_changed++;
                                   if(cur->tok_value == K_NULL){ //NULL
                                     if(match_col->not_null == 1){

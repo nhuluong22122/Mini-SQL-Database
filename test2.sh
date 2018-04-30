@@ -105,7 +105,8 @@ echo
 echo ------------------------------------------------------------------------------------------
 echo "Test SELECT with WHERE clause for case sensitive comparison, e.g. Student_Name < 'Good_Student'"
 echo "Nhu: There is a bug. I will fix mine to validate these stuffs earlier! "
-./db "select * from class where Student_Name < 'FRANK'"
+echo "select * from class where Student_Name < 'Frank'"
+./db "select * from class where Student_Name < 'Frank'"
 echo
 echo "select * from class where Student_Name = 'frank'"
 ./db "select * from class where Student_Name = 'frank'"
@@ -192,8 +193,8 @@ echo
 echo "SELECT AVG(Exams) FROM CLASS"
 ./db "SELECT AVG(Exams) FROM CLASS"
 echo
-echo "UPDATE CLASS SET EXAMS = 600 WHERE STUDENT_NAME = 'NATALIE'"
-./db "UPDATE CLASS SET EXAMS = 600 WHERE STUDENT_NAME = 'NATALIE'"
+echo "UPDATE CLASS SET EXAMS = 600 WHERE STUDENT_NAME = 'Natalie'"
+./db "UPDATE CLASS SET EXAMS = 600 WHERE STUDENT_NAME = 'Natalie'"
 echo
 echo "--------WHEN THERE ARE NO NULLS----------"
 echo "SELECT SUM(Exams) FROM CLASS"
@@ -209,8 +210,8 @@ echo "SELECT COUNT(EXAMS) FROM CLASS"
 ./db "SELECT COUNT(EXAMS) FROM CLASS"
 echo
 echo "--------WHEN THERE ARE NULLS IN EXAM----------"
-echo "UPDATE CLASS SET EXAMS = null WHERE STUDENT_NAME = 'NATALIE'"
-./db "UPDATE CLASS SET EXAMS = null WHERE STUDENT_NAME = 'NATALIE'"
+echo "UPDATE CLASS SET EXAMS = null WHERE STUDENT_NAME = 'Natalie'"
+./db "UPDATE CLASS SET EXAMS = null WHERE STUDENT_NAME = 'Natalie'"
 echo
 echo "SELECT COUNT(EXAMS) FROM CLASS"
 ./db "SELECT COUNT(EXAMS) FROM CLASS"
