@@ -2515,6 +2515,7 @@ int sem_delete(token_list *t_list) {
           cur->tok_value = INVALID;
       }
       else {
+          /* Retrieve the tab file */
           strcpy(tab_entry.table_name, cur->tok_string);
           strcpy(filename, cur->tok_string);
           strcat(filename, ".tab");
@@ -2537,7 +2538,7 @@ int sem_delete(token_list *t_list) {
               int column_offset = 0;
               int i = 0;
               cd_entry* match_col = NULL;
-              //Loop through all the columns
+              //Loop through all the columns to find the delete column in WHERE
               for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
               i < new_entry->num_columns; i++, col_entry++)
               {
@@ -2565,41 +2566,47 @@ int sem_delete(token_list *t_list) {
                   printf("%s\n", "Missing relational operator" );
                   cur->tok_value = INVALID;
                 }
+                /* Check for invalid sign */
                 if(cur->tok_value != S_EQUAL && (match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR)){
                   rc = INVALID_RELATIONAL_OPERATOR;
                   cur->tok_value = INVALID;
                   printf("Invalid relational operator for column%s\n",match_col->col_name);
                   return rc;
                 }
-                else {
+                else { /* Continue parsing for value */
                   int sign = cur->tok_value;
                   cur = cur->next; //moving to data value
-                  //Remember to use column_offset
                   char* end_of_file = record_ptr + tabfile_ptr->file_size;
                   int record_offset = tabfile_ptr->record_offset + column_offset;
                   int cur_row = 0;
                   int num_row_changed = 0;
                   int count = 0;
+
+                  /* Start finding matches from data */
                   for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                       char* eof_offset;
                       if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR) // VARCHAR
                       {
+                        /* Check for invalid string value */
                         if(cur->tok_value != STRING_LITERAL) {
                             rc = DATATYPE_MISMATCH;
                             cur->tok_value = INVALID;
                             printf("%s\n", "Data type mismatch");
                             return rc;
                         }
+                        /* Get corresponding value from mem  */
                         char temp_string[match_col->col_len+1];
                         char replace_string[match_col->col_len+1];
                         memset(temp_string,'\0',match_col->col_len+1);
                         memcpy(&temp_string,record_ptr+record_offset+1,match_col->col_len);
-                        //Found the matching row
+                        /* Compare 2 values  */
                         if(strcmp(cur->tok_string, temp_string) == 0){
                             count++;
                             eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
                             memset(replace_string,'\0',match_col->col_len+1); //empty the string
                             memcpy(&replace_string,eof_offset,match_col->col_len);
+                            /* Check if the new value to replace also matches the condition
+                            If yes -> move to the next one, else -> place the current row */
                             while(strcmp(cur->tok_string, replace_string) == 0){
                               count++;
                               eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
@@ -2626,11 +2633,12 @@ int sem_delete(token_list *t_list) {
                         int replace_value = 0;
                         memcpy(&value, record_ptr+record_offset+1, sizeof(int));
 
+                        /* Check for equality , greater, less than */
                         if(sign == S_EQUAL && value == atoi(cur->tok_string)){
                           count++;
                           eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
                           memcpy(&replace_value, eof_offset, sizeof(int));
-
+                          /* Check for repeated matching value */
                           while(replace_value == atoi(cur->tok_string)){
                             count++;
                             eof_offset = eof_offset-tabfile_ptr->record_size;
@@ -2648,7 +2656,7 @@ int sem_delete(token_list *t_list) {
                           count++;
                           eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
                           memcpy(&replace_value, eof_offset, sizeof(int));
-
+                          /* Check for repeated matching value */
                           while(replace_value < atoi(cur->tok_string)){
                             count++;
                             eof_offset = eof_offset-tabfile_ptr->record_size;
@@ -2666,7 +2674,7 @@ int sem_delete(token_list *t_list) {
                           count++;
                           eof_offset = end_of_file-(count*tabfile_ptr->record_size)+column_offset+1;
                           memcpy(&replace_value, eof_offset, sizeof(int));
-
+                          /* Check for repeated matching value */
                           while(replace_value > atoi(cur->tok_string)){
                             count++;
                             eof_offset = eof_offset-tabfile_ptr->record_size;
@@ -2681,6 +2689,7 @@ int sem_delete(token_list *t_list) {
                           }
                         }
                       }
+                      /* Move to the next row */
                       record_offset += tabfile_ptr->record_size;
                   }
                   if(cur->next != NULL && cur->next->tok_value != EOC){
@@ -2696,7 +2705,7 @@ int sem_delete(token_list *t_list) {
                       fhandle = fopen(filename,"wbc");
                       fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
                   }
-                  else {
+                  else { /* If no row changes -> add the warning */
                     printf("WARNING: Delete %d rows. \n", num_row_changed);
                   }
                   fflush(fhandle);
@@ -2779,11 +2788,12 @@ int sem_update(token_list *t_list) {
 
               bool found_column = false;
               int i = 0;
-
+              /* Parse & save the column */
               cd_entry *match_col_update = NULL;
               bool found_column_update = true;
               int column_offset_update = 0;
               bool where_flag = false;
+              /* Create a new pointer to validate syntax */
               token_list* cur2;
               if(cur->next != NULL){ // check sign
                 if(cur->next->tok_value != S_EQUAL)
@@ -2794,7 +2804,8 @@ int sem_update(token_list *t_list) {
                   return rc;
                 }
                 else if(cur->next->next != NULL){
-                    if(cur->next->next->tok_value == INT_LITERAL){ //check for overflow value
+                    if(cur->next->next->tok_value == INT_LITERAL){
+                        //check for overflow value
                         long long temp_ll = atoll(cur->next->next->tok_string);
                         if(temp_ll > 2147483647)
                         {
@@ -2804,6 +2815,7 @@ int sem_update(token_list *t_list) {
                             return rc;
                         }
                     }
+                    /* If the data value is not null or int or string -> error */
                     if(cur->next->next->tok_value != INT_LITERAL
                       && cur->next->next->tok_value != STRING_LITERAL
                       && cur->next->next->tok_value != K_NULL ){
@@ -2812,8 +2824,10 @@ int sem_update(token_list *t_list) {
                         cur->next->next->tok_value = INVALID;
                         return rc;
                     }
+                    /* If the data type is valid, move cur2 to check for WHERE condition */
                     if(cur->next->next->tok_value == INT_LITERAL ||
-                    cur->next->next->tok_value == STRING_LITERAL || cur->next->next->tok_value == K_NULL )
+                    cur->next->next->tok_value == STRING_LITERAL
+                    || cur->next->next->tok_value == K_NULL )
                     {
                       if(cur->next->next->next != NULL){
                          cur2 = cur->next->next->next;
@@ -2821,11 +2835,12 @@ int sem_update(token_list *t_list) {
                     }
                 }
               }
-              //Should be at column_name
+              /* Check for WHERE condition */
               if(cur2->tok_value == K_WHERE) {
-                if(cur2->next != NULL && cur2->next->tok_value == EOC){
-                  rc = INVALID_UPDATE_SYNTAX;
-                  printf("%s\n", "Invalid Update Syntax" );
+                if(cur2->next != NULL && cur2->next != S_EQUAL
+                  && cur2->next != S_LESS && cur2->next != S_GREATER){
+                  rc = INVALID_RELATIONAL_OPERATOR;
+                  printf("%s\n", "Invalid Relational Operator" );
                   cur2->next->tok_value = INVALID;
                   return rc;
                 }
@@ -2843,12 +2858,12 @@ int sem_update(token_list *t_list) {
               }
 
 
-              //Loop through all the columns
+              /* Check if the column exists  */
               for(i = 0, col_entry = (cd_entry*)((char*)new_entry + new_entry->cd_offset);
               i < new_entry->num_columns; i++, col_entry++)
               {
                   if(!found_column){
-                      //If there is such column
+                    /* This current points to the first column name */
                       if(strcasecmp(cur->tok_string, col_entry->col_name) == 0){
                         found_column = true;
                         match_col = col_entry;
@@ -2859,6 +2874,7 @@ int sem_update(token_list *t_list) {
                   }
 
                   if(!found_column_update){
+                    /* This current points to the column name in WHERE condition  */
                     if(strcasecmp(cur2->tok_string, col_entry->col_name) == 0){
                       found_column_update = true;
                       match_col_update = col_entry;
@@ -2869,6 +2885,7 @@ int sem_update(token_list *t_list) {
                   }
               }
 
+              /* Throw error if either column doesn't exist */
               if(!found_column){
                 rc = COLUMN_NOT_EXIST;
                 printf("No column %s in this table\n", cur->tok_string);
@@ -2882,12 +2899,13 @@ int sem_update(token_list *t_list) {
                 cur2->tok_value = INVALID;
                 return rc;
               }
-              //Check for sign for ints
+              /* Continue checking for syntax in the WHERE condition */
               if(!rc){
                     cur = cur->next; //sign
                     cur = cur->next; //data value
                     if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR) // VARCHAR
                     {
+                      /* This field can set the vlaue to string or null */
                       if(cur->tok_value != STRING_LITERAL && cur->tok_value != K_NULL){
                         rc = INVALID_DATA_VALUE;
                         cur->tok_value = INVALID;
@@ -2900,6 +2918,7 @@ int sem_update(token_list *t_list) {
                         int ptr_offset = tabfile_ptr->record_offset;
                         int cur_row = 0;
                         int rel_op = 0;
+                        /* Continue checking for the sign in condition */
                         if(where_flag){
                             if(cur2->next != NULL){
                               rel_op = cur2->next->tok_value; //relational operator
@@ -2914,6 +2933,7 @@ int sem_update(token_list *t_list) {
                               cur2 = cur2->next->next; // move to the comparable value
                             }
                         }
+                        /* Start going through rows */
                         for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                             if(where_flag){//UPDATE WHERE
                               char* read_pointer = record_ptr+ptr_offset+column_offset_update+1;
@@ -2923,11 +2943,15 @@ int sem_update(token_list *t_list) {
                               int column_type = match_col_update->col_type;
                               if(column_type == T_CHAR || column_type == T_VARCHAR) // VARCHAR
                               {
+                                /* Parse String from cell */
                                 char temp_string[read_length + 1];
                                 memset(temp_string,'\0', read_length + 1);
                                 memcpy(&temp_string,read_pointer,read_length);
+                                /* If the current cell matches the condition */
+                                // TO-DO: Consider > and < for String matching value
                                 if(strcmp(cur2->tok_string, temp_string) == 0){
                                   num_row_changed++;
+                                  /* Write to the SET Column */
                                   if(cur->tok_value == K_NULL){ //NULL
                                     if(match_col->not_null == 1){
                                       rc = NOT_NULL_EXCEPTION;
@@ -2957,19 +2981,23 @@ int sem_update(token_list *t_list) {
                                   }
                                 } // End compare String
                               }
-                              else { //Int - need to process sign
+                              else {  /* Check for 2nd column is INT */
                                 if(cur2->tok_value != INT_LITERAL && cur->tok_value != K_NULL){
                                   rc = INVALID_UPDATE_SYNTAX;
                                   cur2->tok_value = INVALID;
                                   printf("%s\n", "Mismatch datatype");
                                   return rc;
                                 }
+                                /* Get the int from each cell */
                                 int temp_num = 0;
                                 memcpy(&temp_num, read_pointer, sizeof(int));
+                                /* Check if it matches the condition */
                                 if( (temp_num == atoi(cur2->tok_string) && rel_op == S_EQUAL)
                                   || (temp_num < atoi(cur2->tok_string) && rel_op == S_LESS)
                                   || (temp_num > atoi(cur2->tok_string) && rel_op == S_GREATER)){
                                   num_row_changed++;
+                                  memcpy(&temp_num, read_pointer, sizeof(int));
+                                  /* IF trying to set NULL to a NOT NULL column */
                                   if(cur->tok_value == K_NULL){ //NULL
                                     if(match_col->not_null == 1){
                                       rc = NOT_NULL_EXCEPTION;
@@ -3014,7 +3042,7 @@ int sem_update(token_list *t_list) {
                                 }//End compare Int
                               }
                             }
-                            else { //UPDATE ALL
+                            else { /* UPDATE ALL */
                               if(cur->next != NULL && cur->next->tok_value != EOC){
                                 rc = INVALID_UPDATE_SYNTAX;
                                 printf("%s\n", "Invalid Update Syntax" );
@@ -3069,6 +3097,7 @@ int sem_update(token_list *t_list) {
                                 return rc;
                               }
                             }
+                            /* Move to the next row */
                             ptr_offset += tabfile_ptr->record_size;
                         }
                         if(!rc){
