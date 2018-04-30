@@ -2837,10 +2837,9 @@ int sem_update(token_list *t_list) {
               }
               /* Check for WHERE condition */
               if(cur2->tok_value == K_WHERE) {
-                if(cur2->next != NULL && cur2->next != S_EQUAL
-                  && cur2->next != S_LESS && cur2->next != S_GREATER){
-                  rc = INVALID_RELATIONAL_OPERATOR;
-                  printf("%s\n", "Invalid Relational Operator" );
+                if(cur2->next != NULL  && cur2->next->tok_value != IDENT){
+                  rc = INVALID_UPDATE_SYNTAX;
+                  printf("%s\n", "Missing Column in the where clause" );
                   cur2->next->tok_value = INVALID;
                   return rc;
                 }
@@ -2949,7 +2948,9 @@ int sem_update(token_list *t_list) {
                                 memcpy(&temp_string,read_pointer,read_length);
                                 /* If the current cell matches the condition */
                                 // TO-DO: Consider > and < for String matching value
-                                if(strcmp(cur2->tok_string, temp_string) == 0){
+                                if((rel_op == S_EQUAL && strcmp(cur2->tok_string, temp_string) == 0)
+                                || (rel_op == S_GREATER && strcmp(cur2->tok_string, temp_string) < 0)
+                                || (rel_op == S_LESS && strcmp (cur2->tok_string, temp_string) > 0)){
                                   num_row_changed++;
                                   /* Write to the SET Column */
                                   if(cur->tok_value == K_NULL){ //NULL
