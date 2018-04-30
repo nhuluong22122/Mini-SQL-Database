@@ -115,19 +115,19 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-db.cpp:1982:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1979:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *end = ")";
                                     ^
-db.cpp:1983:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1980:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *start = "";
                                       ^
-db.cpp:1986:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1983:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "SUM(";
                                      ^
-db.cpp:1989:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1986:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "COUNT(";
                                      ^
-db.cpp:1992:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1989:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "AVG(";
                                      ^
 41 warnings generated.
@@ -186,7 +186,6 @@ Select All
 Simple select & verify headings & verify NULL display with
 dbfile.bin size = 228
 SELECT statement
-Here
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -212,7 +211,6 @@ Projection of two of the same columns
 select Student_Name, Student_Name from class
 dbfile.bin size = 228
 SELECT statement
-Here
 +--------------------+--------------------+
 |Student_Name        |Student_Name        |
 +--------------------+--------------------+
@@ -238,7 +236,6 @@ Projection of columns in different order
 select Total, Quiz_Total, exams, gender, Student_Name from class
 dbfile.bin size = 228
 SELECT statement
-Here
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Total               |Quiz_Total          |exams               |gender              |Student_Name        |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -264,115 +261,101 @@ Error Testing **THESE SHOULD ALL BE BLOCKED**
 select * from class where gender = 123
 dbfile.bin size = 228
 SELECT statement
-Here
 Data Type Mismatch
 Error in the string: 123
-rc=-385
+rc=-378
 
 select * from class where exams = hi
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid data value
 Error in the string: hi
-rc=-385
+rc=-379
 
 select Total, Quiz_Total, exams, gender, Student_Name from class hi
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid Select Syntax Error
 Error in the string: hi
-rc=-385
+rc=-350
 
 select Total Quiz_Total from class
 dbfile.bin size = 228
 SELECT statement
-Here
 Missing Coma
 Error in the string: Quiz_Total
-rc=-385
+rc=-350
 
 select Total, Quiz_Total from class ORDER BY exams hi
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid ORDER BY condition
 Error in the string: hi
-rc=-385
+rc=-350
 
 select Total, Quiz_Total from class ORDER BY FAKECOLUMN
 dbfile.bin size = 228
 SELECT statement
-Here
 Order By Clause
 The column name is invalid
 Error in the string: FAKECOLUMN
-rc=-385
+rc=-393
 
 select Total, Quiz_Total, exams, gender, Student_Name from class where student > 'A' hi
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid Select Syntax
 Error in the string: hi
-rc=-385
+rc=-350
 
 select Total, Quiz_Total, exams, gender, Student_Name from class where student > 'A' AND student > 'A' hi
 dbfile.bin size = 228
 SELECT statement
-Here
 The column name is invalid
 Error in the string: student
-rc=-385
+rc=-393
 
 select FAKECOLUMN from class where student > 'A'
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid Column Name
 Error in the string: FAKECOLUMN
-rc=-385
+rc=-393
 
 select FAKECOLUMN, Quiz_Total, exams, gender, Student_Name from class where student > 'A'
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid Column Name
 Error in the string: FAKECOLUMN
-rc=-385
+rc=-393
 
 select sum(gender) from class
 dbfile.bin size = 228
 SELECT statement
-Here
 Can't apply SUM or AVG to String Column Type
 Error in the string: gender
-rc=-385
+rc=-379
 
 select sum(*) from class
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid column for sum
 Error in the string: *
-rc=-385
+rc=-376
 
 select avg(gender) from class
 dbfile.bin size = 228
 SELECT statement
-Here
 Can't apply SUM or AVG to String Column Type
 Error in the string: gender
-rc=-385
+rc=-379
 
 select avg(*) from class
 dbfile.bin size = 228
 SELECT statement
-Here
 Invalid column for avg
 Error in the string: *
-rc=-385
+rc=-376
 
 ==========================================================================================
 DELETE
@@ -383,7 +366,7 @@ dbfile.bin size = 228
 DELETE statement
 Missing WHERE or invalid syntax
 Error in the string: hi
-rc=-367
+rc=-370
 
 delete from class where hi
 dbfile.bin size = 228
@@ -397,47 +380,46 @@ dbfile.bin size = 228
 DELETE statement
 Data type mismatch
 Error in the string: 
-rc=-367
+rc=-378
 
 delete from class where gender = null
 dbfile.bin size = 228
 DELETE statement
 Data type mismatch
 Error in the string: null
-rc=-367
+rc=-378
 
 delete from class where gender = not null
 dbfile.bin size = 228
 DELETE statement
 Data type mismatch
 Error in the string: not
-rc=-367
+rc=-378
 
 delete from class where gender = 123
 dbfile.bin size = 228
 DELETE statement
 Data type mismatch
 Error in the string: 123
-rc=-367
+rc=-378
 
 delete from class where gender = NoQuoteString
 dbfile.bin size = 228
 DELETE statement
 Data type mismatch
 Error in the string: NoQuoteString
-rc=-367
+rc=-378
 
 delete from class where exams = 'CannotBeString'
 dbfile.bin size = 228
 DELETE statement
 Data type mismatch
 Error in the string: CannotBeString
-rc=-367
+rc=-378
 
 YOUR TABLE SHOULD NOT HAVE CHANGED
 dbfile.bin size = 228
 SELECT statement
-Here
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -467,21 +449,21 @@ UPDATE statement
 Not Null constraint exists for column name Student_Name
 Type mismatch at SET
 Error in the string: null
-rc=-368
+rc=-378
 
 update class set STUDENT_NAME = 123
 dbfile.bin size = 228
 UPDATE statement
 Invalid data value
 Error in the string: 123
-rc=-370
+rc=-379
 
 update class set STUDENT_NAME = 'damon' hi
 dbfile.bin size = 228
 UPDATE statement
 Invalid Update Syntax
 Error in the string: STUDENT_NAME
-rc=-370
+rc=-360
 
 update class set exams = 'string'
 dbfile.bin size = 228
@@ -489,42 +471,42 @@ UPDATE statement
 Type mismatch at SET
 Type mismatch at SET
 Error in the string: string
-rc=-368
+rc=-378
 
 update class set exams
 dbfile.bin size = 228
 UPDATE statement
 Missing equal sign
 Error in the string: exams
-rc=-370
+rc=-360
 
 update class set exams = 
 dbfile.bin size = 228
 UPDATE statement
 Invalid or missing data value
 Error in the string: 
-rc=-370
+rc=-379
 
 update class set FAKECOLUMN = 'string'
 dbfile.bin size = 228
 UPDATE statement
 No column FAKECOLUMN in this table
 Error in the string: FAKECOLUMN
-rc=-369
+rc=-393
 
 update class set STUDENT_NAME = 'stephanie' where
 dbfile.bin size = 228
 UPDATE statement
 Invalid Update Syntax
 Error in the string: 
-rc=-370
+rc=-360
 
 update class set STUDENT_NAME = 'stephanie' where exams = 'string'
 dbfile.bin size = 228
 UPDATE statement
 Mismatch datatype
 Error in the string: string
-rc=-370
+rc=-360
 
 update class set STUDENT_NAME = 'christine' where gender = 123
 dbfile.bin size = 228
@@ -541,26 +523,25 @@ dbfile.bin size = 228
 UPDATE statement
 Keyword SET is missing
 Error in the string: STUDENT_NAME
-rc=-370
+rc=-360
 
 update class set gender 'hi' where STUDENT_NAME = 'test4'
 dbfile.bin size = 228
 UPDATE statement
 Missing equal sign
 Error in the string: gender
-rc=-370
+rc=-360
 
 update class set total = 3000000000 where STUDENT_NAME = 'Test1'
 dbfile.bin size = 228
 UPDATE statement
 Exceed max integer value
 Error in the string: 3000000000
-rc=-370
+rc=-379
 
 YOUR TABLE SHOULD NOT HAVE CHANGED
 dbfile.bin size = 228
 SELECT statement
-Here
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -598,7 +579,6 @@ Updated 1 rows.
 select * from class
 dbfile.bin size = 228
 SELECT statement
-Here
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -623,7 +603,6 @@ SELECT SUM SHOULD RETURN 4 BILLION SOMETHING
 select sum(total) from class
 dbfile.bin size = 228
 SELECT statement
-Here
 +--------------------+
 |SUM(total)          |
 +--------------------+
