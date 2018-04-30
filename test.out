@@ -110,19 +110,19 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-db.cpp:1927:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1981:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *end = ")";
                                     ^
-db.cpp:1928:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1982:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *start = "";
                                       ^
-db.cpp:1931:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1985:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "SUM(";
                                      ^
-db.cpp:1934:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1988:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "COUNT(";
                                      ^
-db.cpp:1937:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1991:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "AVG(";
                                      ^
 41 warnings generated.
@@ -640,7 +640,7 @@ SELECT statement
 +--------------------+
 |AVG(Exams)          |
 +--------------------+
-|                 583|
+|              583.75|
 +--------------------+
 1 rows selected.
 
@@ -650,7 +650,7 @@ SELECT statement
 +--------------------+
 |AVG(Total)          |
 +--------------------+
-|                 598|
+|              598.33|
 +--------------------+
 1 rows selected.
 
@@ -662,7 +662,7 @@ SELECT statement
 +--------------------+
 |AVG(Total)          |
 +--------------------+
-|                 587|
+|              587.25|
 +--------------------+
 1 rows selected.
 
@@ -719,7 +719,7 @@ SELECT statement
 +--------------------+
 |AVG(Exams)          |
 +--------------------+
-|                 583|
+|              583.75|
 +--------------------+
 1 rows selected.
 
@@ -745,7 +745,7 @@ SELECT statement
 +--------------------+
 |AVG(Exams)          |
 +--------------------+
-|                 585|
+|              585.56|
 +--------------------+
 1 rows selected.
 

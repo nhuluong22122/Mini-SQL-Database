@@ -386,7 +386,7 @@ int do_semantic(token_list *tok_list)
 						break;
 			case LIST_SCHEMA:
 						rc = sem_list_schema(cur);
-						break;
+				 		break;
       case INSERT:
             rc = sem_insert_record(cur);
             break;
@@ -1468,6 +1468,7 @@ int sem_select(token_list *t_list) {
     char proj_col[MAX_NUM_COL][MAX_TOK_LEN];
 
     bool select_all = false;
+
     //Check for SELECT ALL
     if(cur->tok_value == S_STAR){
         select_all = true;
@@ -1510,12 +1511,25 @@ int sem_select(token_list *t_list) {
                      // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
                      count_proj++;
                      cur = cur->next;
+                     if(cur->tok_value == IDENT){
+                       rc = INVALID_SELECT_SYNTAX;
+                       cur->tok_value = INVALID;
+                       printf("%s\n", "Missing Coma");
+                       return rc;
+                     }
                      if(cur->tok_value == S_COMMA && cur->next != NULL){
                        cur = cur->next;
                      }
+
                    }
                  }
                  else if(cur->tok_value == S_STAR){
+                   if(aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG){
+                     rc = INVALID_SELECT_SYNTAX;
+                     cur->tok_value = INVALID;
+                     printf("Invalid column for %s\n", aggregate_func->tok_string);
+                     return rc;
+                   }
                    strcpy(proj_col[count_proj], cur->tok_string);
                    if(cur->next != NULL){
                      cur = cur->next;
@@ -1545,6 +1559,12 @@ int sem_select(token_list *t_list) {
             // printf("Array %s Count %d\n",proj_col[count_proj],count_proj );
             count_proj++;
             cur = cur->next;
+            if(cur->tok_value == IDENT){
+              rc = INVALID_SELECT_SYNTAX;
+              cur->tok_value = INVALID;
+              printf("%s\n", "Missing Coma");
+              return rc;
+            }
             if(cur->tok_value == S_COMMA && cur->next != NULL){
               cur = cur->next;
             }
@@ -1591,7 +1611,7 @@ int sem_select(token_list *t_list) {
                 //Store the signs or null
                 token_list *cond_relation_operator[2];
                 //Store the data value
-                char *cond_value[2];
+                token_list *cond_value[2];
                 token_list *orderby_column;
                 // int *cond_value_int[2];
 
@@ -1639,15 +1659,15 @@ int sem_select(token_list *t_list) {
                                           return rc;
                                       }
                                       if(cur2->tok_value == STRING_LITERAL){ //char
-                                         cond_value[count_cond] = cur2->tok_string;
+                                         cond_value[count_cond] = cur2;
                                          // printf("%s\n", cond_value[count_cond]);
                                       }
-                                      else if(cur2->tok_value == INT_LITERAL){ //must be int
+                                      else if(cur2->tok_value == INT_LITERAL){ //must be into
                                          // printf("%s \n", cur2->tok_string);
-                                         int temp_int = atoi(cur2->tok_string);
-                                         int *p_int = &temp_int;
-                                         cond_value[count_cond] = (char*)p_int;
-                                         int *back = (int*)cond_value[count_cond];
+                                         // int temp_int = atoi(cur2->tok_string);
+                                         // int *p_int = &temp_int;
+                                         cond_value[count_cond] = cur2;
+                                         // int *back = (int*)cond_value[count_cond];
                                          // printf("%d\n", *back);
                                       }
                                       else {
@@ -1815,7 +1835,7 @@ int sem_select(token_list *t_list) {
                   if(cur->next->tok_value != EOC){
                     rc = INVALID_SELECT_SYNTAX;
                     cur->next->tok_value = INVALID;
-                    printf("%s\n", "Invalid Syntax Error");
+                    printf("%s\n", "Invalid Select Syntax Error");
                     return rc;
                   }
                 }
@@ -1862,7 +1882,6 @@ int sem_select(token_list *t_list) {
                   print_column = count_proj;
                 }
 
-
                 //Check where columns
                 int col = 0;
                 bool valid_column = false;
@@ -1874,11 +1893,47 @@ int sem_select(token_list *t_list) {
                       if(where_flag){
                         if(strcasecmp(cond_column[0]->tok_string, list_cd_entry[i]->col_name) == 0){
                             valid_column = true;
+                            if(cond_relation_operator[0]->tok_value != K_NULL && cond_relation_operator[0]->tok_value != K_NOT){
+                              if(list_cd_entry[i]->col_type == T_VARCHAR || list_cd_entry[i]->col_type == T_CHAR){
+                                  if(cond_value[0]->tok_value != STRING_LITERAL){
+                                      rc = INVALID_SELECT_SYNTAX;
+                                      cond_value[0]->tok_value = INVALID;
+                                      printf("Data Type Mismatch\n");
+                                      return rc;
+                                  }
+                              }
+                              else if(list_cd_entry[i]->col_type == T_INT){
+                                if(cond_value[0]->tok_value != INT_LITERAL){
+                                    rc = INVALID_SELECT_SYNTAX;
+                                    cond_value[0]->tok_value = INVALID;
+                                    printf("Data Type Mismatch\n");
+                                    return rc;
+                                }
+                              }
+                            }
                         }
                       }
                       if(multi_cond){
                           if(strcasecmp(cond_column[1]->tok_string, list_cd_entry[i]->col_name ) == 0){
                             valid_column2 = true;
+                            if(cond_relation_operator[1]->tok_value  != K_NULL && cond_relation_operator[1]->tok_value != K_NOT){
+                              if(list_cd_entry[i]->col_type == T_VARCHAR || list_cd_entry[i]->col_type == T_CHAR){
+                                  if(cond_value[1]->tok_value != STRING_LITERAL){
+                                      rc = INVALID_SELECT_SYNTAX;
+                                      cond_value[1]->tok_value = INVALID;
+                                      printf("Data Type Mismatch\n");
+                                      return rc;
+                                  }
+                              }
+                              else if(list_cd_entry[i]->col_type == T_INT){
+                                if(cond_value[1]->tok_value != INT_LITERAL){
+                                    rc = INVALID_SELECT_SYNTAX;
+                                    cond_value[1]->tok_value = INVALID;
+                                    printf("Data Type Mismatch\n");
+                                    return rc;
+                                }
+                              }
+                            }
                           }
                       }
                       if(orderby_flag) {
@@ -1888,14 +1943,13 @@ int sem_select(token_list *t_list) {
                       }
                   }
                 }
-
                 if(multi_cond && !valid_column2){
                   rc = INVALID_SELECT_SYNTAX;
                   cond_column[1]->tok_value = INVALID;
                   printf("The column name is invalid\n");
                   return rc;
                 }
-                if (where_flag && !valid_column) {
+                if(where_flag && !valid_column) {
                   rc = INVALID_SELECT_SYNTAX;
                   cond_column[0]->tok_value = INVALID;
                   printf("The column name is invalid\n");
@@ -1983,13 +2037,17 @@ int sem_select(token_list *t_list) {
                       //If there is a where flag
                       if(where_flag){
                         if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
-                          if(cond_relation_operator[0]->tok_value == K_NULL && tok_length == 0){ //when its null & check if is null
-                            record_to_print[row_select] = record_ptr;
-                            row_select++;
+                          if(cond_relation_operator[0]->tok_value == K_NULL){ //when its null & check if is null
+                            if(tok_length == 0){
+                              record_to_print[row_select] = record_ptr;
+                              row_select++;
+                            }
                           }//end checking for null
-                          else if(cond_relation_operator[0]->tok_value == K_NOT && tok_length != 0){
-                            record_to_print[row_select] = record_ptr;
-                            row_select++;
+                          else if(cond_relation_operator[0]->tok_value == K_NOT){
+                            if(tok_length == 0){
+                              record_to_print[row_select] = record_ptr;
+                              row_select++;
+                            }
                           }
                           else { // must be relational
                             if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
@@ -1999,19 +2057,19 @@ int sem_select(token_list *t_list) {
                               memcpy(&temp_string, record_ptr+record_offset, tok_length);
                                   // printf("%s\n", temp_string);
                               if(cond_relation_operator[0]->tok_value == S_EQUAL){
-                                if(strcmp(cond_value[0], temp_string) == 0){
+                                if(strcmp(cond_value[0]->tok_string, temp_string) == 0){
                                     record_to_print[row_select] = record_ptr;
                                     row_select++;
                                 }
                               }
                               else if(cond_relation_operator[0]->tok_value == S_GREATER){
-                                if(strcmp(cond_value[0], temp_string) < 0){
+                                if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
                                     record_to_print[row_select] = record_ptr;
                                     row_select++;
                                 }
                               }
                               else {
-                                if(strcmp(cond_value[0], temp_string) > 0){
+                                if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
                                     record_to_print[row_select] = record_ptr;
                                     row_select++;
                                 }
@@ -2020,38 +2078,42 @@ int sem_select(token_list *t_list) {
                             else{ // this must be int
                               int temp_num = 0;
                               memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
-                              int *extract_value = (int*)cond_value[0];
+                              int extract_value = atoi(cond_value[0]->tok_string);
                               if(cond_relation_operator[0]->tok_value == S_EQUAL
-                                && temp_num == *extract_value){
+                                && temp_num == extract_value){
                                   record_to_print[row_select] = record_ptr;
                                   row_select++;
                                 }
                               else if(cond_relation_operator[0]->tok_value == S_GREATER
-                                && temp_num > *extract_value)
+                                && temp_num > extract_value)
                                 {
                                   record_to_print[row_select] = record_ptr;
                                   row_select++;
                                 }
                               else if(cond_relation_operator[0]->tok_value == S_LESS
-                                && temp_num < *extract_value)
+                                && temp_num < extract_value)
                                 {
                                   record_to_print[row_select] = record_ptr;
                                   row_select++;
                                 }
                             }
                           }
-                      }
-                        if(multi_cond){//if both condition
+                        }
+                        if(multi_cond){//if both
                             int boolean = and_or->tok_value;
                             //If match the column name -> find the matching cell
                             if(strcasecmp(cond_column[1]->tok_string, column_address->col_name) == 0){
-                              if(cond_relation_operator[1]->tok_value == K_NULL && tok_length == 0){ //when its null & check if is null
-                                record_to_print2[row_select2] = record_ptr;
-                                row_select2++;
+                              if(cond_relation_operator[1]->tok_value == K_NULL){ //when its null & check if is null
+                                if(tok_length == 0){
+                                  record_to_print2[row_select2] = record_ptr;
+                                  row_select2++;
+                                }
                               }//end checking for null
-                              else if(cond_relation_operator[1]->tok_value == K_NOT && tok_length != 0){
-                                record_to_print2[row_select2] = record_ptr;
-                                row_select2++;
+                              else if(cond_relation_operator[1]->tok_value == K_NOT){
+                                if(tok_length == 0){
+                                  record_to_print2[row_select2] = record_ptr;
+                                  row_select2++;
+                                }
                               }
                               else { // must be relational
                                 if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
@@ -2061,35 +2123,41 @@ int sem_select(token_list *t_list) {
                                   memcpy(&temp_string, record_ptr+record_offset, tok_length);
                                       // printf("%s\n", temp_string);
                                   if(cond_relation_operator[1]->tok_value == S_EQUAL){
-                                    if(strcmp(cond_value[1], temp_string) == 0){
+                                    if(strcmp(cond_value[1]->tok_string, temp_string) == 0){
                                         record_to_print2[row_select2] = record_ptr;
                                         row_select2++;
                                     }
                                   }
-                                  else { //REDO - MOVE TO TOP
-                                      rc = INVALID_SELECT_SYNTAX;
-                                      cond_relation_operator[1]->tok_value = INVALID;
-                                      printf("%s\n", "Can't have > or < for column type String");
-                                      return rc;
+                                  else if(cond_relation_operator[0]->tok_value == S_GREATER){
+                                    if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
+                                        record_to_print[row_select] = record_ptr;
+                                        row_select++;
+                                    }
+                                  }
+                                  else {
+                                    if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
+                                        record_to_print[row_select] = record_ptr;
+                                        row_select++;
+                                    }
                                   }
                                 }
                                 else{ // this must be int
                                   int temp_num = 0;
                                   memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
-                                  int *extract_value = (int*)cond_value[1];
+                                  int extract_value = atoi(cond_value[1]->tok_string);
                                   if(cond_relation_operator[1]->tok_value == S_EQUAL
-                                    && temp_num == *extract_value){
+                                    && temp_num ==  extract_value){
                                       record_to_print2[row_select2] = record_ptr;
                                       row_select2++;
                                     }
                                   else if(cond_relation_operator[1]->tok_value == S_GREATER
-                                    && temp_num > *extract_value)
+                                    && temp_num >  extract_value)
                                     {
                                       record_to_print2[row_select2] = record_ptr;
                                       row_select2++;
                                     }
                                   else if(cond_relation_operator[1]->tok_value == S_LESS
-                                    && temp_num < *extract_value)
+                                    && temp_num <  extract_value)
                                     {
                                       record_to_print2[row_select2] = record_ptr;
                                       row_select2++;
@@ -2196,30 +2264,13 @@ int sem_select(token_list *t_list) {
                                 record_to_print_final[j+1] = temp;
                               }
                            }
-
-                           // printf("First %d Second %d\n", first_length, second_length);
-                           // if(first_length < second_length){
-                           //   printf("%s First %d | Value %d - Second %d | Value %d\n", "here1", first_length,first,second_length,second );
-                           //   char *temp = record_to_print_final[j+1];
-                           //   record_to_print_final[j+1] = record_to_print_final[j];
-                           //   record_to_print_final[j] = temp;
-                           // }
-                           // else if (first_length > second_length){
-                           //   printf("%s First %d | Value %d - Second %d | Value %d\n", "here2", first_length,first,second_length,second );
-                           //   char *temp = record_to_print_final[j+1];
-                           //   record_to_print_final[j+1] = record_to_print_final[j];
-                           //   record_to_print_final[j] = temp;
-                           // }
-                           // else if(second_length == first_length){
-
-                           // }
                       }
                     }//End INT
                   } //End loop
                 }//End order by
 
                 // PRINT EVERYTHING
-                int aggregate_result = 0;
+                long long aggregate_result = 0;
                 int null_count = 0;
 
                 for(int z = 0; z < total_row; z++){
@@ -2273,8 +2324,8 @@ int sem_select(token_list *t_list) {
                       }
                     }
                     else if(!select_all) {
-                      int record_offset2 = 0;
                       for(int i = 0; i < count_proj; i++){ // for all projection column
+                        int record_offset2 = 0;
                         for(j = 0; j < tab_entry->num_columns; j++) //search through all 5 columns
                         {
                           int tok_length2 = NULL;
@@ -2320,9 +2371,9 @@ int sem_select(token_list *t_list) {
                               }//End parse aggregate
                             }//End parse valid int
                           }//End parse int
-                          i++;
+                          // j++;
                         } // Compare Columns
-                        record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                          record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
                         }
                      }
                   }
@@ -2333,7 +2384,10 @@ int sem_select(token_list *t_list) {
                 }
                 //End going through rows
                 if(aggregate_func != NULL){
-                  if(aggregate_func->tok_value == F_SUM) {  printf("|%*d|\n",FORMAT_LENGTH,aggregate_result);total_row=1; }
+                  if(aggregate_func->tok_value == F_SUM) {
+                    printf("|%*lld|\n",FORMAT_LENGTH,aggregate_result);
+                    total_row=1;
+                  }
                   else if(aggregate_func->tok_value == F_COUNT) {
                     printf("|%*d|\n",FORMAT_LENGTH,total_row - null_count);
                     if(cur_projection != NULL){
@@ -2342,7 +2396,7 @@ int sem_select(token_list *t_list) {
                   }
                   else {
                     if(aggregate_result != 0){
-                      printf("|%*d|\n",FORMAT_LENGTH,aggregate_result / (total_row- null_count) );
+                      printf("|%*.2f|\n",FORMAT_LENGTH, (float)(aggregate_result) / (total_row-null_count));
                     }
                     else {
                       printf("|%*s|\n",FORMAT_LENGTH,"-");
@@ -2652,6 +2706,11 @@ int sem_update(token_list *t_list) {
           else{
               //Supposed to be column
               cur = cur->next;
+              if(cur->tok_value != IDENT){
+                rc = INVALID_UPDATE_SYNTAX;
+                printf("%s\n", "Missing column" );
+                cur->tok_value = INVALID;
+              }
               //Keep track of offset where buffer start
               int buffer_offset = 0;
               char* record_ptr = (char *)load_data_from_tab((char *)tab_entry.table_name);
@@ -2677,8 +2736,30 @@ int sem_update(token_list *t_list) {
                   return rc;
                 }
                 else if(cur->next->next != NULL){
-                    if(cur->next->next->next != NULL){
-                       cur2 = cur->next->next->next;
+                    if(cur->next->next->tok_value == INT_LITERAL){ //check for overflow value
+                        long long temp_ll = atoll(cur->next->next->tok_string);
+                        if(temp_ll > 2147483647)
+                        {
+                            rc = INVALID_UPDATE_SYNTAX;
+                            cur->next->next->tok_value = INVALID;
+                            printf("%s\n", "Exceed max integer value");
+                            return rc;
+                        }
+                    }
+                    if(cur->next->next->tok_value != INT_LITERAL
+                      && cur->next->next->tok_value != STRING_LITERAL
+                      && cur->next->next->tok_value != K_NULL ){
+                        rc = INVALID_UPDATE_SYNTAX;
+                        printf("%s\n", "Invalid or missing data value" );
+                        cur->next->next->tok_value = INVALID;
+                        return rc;
+                    }
+                    if(cur->next->next->tok_value == INT_LITERAL ||
+                    cur->next->next->tok_value == STRING_LITERAL || cur->next->next->tok_value == K_NULL )
+                    {
+                      if(cur->next->next->next != NULL){
+                         cur2 = cur->next->next->next;
+                      }
                     }
                 }
               }
@@ -2729,6 +2810,7 @@ int sem_update(token_list *t_list) {
                     }
                   }
               }
+
               if(!found_column){
                 rc = UPDATE_NO_COLUMN;
                 printf("No column %s in this table\n", cur->tok_string);

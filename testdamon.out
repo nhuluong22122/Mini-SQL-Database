@@ -1,0 +1,669 @@
+
+*
+you have found the golden easter egg, oasis is yours
+*
+
+TEST1.sh - test driver for CS157B project
+Compile your code
+In file included from db.cpp:5:
+./db.h:140:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+  ^
+./db.h:140:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+         ^
+./db.h:140:18: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                 ^
+./db.h:140:29: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                            ^
+./db.h:140:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                      ^
+./db.h:140:48: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                               ^
+./db.h:140:55: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                      ^
+./db.h:140:63: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                              ^
+./db.h:140:71: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                                      ^
+./db.h:140:79: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
+                                                                              ^
+./db.h:141:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+  ^
+./db.h:141:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+         ^
+./db.h:141:16: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+               ^
+./db.h:141:26: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                         ^
+./db.h:141:34: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                 ^
+./db.h:141:44: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                           ^
+./db.h:141:54: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                                     ^
+./db.h:141:62: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "for", "to", "insert", "into", "values", "delete", "from", "where",
+                                                             ^
+./db.h:142:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+  ^
+./db.h:142:13: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+            ^
+./db.h:142:20: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                   ^
+./db.h:142:30: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                             ^
+./db.h:142:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                      ^
+./db.h:142:45: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                            ^
+./db.h:142:53: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                                    ^
+./db.h:142:59: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                                          ^
+./db.h:142:66: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "update", "set", "select", "order", "by", "desc", "is", "and", "or",
+                                                                 ^
+./db.h:143:3: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "sum", "avg", "count"
+  ^
+./db.h:143:10: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "sum", "avg", "count"
+         ^
+./db.h:143:17: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+  "sum", "avg", "count"
+                ^
+db.cpp:162:28: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                        add_to_list(tok_list, "", terminator, EOC);
+                                                              ^
+db.cpp:192:28: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                        add_to_list(tok_list, "", terminator, EOC);
+                                                              ^
+db.cpp:219:27: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                add_to_list(tok_list, "", terminator, EOC);
+                                                      ^
+db.cpp:249:28: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                        add_to_list(tok_list, "", terminator, EOC);
+                                                              ^
+db.cpp:258:27: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+                                add_to_list(tok_list, "", terminator, EOC);
+                                                      ^
+db.cpp:5164:36: warning: format specifies type 'int' but the argument has type 'off_t' (aka 'long long') [-Wformat]
+                printf("dbfile.bin size = %d\n", file_stat.st_size);
+                                          ~~     ^~~~~~~~~~~~~~~~~
+                                          %lld
+36 warnings generated.
+Clean up
+==========================================================================================
+01 Test setup - create table + insert data
+CREATE TABLE statement
+==========================================================================================
+02 Insert 15 rows of data
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 64 Number of records: 1
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 104 Number of records: 2
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 144 Number of records: 3
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 184 Number of records: 4
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 224 Number of records: 5
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 264 Number of records: 6
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 304 Number of records: 7
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 344 Number of records: 8
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 384 Number of records: 9
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 424 Number of records: 10
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 464 Number of records: 11
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 504 Number of records: 12
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 544 Number of records: 13
+
+dbfile.bin size = 228
+INSERT statement
+class.tab size: 584 Number of records: 14
+
+==========================================================================================
+SELECT
+==========================================================================================
+Select All
+Simple select & verify headings & verify NULL display with
+dbfile.bin size = 228
+SELECT statement
++----------------+----------------+----------------+----------------+----------------+
+|Student_Name    |Gender          |Exams           |Quiz_Total      |Total           |
++----------------+----------------+----------------+----------------+----------------+
+|Siu             |M               |             480|              80|             560|
+|Frank           |M               |             600|             100|             700|
+|Jordon          |M               |             450|              75|             525|
+|Jeff            |M               |             455|              60|             515|
+|Ying            |F               |             540|              85|             625|
+|David           |M               |             550|              83|             633|
+|euna            |F               |             620|              90|             535|
+|Victor          |M               |             475|              60|             535|
+|Linawati        |F               |             490|              86|             576|
+|Stephen         |M               |             520|              76|             596|
+|Test1           |-               |             560|              83|             633|
+|Test2           |M               |               -|              75|             534|
+|Test3           |F               |             610|               -|             647|
+|Test4           |M               |             590|              86|            9999|
++----------------+----------------+----------------+----------------+----------------+
+14 rows selected.
+
+
+------------------------------------------------------------------------------------------
+Projection of two of the same columns
+select Student_Name, Student_Name from class
+dbfile.bin size = 228
+SELECT statement
++----------------+----------------+
+|Student_Name    |Student_Name    |
++----------------+----------------+
+|Siu             |Siu             |
+|Frank           |Frank           |
+|Jordon          |Jordon          |
+|Jeff            |Jeff            |
+|Ying            |Ying            |
+|David           |David           |
+|euna            |euna            |
+|Victor          |Victor          |
+|Linawati        |Linawati        |
+|Stephen         |Stephen         |
+|Test1           |Test1           |
+|Test2           |Test2           |
+|Test3           |Test3           |
+|Test4           |Test4           |
++----------------+----------------+
+14 rows selected.
+
+
+------------------------------------------------------------------------------------------
+Projection of columns in different order
+select Total, Quiz_Total, exams, gender, Student_Name from class
+dbfile.bin size = 228
+SELECT statement
++----------------+----------------+----------------+----------------+----------------+
+|Total           |Quiz_Total      |exams           |gender          |Student_Name    |
++----------------+----------------+----------------+----------------+----------------+
+|             560|              80|             480|M               |Siu             |
+|             700|             100|             600|M               |Frank           |
+|             525|              75|             450|M               |Jordon          |
+|             515|              60|             455|M               |Jeff            |
+|             625|              85|             540|F               |Ying            |
+|             633|              83|             550|M               |David           |
+|             535|              90|             620|F               |euna            |
+|             535|              60|             475|M               |Victor          |
+|             576|              86|             490|F               |Linawati        |
+|             596|              76|             520|M               |Stephen         |
+|             633|              83|             560|-               |Test1           |
+|             534|              75|               -|M               |Test2           |
+|             647|               -|             610|F               |Test3           |
+|            9999|              86|             590|M               |Test4           |
++----------------+----------------+----------------+----------------+----------------+
+14 rows selected.
+
+
+------------------------------------------------------------------------------------------
+Error Testing **THESE SHOULD ALL BE BLOCKED**
+select * from class where gender = 123
+dbfile.bin size = 228
+SELECT statement
+Data Type Mismatch
+
+Error in the string: 123
+rc=-376
+
+
+select * from class where exams = hi
+dbfile.bin size = 228
+SELECT statement
+Data Type Mismatch
+
+Error in the string: hi
+rc=-376
+
+
+select Total, Quiz_Total, exams, gender, Student_Name from class hi
+dbfile.bin size = 228
+SELECT statement
+Invalid Select, Excepted EOC or Where condition not found
+
+Error in the string: hi
+rc=-386
+
+
+select Total Quiz_Total from class
+dbfile.bin size = 228
+SELECT statement
+99
+Missing or Extra comma
+
+Error in the string: Quiz_Total
+rc=-386
+
+
+select Total, Quiz_Total from class ORDER BY exams hi
+dbfile.bin size = 228
+SELECT statement
+99
+Order by syntax invalid
+
+Error in the string: hi
+rc=-386
+
+
+select Total, Quiz_Total from class ORDER BY FAKECOLUMN
+dbfile.bin size = 228
+SELECT statement
+FAKECOLUMN is not a valid column
+
+Error in the string: FAKECOLUMN
+rc=-393
+
+
+select Total, Quiz_Total, exams, gender, Student_Name from class where student > 'A' hi
+dbfile.bin size = 228
+SELECT statement
+student is not a valid column
+
+Error in the string: student
+rc=-393
+
+
+select Total, Quiz_Total, exams, gender, Student_Name from class where student > 'A' AND student > 'A' hi
+dbfile.bin size = 228
+SELECT statement
+student is not a valid column
+
+Error in the string: student
+rc=-393
+
+
+select FAKECOLUMN from class where student > 'A'
+dbfile.bin size = 228
+SELECT statement
+FAKECOLUMN is not a valid column
+
+Error in the string: class
+rc=-386
+
+
+select FAKECOLUMN, Quiz_Total, exams, gender, Student_Name from class where student > 'A'
+dbfile.bin size = 228
+SELECT statement
+FAKECOLUMN is not a valid column
+
+Error in the string: class
+rc=-386
+
+
+select sum(gender) from class
+dbfile.bin size = 228
+SELECT statement
+gender is not INT type, cannot sum
+
+Error in the string: class
+rc=-386
+
+
+select sum(*) from class
+dbfile.bin size = 228
+SELECT statement
+* is not a valid column
+
+Error in the string: class
+rc=-393
+
+
+select avg(gender) from class
+dbfile.bin size = 228
+SELECT statement
+gender is not INT type, cannot sum
+
+Error in the string: class
+rc=-386
+
+
+select avg(*) from class
+dbfile.bin size = 228
+SELECT statement
+* is not a valid column
+
+Error in the string: class
+rc=-393
+
+
+==========================================================================================
+DELETE
+==========================================================================================
+Error Testing **THESE SHOULD ALL BE BLOCKED AND YOUR TABLE SHOULDN'T CHANGE**
+delete from class hi
+dbfile.bin size = 228
+DELETE statement
+Invalid Delete, Expected WHERE keyword or EOC not found
+
+Error in the string: hi
+rc=-385
+
+
+delete from class where hi
+dbfile.bin size = 228
+DELETE statement
+hi is not a valid column
+
+Error in the string: hi
+rc=-393
+
+
+delete from class where gender =
+dbfile.bin size = 228
+DELETE statement
+Delete Value Type Mismatch
+
+Error in the string: 
+rc=-385
+
+
+delete from class where gender = null
+dbfile.bin size = 228
+DELETE statement
+Delete Value Type Mismatch
+
+Error in the string: null
+rc=-385
+
+
+delete from class where gender = not null
+dbfile.bin size = 228
+DELETE statement
+Delete Value Type Mismatch
+
+Error in the string: not
+rc=-385
+
+
+delete from class where gender = 123
+dbfile.bin size = 228
+DELETE statement
+Delete Value Type Mismatch
+
+Error in the string: 123
+rc=-385
+
+
+delete from class where gender = NoQuoteString
+dbfile.bin size = 228
+DELETE statement
+Delete Value Type Mismatch
+
+Error in the string: NoQuoteString
+rc=-385
+
+
+delete from class where exams = 'CannotBeString'
+dbfile.bin size = 228
+DELETE statement
+Delete Value Type Mismatch
+
+Error in the string: CannotBeString
+rc=-385
+
+
+YOUR TABLE SHOULD NOT HAVE CHANGED
+dbfile.bin size = 228
+SELECT statement
++----------------+----------------+----------------+----------------+----------------+
+|Student_Name    |Gender          |Exams           |Quiz_Total      |Total           |
++----------------+----------------+----------------+----------------+----------------+
+|Siu             |M               |             480|              80|             560|
+|Frank           |M               |             600|             100|             700|
+|Jordon          |M               |             450|              75|             525|
+|Jeff            |M               |             455|              60|             515|
+|Ying            |F               |             540|              85|             625|
+|David           |M               |             550|              83|             633|
+|euna            |F               |             620|              90|             535|
+|Victor          |M               |             475|              60|             535|
+|Linawati        |F               |             490|              86|             576|
+|Stephen         |M               |             520|              76|             596|
+|Test1           |-               |             560|              83|             633|
+|Test2           |M               |               -|              75|             534|
+|Test3           |F               |             610|               -|             647|
+|Test4           |M               |             590|              86|            9999|
++----------------+----------------+----------------+----------------+----------------+
+14 rows selected.
+
+==========================================================================================
+UPDATE
+==========================================================================================
+Error Testing **THESE SHOULD ALL BE BLOCKED AND YOUR TABLE SHOULDN'T CHANGE**
+update class set STUDENT_NAME = null
+dbfile.bin size = 228
+UPDATE statement
+Column to update cannot be null
+
+Error in the string: null
+rc=-377
+
+
+update class set STUDENT_NAME = 123
+dbfile.bin size = 228
+UPDATE statement
+Update new value is the wrong type
+
+Error in the string: 123
+rc=-377
+
+
+update class set STUDENT_NAME = 'damon' hi
+dbfile.bin size = 228
+UPDATE statement
+Update syntax is incorrect
+
+Error in the string: =
+rc=-379
+
+
+update class set exams = 'string'
+dbfile.bin size = 228
+UPDATE statement
+Update new value is the wrong type
+
+Error in the string: string
+rc=-377
+
+
+update class set exams
+dbfile.bin size = 228
+UPDATE statement
+missing equal sign in update
+
+Error in the string: 
+rc=-379
+
+
+update class set exams = 
+damon.sh: line 172: 63147 Segmentation fault: 11  ./db "update class set exams = "
+
+update class set FAKECOLUMN = 'string'
+dbfile.bin size = 228
+UPDATE statement
+FAKECOLUMN is not a valid column name
+
+Error in the string: FAKECOLUMN
+rc=-378
+
+
+update class set STUDENT_NAME = 'stephanie' where
+dbfile.bin size = 228
+UPDATE statement
+Update syntax is incorrect
+
+Error in the string: =
+rc=-379
+
+
+update class set STUDENT_NAME = 'stephanie' where exams = 'string'
+dbfile.bin size = 228
+UPDATE statement
+Data Type Mismatch
+
+Error in the string: string
+rc=-376
+
+
+update class set STUDENT_NAME = 'christine' where gender = 123
+dbfile.bin size = 228
+UPDATE statement
+Data Type Mismatch
+
+Error in the string: 123
+rc=-376
+
+
+update class set STUDENT_NAME = 'ryan' where STUDENT_NAME = 'Frank' hi
+dbfile.bin size = 228
+UPDATE statement
+EOC Expected but not found
+
+Error in the string: Frank
+rc=-379
+
+
+update class STUDENT_NAME = 'ryan' where STUDENT_NAME = 'Frank'
+dbfile.bin size = 228
+UPDATE statement
+Missing SET keyword
+
+Error in the string: STUDENT_NAME
+rc=-379
+
+
+update class set gender 'hi' where STUDENT_NAME = 'test4'
+dbfile.bin size = 228
+UPDATE statement
+missing equal sign in update
+
+Error in the string: hi
+rc=-379
+
+
+update class set total = 3000000000 where STUDENT_NAME = 'Test1'
+dbfile.bin size = 228
+UPDATE statement
+Number in update exceeded maximum integer value of 2,147,483,647
+
+Error in the string: 3000000000
+rc=-379
+
+
+YOUR TABLE SHOULD NOT HAVE CHANGED
+dbfile.bin size = 228
+SELECT statement
++----------------+----------------+----------------+----------------+----------------+
+|Student_Name    |Gender          |Exams           |Quiz_Total      |Total           |
++----------------+----------------+----------------+----------------+----------------+
+|Siu             |M               |             480|              80|             560|
+|Frank           |M               |             600|             100|             700|
+|Jordon          |M               |             450|              75|             525|
+|Jeff            |M               |             455|              60|             515|
+|Ying            |F               |             540|              85|             625|
+|David           |M               |             550|              83|             633|
+|euna            |F               |             620|              90|             535|
+|Victor          |M               |             475|              60|             535|
+|Linawati        |F               |             490|              86|             576|
+|Stephen         |M               |             520|              76|             596|
+|Test1           |-               |             560|              83|             633|
+|Test2           |M               |               -|              75|             534|
+|Test3           |F               |             610|               -|             647|
+|Test4           |M               |             590|              86|            9999|
++----------------+----------------+----------------+----------------+----------------+
+14 rows selected.
+
+
+==========================================================================================
+More fun breaking stuff
+==========================================================================================
+Test SELECT with WHERE clause with a single condition.
+update class set total = 2000000000 where STUDENT_NAME = 'Test2'
+dbfile.bin size = 228
+UPDATE statement
+Updated 1 Rows
+
+
+update class set total = 2000000000 where STUDENT_NAME = 'Test3'
+dbfile.bin size = 228
+UPDATE statement
+Updated 1 Rows
+
+
+SELECT SUM SHOULD RETURN 4 BILLION SOMETHING
+select sum(total) from class
+dbfile.bin size = 228
+SELECT statement
++---------------------+
+|SUM(total)           |
++---------------------+
+|           4000016432|
++---------------------+
+1 rows selected.
+
+
+------------------------------------------------------------------------------------------
+==========================================================================================
+END FUNCTIONAL QUERY
+==========================================================================================
