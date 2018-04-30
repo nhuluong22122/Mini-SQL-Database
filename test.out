@@ -110,19 +110,19 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-db.cpp:1981:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1979:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *end = ")";
                                     ^
-db.cpp:1982:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1980:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *start = "";
                                       ^
-db.cpp:1985:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1983:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "SUM(";
                                      ^
-db.cpp:1988:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1986:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "COUNT(";
                                      ^
-db.cpp:1991:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1989:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "AVG(";
                                      ^
 41 warnings generated.
@@ -292,7 +292,7 @@ Delete from class where no row is found
 delete from class where Student_Name = 'Hi'
 dbfile.bin size = 228
 DELETE statement
-Delete 0 rows. 
+WARNING: Delete 0 rows. 
 dbfile.bin size = 228
 SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -368,7 +368,7 @@ Test update when no rows is found
 update class set Quiz_Total = 350 where Student_Name = 'Nhu'
 dbfile.bin size = 228
 UPDATE statement
-Updated 0 rows.
+WARNING: Updated 0 rows.
 dbfile.bin size = 228
 SELECT statement
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -474,7 +474,6 @@ Updated 1 rows.
 select Student_Name, Gender from class where Exams IS NULL
 dbfile.bin size = 228
 SELECT statement
-Is Null
 +--------------------+--------------------+
 |Student_Name        |Gender              |
 +--------------------+--------------------+
@@ -487,7 +486,6 @@ Test SELECT with two conditions separated by the AND keyword.
 select * from class where Total > 400 AND Exams IS NULL
 dbfile.bin size = 228
 SELECT statement
-Is Null
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -500,12 +498,11 @@ Test SELECT with two conditions separated by the OR keyword
 select * from class where Exams IS NULL OR Student_Name ='Frank'
 dbfile.bin size = 228
 SELECT statement
-Is Null
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
-|Natalie             |F                   |                   -|                 350|                 596|
 |Frank               |M                   |                 600|                 100|                 700|
+|Natalie             |F                   |                   -|                 350|                 596|
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 2 rows selected.
 

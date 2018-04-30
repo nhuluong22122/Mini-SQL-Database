@@ -1859,7 +1859,7 @@ int sem_select(token_list *t_list) {
                         match = true;
                         if(list_cd_entry[i]->col_type == T_CHAR || list_cd_entry[i]->col_type == T_VARCHAR){
                           if(aggregate_func != NULL && (aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG)){
-                             rc = INVALID_DATA_VALUE;
+                             rc = INVALID_AGGREGATE_FUNCTION_PARAM;
                              cur_projection->tok_value = INVALID;
                              printf("%s\n", "Can't apply SUM or AVG to String Column Type");
                              return rc;
@@ -2037,14 +2037,18 @@ int sem_select(token_list *t_list) {
                         if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
                           if(cond_relation_operator[0]->tok_value == K_NULL){ //when its null & check if is null
                             if(tok_length == 0){
-                              record_to_print[row_select] = record_ptr;
-                              row_select++;
+                              // record_to_print[row_select] = record_ptr;
+                              // row_select++;
+                              record_to_print[total_row] = record_ptr;
+                              total_row++;
                             }
                           }//end checking for null
                           else if(cond_relation_operator[0]->tok_value == K_NOT){
                             if(tok_length == 0){
-                              record_to_print[row_select] = record_ptr;
-                              row_select++;
+                              // record_to_print[row_select] = record_ptr;
+                              // row_select++;
+                              record_to_print[total_row] = record_ptr;
+                              total_row++;
                             }
                           }
                           else { // must be relational
@@ -2056,20 +2060,26 @@ int sem_select(token_list *t_list) {
                                   // printf("%s\n", temp_string);
                               if(cond_relation_operator[0]->tok_value == S_EQUAL){
                                 if(strcmp(cond_value[0]->tok_string, temp_string) == 0){
-                                    record_to_print[row_select] = record_ptr;
-                                    row_select++;
+                                    // record_to_print[row_select] = record_ptr;
+                                    // row_select++;
+                                    record_to_print[total_row] = record_ptr;
+                                    total_row++;
                                 }
                               }
                               else if(cond_relation_operator[0]->tok_value == S_GREATER){
                                 if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
-                                    record_to_print[row_select] = record_ptr;
-                                    row_select++;
+                                    // record_to_print[row_select] = record_ptr;
+                                    // row_select++;
+                                    record_to_print[total_row] = record_ptr;
+                                    total_row++;
                                 }
                               }
                               else {
                                 if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
-                                    record_to_print[row_select] = record_ptr;
-                                    row_select++;
+                                    // record_to_print[row_select] = record_ptr;
+                                    // row_select++;
+                                    record_to_print[total_row] = record_ptr;
+                                    total_row++;
                                 }
                               }
                             }
@@ -2079,20 +2089,26 @@ int sem_select(token_list *t_list) {
                               int extract_value = atoi(cond_value[0]->tok_string);
                               if(cond_relation_operator[0]->tok_value == S_EQUAL
                                 && temp_num == extract_value){
-                                  record_to_print[row_select] = record_ptr;
-                                  row_select++;
+                                  // record_to_print[row_select] = record_ptr;
+                                  // row_select++;
+                                  record_to_print[total_row] = record_ptr;
+                                  total_row++;
                                 }
                               else if(cond_relation_operator[0]->tok_value == S_GREATER
                                 && temp_num > extract_value)
                                 {
-                                  record_to_print[row_select] = record_ptr;
-                                  row_select++;
+                                  // record_to_print[row_select] = record_ptr;
+                                  // row_select++;
+                                  record_to_print[total_row] = record_ptr;
+                                  total_row++;
                                 }
                               else if(cond_relation_operator[0]->tok_value == S_LESS
                                 && temp_num < extract_value)
                                 {
-                                  record_to_print[row_select] = record_ptr;
-                                  row_select++;
+                                  // record_to_print[row_select] = record_ptr;
+                                  // row_select++;
+                                  record_to_print[total_row] = record_ptr;
+                                  total_row++;
                                 }
                             }
                           }
@@ -2103,14 +2119,18 @@ int sem_select(token_list *t_list) {
                             if(strcasecmp(cond_column[1]->tok_string, column_address->col_name) == 0){
                               if(cond_relation_operator[1]->tok_value == K_NULL){ //when its null & check if is null
                                 if(tok_length == 0){
-                                  record_to_print2[row_select2] = record_ptr;
-                                  row_select2++;
+                                  // record_to_print2[row_select2] = record_ptr;
+                                  // row_select2++;
+                                  record_to_print[total_row] = record_ptr;
+                                  total_row++;
                                 }
                               }//end checking for null
                               else if(cond_relation_operator[1]->tok_value == K_NOT){
                                 if(tok_length == 0){
-                                  record_to_print2[row_select2] = record_ptr;
-                                  row_select2++;
+                                  // record_to_print2[row_select2] = record_ptr;
+                                  // row_select2++;
+                                  record_to_print[total_row] = record_ptr;
+                                  total_row++;
                                 }
                               }
                               else { // must be relational
@@ -2122,20 +2142,26 @@ int sem_select(token_list *t_list) {
                                       // printf("%s\n", temp_string);
                                   if(cond_relation_operator[1]->tok_value == S_EQUAL){
                                     if(strcmp(cond_value[1]->tok_string, temp_string) == 0){
-                                          record_to_print2[row_select2] = record_ptr;
-                                          row_select2++;
+                                          // record_to_print2[row_select2] = record_ptr;
+                                          // row_select2++;
+                                          record_to_print[total_row] = record_ptr;
+                                          total_row++;
                                     }
                                   }
                                   else if(cond_relation_operator[0]->tok_value == S_GREATER){
                                     if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
-                                        record_to_print[row_select] = record_ptr;
-                                        row_select++;
+                                        // record_to_print[row_select] = record_ptr;
+                                        // row_select++;
+                                        record_to_print[total_row] = record_ptr;
+                                        total_row++;
                                     }
                                   }
                                   else {
                                     if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
-                                        record_to_print[row_select] = record_ptr;
-                                        row_select++;
+                                        // record_to_print[row_select] = record_ptr;
+                                        // row_select++;
+                                        record_to_print[total_row] = record_ptr;
+                                        total_row++;
                                     }
                                   }
                                 }
@@ -2145,28 +2171,33 @@ int sem_select(token_list *t_list) {
                                   int extract_value = atoi(cond_value[1]->tok_string);
                                   if(cond_relation_operator[1]->tok_value == S_EQUAL
                                     && temp_num ==  extract_value){
-                                      record_to_print2[row_select2] = record_ptr;
-                                      row_select2++;
+                                      // record_to_print2[row_select2] = record_ptr;
+                                      // row_select2++;
+                                      record_to_print[total_row] = record_ptr;
+                                      total_row++;
                                     }
                                   else if(cond_relation_operator[1]->tok_value == S_GREATER
                                     && temp_num >  extract_value)
                                     {
-                                      record_to_print2[row_select2] = record_ptr;
-                                      row_select2++;
+                                      // record_to_print2[row_select2] = record_ptr;
+                                      // row_select2++;
+                                      record_to_print[total_row] = record_ptr;
+                                      total_row++;
                                     }
                                   else if(cond_relation_operator[1]->tok_value == S_LESS
                                     && temp_num <  extract_value)
                                     {
-                                      record_to_print2[row_select2] = record_ptr;
-                                      row_select2++;
+                                      // record_to_print2[row_select2] = record_ptr;
+                                      // row_select2++;
+                                      record_to_print[total_row] = record_ptr;
+                                      total_row++;
                                     }
                                 }
                               }
                             }
                         }
                         else {
-                          record_to_print_final[row_select-1] = record_to_print[row_select-1];
-                          total_row=row_select;
+                          record_to_print_final[total_row-1] = record_to_print[total_row-1];
                         }
                       }
                       if(orderby_flag){
@@ -2187,38 +2218,67 @@ int sem_select(token_list *t_list) {
                     // printf("Print Count %d Count Proj %d", print_count, count_proj);
                 }
 
-
-                //AND OR LOGIC
                 if(multi_cond){
+                  int new_total_row = 0;
                   if(and_or->tok_value == K_AND){
-                      for(int m = 0; m < row_select2; m++){
-                        for(int n = 0; n < row_select; n++){
-                          if(record_to_print2[m] == record_to_print[n]){
-                            record_to_print_final[total_row++] = record_to_print2[m];
-                            m++;
-                          }
-                        }
+                      int i = 0;
+                      for(int j = 0; j < total_row-1; j++){
+                            if(record_to_print[j] == record_to_print[j+1]){
+                                record_to_print_final[i] = record_to_print[j+1];
+                                i++;
+                                new_total_row++;
+                            }
                       }
-                    }
-                  else if(and_or->tok_value == K_OR){
-                    for(int i = 0; i < row_select; i++){
-                      record_to_print_final[i] = record_to_print[i];
-                      total_row++;
-                    }
-                    for(int m = 0; m < row_select2; m++){
-                      bool found = false;
-                      for(int n = 0; n < row_select; n++){
-                        if(record_to_print2[m] == record_to_print[n]){
-                            found = true;
-                            n++;
-                        }
-                      }
-                      if(!found){
-                        record_to_print_final[total_row++] = record_to_print2[m];
-                      }
-                    }
                   }
+                  else if(and_or->tok_value == K_OR){
+                     int i = 0;
+                     for(int j = 0; j < total_row-1; j++){
+                           if(record_to_print[j] != record_to_print[j+1]){
+                               record_to_print_final[i] = record_to_print[j];
+                               i++;
+                               new_total_row++;
+                           }
+                           if(j == total_row - 2 && record_to_print[j+1] != record_to_print[j+2]){
+                               record_to_print_final[i] = record_to_print[j+1];
+                               i++;
+                               new_total_row++;
+                           }
+                     }
+
+                  }
+                  total_row = new_total_row;
                 }
+                //AND OR LOGIC
+                // if(multi_cond){
+                //   if(and_or->tok_value == K_AND){
+                //       for(int m = 0; m < row_select2; m++){
+                //         for(int n = 0; n < row_select; n++){
+                //           if(record_to_print2[m] == record_to_print[n]){
+                //             record_to_print_final[total_row++] = record_to_print2[m];
+                //             m++;
+                //           }
+                //         }
+                //       }
+                //     }
+                //   else if(and_or->tok_value == K_OR){
+                //     for(int i = 0; i < row_select; i++){
+                //       record_to_print_final[i] = record_to_print[i];
+                //       total_row++;
+                //     }
+                //     for(int m = 0; m < row_select2; m++){
+                //       bool found = false;
+                //       for(int n = 0; n < row_select; n++){
+                //         if(record_to_print2[m] == record_to_print[n]){
+                //             found = true;
+                //             n++;
+                //         }
+                //       }
+                //       if(!found){
+                //         record_to_print_final[total_row++] = record_to_print2[m];
+                //       }
+                //     }
+                //   }
+                // }
                 //ORDER BY LOGIC
                 if(orderby_flag){
                   for(int i = 0; i < total_row - 1; i++){ // for the first row
@@ -2637,7 +2697,7 @@ int sem_delete(token_list *t_list) {
                       fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
                   }
                   else {
-                    printf("Delete %d rows. \n", num_row_changed);
+                    printf("WARNING: Delete %d rows. \n", num_row_changed);
                   }
                   fflush(fhandle);
                   fclose(fhandle);
@@ -3012,7 +3072,12 @@ int sem_update(token_list *t_list) {
                             ptr_offset += tabfile_ptr->record_size;
                         }
                         if(!rc){
-                          printf("Updated %d rows.\n", num_row_changed);
+                          if(num_row_changed == 0){
+                            printf("WARNING: Updated %d rows.\n", num_row_changed);
+                          }
+                          else{
+                            printf("Updated %d rows.\n", num_row_changed);
+                          }
                           fhandle = fopen(filename,"r+bc");
                           fwrite(record_ptr, tabfile_ptr->file_size, 1, fhandle);
                           fflush(fhandle);

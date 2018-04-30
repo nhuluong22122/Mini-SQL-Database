@@ -334,7 +334,7 @@ dbfile.bin size = 228
 SELECT statement
 Can't apply SUM or AVG to String Column Type
 Error in the string: gender
-rc=-379
+rc=-376
 
 select sum(*) from class
 dbfile.bin size = 228
@@ -348,7 +348,7 @@ dbfile.bin size = 228
 SELECT statement
 Can't apply SUM or AVG to String Column Type
 Error in the string: gender
-rc=-379
+rc=-376
 
 select avg(*) from class
 dbfile.bin size = 228
@@ -511,7 +511,7 @@ rc=-360
 update class set STUDENT_NAME = 'christine' where gender = 123
 dbfile.bin size = 228
 UPDATE statement
-Updated 0 rows.
+WARNING: Updated 0 rows.
 
 update class set STUDENT_NAME = 'ryan' where STUDENT_NAME = 'Frank' hi
 dbfile.bin size = 228
