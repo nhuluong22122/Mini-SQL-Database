@@ -492,10 +492,10 @@ rc=-360
 update class set exams = 'string'
 dbfile.bin size = 228
 UPDATE statement
-Invalid data value
+Type mismatch at SET
 
 Error in the string: string
-rc=-379
+rc=-378
 
 update class set exams
 dbfile.bin size = 228
@@ -532,18 +532,15 @@ rc=-360
 update class set STUDENT_NAME = 'stephanie' where exams = 'string'
 dbfile.bin size = 228
 UPDATE statement
-Datatype Mismatch
+Mismatch datatype
 
 Error in the string: string
-rc=-378
+rc=-360
 
 update class set STUDENT_NAME = 'christine' where gender = 123
 dbfile.bin size = 228
 UPDATE statement
-Datatype Mismatch
-
-Error in the string: 123
-rc=-378
+WARNING: Updated 0 rows.
 
 update class set STUDENT_NAME = 'ryan' where STUDENT_NAME = 'Frank' hi
 dbfile.bin size = 228
