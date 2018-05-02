@@ -1228,7 +1228,7 @@ int sem_create_table(token_list *t_list)
           {
             //Error
             rc = INSERT_SYNTAX_VALUE;
-            printf("%s\n", "Keyword VALUES is missing" );
+            printf("%s\n\n", "Keyword VALUES is missing" );
             cur->tok_value = INVALID;
           }
           else
@@ -1266,7 +1266,7 @@ int sem_create_table(token_list *t_list)
                       if(cur->tok_value == K_NULL && col_entry->not_null == 1){
                           rc = NOT_NULL_EXCEPTION;
                           cur->tok_value = INVALID;
-                          printf("%s%s\n", "Not Null constraint exists for column name ", col_entry->col_name );
+                          printf("%s%s\n\n", "Not Null constraint exists for column name ", col_entry->col_name );
                       }
                       else { //It can accept NULL
 
@@ -1278,12 +1278,12 @@ int sem_create_table(token_list *t_list)
                               if(cur->tok_value == S_RIGHT_PAREN){
                                 rc = INSERT_MISSING_COMA;
                                 cur->tok_value = INVALID;
-                                printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                printf("%s\n\n", "Missing ) or the number of columns and insert values don't match");
                               }
                               else if(cur->tok_value != S_COMMA){
                                 rc = INSERT_MISSING_COMA;
                                 cur->tok_value = INVALID;
-                                printf("%s\n", "Missing coma or the number of columns and insert values don't match");
+                                printf("%s\n\n", "Missing coma or the number of columns and insert values don't match");
                               }
                               else {
                                 cur = cur->next;
@@ -1293,7 +1293,7 @@ int sem_create_table(token_list *t_list)
                               if(cur->tok_value != S_RIGHT_PAREN || cur->tok_value == S_COMMA){
                                 rc = INSERT_MISSING_COMA;
                                 cur->tok_value = INVALID;
-                                printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                printf("%s\n\n", "Missing ) or the number of columns and insert values don't match");
                               }
                               else {
                                 column_done = true;
@@ -1304,10 +1304,16 @@ int sem_create_table(token_list *t_list)
                         //Reading in CHAR
                         else if(col_entry->col_type == T_CHAR)
                         {
-                              if(cur->tok_value != STRING_LITERAL || cur->tok_class != constant)
+                              if(cur->tok_value == IDENT)
+                              {
+                                  rc = INVALID_DATA_VALUE;
+                                  printf("%s\n\n", "Invalid value");
+                                  cur->tok_value = INVALID;
+                              }
+                              else if(cur->tok_value != STRING_LITERAL || cur->tok_class != constant)
                               {
                                   rc = INSERT_TYPE_MISMATCH;
-                                  printf("%s\n", "Type mismatch");
+                                  printf("%s\n\n", "Type mismatch");
                                   cur->tok_value = INVALID;
                               }
                               else { //if it's a valid string value
@@ -1329,12 +1335,12 @@ int sem_create_table(token_list *t_list)
                                       if(cur->tok_value == S_RIGHT_PAREN){
                                         rc = INSERT_MISSING_COMA;
                                         cur->tok_value = INVALID;
-                                        printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                        printf("%s\n\n", "Missing ) or the number of columns and insert values don't match");
                                       }
                                       else if(cur->tok_value != S_COMMA){
                                         rc = INSERT_MISSING_COMA;
                                         cur->tok_value = INVALID;
-                                        printf("%s\n", "Missing coma or the number of columns and insert values don't match");
+                                        printf("%s\n\n", "Missing coma or the number of columns and insert values don't match");
                                       }
                                       else {
                                         cur = cur->next;
@@ -1344,7 +1350,7 @@ int sem_create_table(token_list *t_list)
                                       if(cur->tok_value != S_RIGHT_PAREN || cur->tok_value == S_COMMA){
                                         rc = INSERT_MISSING_COMA;
                                         cur->tok_value = INVALID;
-                                        printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                        printf("%s\n\n", "Missing ) or the number of columns and insert values don't match");
                                       }
                                       else {
                                         column_done = true;
@@ -1357,11 +1363,19 @@ int sem_create_table(token_list *t_list)
                           else if(col_entry->col_type == T_INT)
                           {
                               //Check for invalid input
-                              if(cur->tok_value != INT_LITERAL || cur->tok_class != constant)
+                              if(cur->tok_value == IDENT)
+                              {
+                                  rc = INVALID_DATA_VALUE;
+                                  printf("%s\n\n", "Invalid value");
+                                  cur->tok_value = INVALID;
+                                  return rc;
+                              }
+                              else if(cur->tok_value != INT_LITERAL || cur->tok_class != constant)
                               {
                                   rc = INSERT_TYPE_MISMATCH;
                                   cur->tok_value = INVALID;
-                                  printf("%s\n", "Type mismatch");
+                                  printf("%s\n\n", "Type mismatch");
+                                  return rc;
                               }
                               else { // if its a valid int value , parse the int and then check for comma
                                 int tok_length = sizeof(int);
@@ -1372,9 +1386,9 @@ int sem_create_table(token_list *t_list)
                         				long long temp_ll = atoll(cur->tok_string);
                         				if(temp_ll > 2147483647)
                         				{
-                        				    rc = INSERT_INVALID_VALUE;
+                        				    rc = INVALID_DATA_VALUE;
                          				    cur->tok_value = INVALID;
-                        				    printf("%s\n", "Exceed max integer value");
+                        				    printf("%s\n\n", "Exceed max integer value");
                         				}
                         				else{
                         				//Write the actual int
@@ -1388,12 +1402,12 @@ int sem_create_table(token_list *t_list)
                                     if(cur->tok_value == S_RIGHT_PAREN){
                                       rc = INSERT_MISSING_COMA;
                                       cur->tok_value = INVALID;
-                                      printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                      printf("%s\n\n", "Missing ) or the number of columns and insert values don't match");
                                     }
                                     else if(cur->tok_value != S_COMMA){
                                       rc = INSERT_MISSING_COMA;
                                       cur->tok_value = INVALID;
-                                      printf("%s\n", "Missing coma or the number of columns and insert values don't match");
+                                      printf("%s\n\n", "Missing coma or the number of columns and insert values don't match");
                                     }
                                     else {
                                       cur = cur->next;
@@ -1403,7 +1417,7 @@ int sem_create_table(token_list *t_list)
                                     if(cur->tok_value != S_RIGHT_PAREN || cur->tok_value == S_COMMA){
                                       rc = INSERT_MISSING_COMA;
                                       cur->tok_value = INVALID;
-                                      printf("%s\n", "Missing ) or the number of columns and insert values don't match");
+                                      printf("%s\n\n", "Missing ) or the number of columns and insert values don't match");
                                     }
                                     else {
                                       column_done = true;
@@ -1418,7 +1432,8 @@ int sem_create_table(token_list *t_list)
                 }//End of for loop
                 if ((column_done) && (cur->tok_value != EOC))
                 {
-                  rc = INVALID_TABLE_DEFINITION;
+                  rc = INSERT_SYNTAX_VALUE;
+                  printf("%s\n\n","Supposed to be EOC");
                   cur->tok_value = INVALID;
                 }
                 if (!rc)
@@ -1551,7 +1566,9 @@ int sem_select(token_list *t_list) {
                }
           }
         }//End parsing aggregate
-        else if(cur->tok_value == IDENT){
+        //When it is a column
+        else if(cur->tok_value == IDENT
+          && (cur->next != NULL && cur->next->tok_value != S_LEFT_PAREN)){
           cur_projection = cur;
           /* Check for projection column */
           while(cur->tok_value != K_FROM){
@@ -1571,9 +1588,9 @@ int sem_select(token_list *t_list) {
           }
         }//End parsing column name
         else {
-          rc = INVALID_COLUMN_NAME;
+          rc = INVALID_SELECT_SYNTAX;
           cur->tok_value = INVALID;
-          printf("%s\n\n", "Invalid or missing column name");
+          printf("%s\n\n", "Invalid aggregated function or missing column name");
         }
       }
     }
@@ -1762,7 +1779,6 @@ int sem_select(token_list *t_list) {
                                 return rc;
                               }
                               orderby_flag = true;
-                              printf("%s\n\n", "Order By Clause");
                           }
                           else {
                             rc = INVALID_SELECT_SYNTAX;
@@ -1801,7 +1817,6 @@ int sem_select(token_list *t_list) {
                               return rc;
                             }
                             orderby_flag = true;
-                            printf("%s\n\n", "Order By Clause");
                         }
                         else {
                           rc = INVALID_SELECT_SYNTAX;
@@ -2485,6 +2500,7 @@ int sem_delete(token_list *t_list) {
                   rc = INVALID_RELATIONAL_OPERATOR;
                   printf("%s\n", "Missing relational operator" );
                   cur->tok_value = INVALID;
+                  return rc;
                 }
                 /* Check for invalid sign */
                 /* Continue parsing for value */
@@ -2502,7 +2518,13 @@ int sem_delete(token_list *t_list) {
                       if(match_col->col_type == T_CHAR || match_col->col_type == T_VARCHAR) // VARCHAR
                       {
                         /* Check for invalid string value */
-                        if(cur->tok_value != STRING_LITERAL) {
+                        if(cur->tok_value == IDENT){
+                          rc = INVALID_DATA_VALUE;
+                          cur->tok_value = INVALID;
+                          printf("%s\n\n", "Invalid data value");
+                          return rc;
+                        }
+                        else if(cur->tok_value != STRING_LITERAL) {
                             rc = DATATYPE_MISMATCH;
                             cur->tok_value = INVALID;
                             printf("%s\n\n", "Data type mismatch");
@@ -2543,7 +2565,13 @@ int sem_delete(token_list *t_list) {
                         }
                       }
                       else { //must be an int
-                        if(cur->tok_value != INT_LITERAL) {
+                        if(cur->tok_value == IDENT){
+                          rc = INVALID_DATA_VALUE;
+                          cur->tok_value = INVALID;
+                          printf("%s\n\n", "Invalid data value");
+                          return rc;
+                        }
+                        else if(cur->tok_value != INT_LITERAL) {
                             rc = DATATYPE_MISMATCH;
                             cur->tok_value = INVALID;
                             printf("%s\n\n", "Data type mismatch");
@@ -2880,9 +2908,10 @@ int sem_update(token_list *t_list) {
                                   return rc;
                                 }
                               }
+                              /* Check for the next value - which is supposed to be EOC */
                               if(cur2->next != NULL && cur2->next->tok_value != EOC){
                                 rc = INVALID_UPDATE_SYNTAX;
-                                printf("%s\n\n", "Supposed to be EOC" );
+                                printf("%s\n\n", "Invalid Update Syntax" );
                                 cur2->next->tok_value = INVALID;
                                 return rc;
                               }

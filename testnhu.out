@@ -115,19 +115,19 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-db.cpp:1967:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1982:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *end = ")";
                                     ^
-db.cpp:1968:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1983:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *start = "";
                                       ^
-db.cpp:1971:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1986:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "SUM(";
                                      ^
-db.cpp:1974:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1989:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "COUNT(";
                                      ^
-db.cpp:1977:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1992:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "AVG(";
                                      ^
 41 warnings generated.
@@ -301,8 +301,6 @@ rc=-350
 select Total, Quiz_Total from class ORDER BY FAKECOLUMN
 dbfile.bin size = 228
 SELECT statement
-Order By Clause
-
 The column name is invalid
 
 Error in the string: FAKECOLUMN
@@ -426,10 +424,10 @@ rc=-378
 delete from class where gender = NoQuoteString
 dbfile.bin size = 228
 DELETE statement
-Data type mismatch
+Invalid data value
 
 Error in the string: NoQuoteString
-rc=-378
+rc=-379
 
 delete from class where exams = 'CannotBeString'
 dbfile.bin size = 228
@@ -548,7 +546,7 @@ rc=-378
 update class set STUDENT_NAME = 'ryan' where STUDENT_NAME = 'Frank' hi
 dbfile.bin size = 228
 UPDATE statement
-Supposed to be EOC
+Invalid Update Syntax
 
 Error in the string: hi
 rc=-360

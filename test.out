@@ -110,19 +110,19 @@ db.cpp:667:36: warning: format specifies type 'int' but the argument has type 'o
                 printf("dbfile.bin size = %d\n", file_stat.st_size);
                                           ~~     ^~~~~~~~~~~~~~~~~
                                           %lld
-db.cpp:1967:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1982:37: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *end = ")";
                                     ^
-db.cpp:1968:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1983:39: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                         char *start = "";
                                       ^
-db.cpp:1971:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1986:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "SUM(";
                                      ^
-db.cpp:1974:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1989:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "COUNT(";
                                      ^
-db.cpp:1977:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
+db.cpp:1992:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "AVG(";
                                      ^
 41 warnings generated.
@@ -511,8 +511,6 @@ Test SELECT with ORDER BY clause.
 select * from class ORDER BY Student_Name DESC
 dbfile.bin size = 228
 SELECT statement
-Order By Clause
-
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -531,8 +529,6 @@ Order By Clause
 select * from class ORDER BY Student_Name
 dbfile.bin size = 228
 SELECT statement
-Order By Clause
-
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -551,8 +547,6 @@ Order By Clause
 select * from class ORDER BY Exams DESC
 dbfile.bin size = 228
 SELECT statement
-Order By Clause
-
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -571,8 +565,6 @@ Order By Clause
 select * from class ORDER BY Exams
 dbfile.bin size = 228
 SELECT statement
-Order By Clause
-
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -593,8 +585,6 @@ Test SELECT with WHERE and ORDER BY clause.
 select * from class WHERE Student_Name = 'Siu' Or Quiz_Total > 80 ORDER BY Quiz_Total
 dbfile.bin size = 228
 SELECT statement
-Order By Clause
-
 +--------------------+--------------------+--------------------+--------------------+--------------------+
 |Student_Name        |Gender              |Exams               |Quiz_Total          |Total               |
 +--------------------+--------------------+--------------------+--------------------+--------------------+
@@ -792,5 +782,345 @@ SELECT statement
 
 ------------------------------------------------------------------------------------------
 ==========================================================================================
-END FUNCTIONAL QUERY
+END FUNCTIONAL QUERY - BEGIN ERROR CHECKING
 ==========================================================================================
+==========================================================================================
+INSERT ERROR
+==========================================================================================
+Check syntax errors in various INSERT statement combinations
+insert into class values ('Siu', M, 480, 80, 560)
+dbfile.bin size = 228
+INSERT statement
+Invalid value
+
+Error in the string: M
+rc=-379
+
+insert into class values ('Zeno', 600, 100, 700)
+dbfile.bin size = 228
+INSERT statement
+Type mismatch
+
+Error in the string: 600
+rc=-382
+
+insert into class values ('Zeno', M, '600', 100, 700)
+dbfile.bin size = 228
+INSERT statement
+Invalid value
+
+Error in the string: M
+rc=-379
+
+insert into table values
+dbfile.bin size = 228
+INSERT statement
+Table table not found
+
+Error in the string: table
+rc=-397
+
+insert into class values ('Zeno', 'M', 600, 100, 700) hi
+dbfile.bin size = 228
+INSERT statement
+Supposed to be EOC
+
+Error in the string: hi
+rc=-199
+==========================================================================================
+UPDATE ERROR
+==========================================================================================
+Check syntax errors in various UPDATE statement combinations
+update hi SET Student_Name = 'Hi'
+dbfile.bin size = 228
+UPDATE statement
+Table hi does not exist
+
+Error in the string: hi
+rc=-397
+
+update class SET Student_Name = Hi
+dbfile.bin size = 228
+UPDATE statement
+Invalid or missing data value
+
+Error in the string: Hi
+rc=-379
+
+update class Student_Name = NULL
+dbfile.bin size = 228
+UPDATE statement
+Keyword SET is missing
+
+Error in the string: Student_Name
+rc=-360
+
+update class SET Student_Name = 'Hi' hi
+dbfile.bin size = 228
+UPDATE statement
+Supposed to be EOC
+
+Error in the string: hi
+rc=-360
+
+update class SET Student_Name = 'Three' WHERE
+dbfile.bin size = 228
+UPDATE statement
+Missing Column in the where clause
+
+Error in the string: 
+rc=-360
+
+update class SET Student_Name = Three WHERE Student_Name IS NULL
+dbfile.bin size = 228
+UPDATE statement
+Invalid or missing data value
+
+Error in the string: Three
+rc=-379
+
+update class SET Student_Name = 'Three' WHERE Student_Name IS NOT NULL
+dbfile.bin size = 228
+UPDATE statement
+Invalid relational operator
+
+Error in the string: IS
+rc=-377
+
+==========================================================================================
+SELECT ERROR
+==========================================================================================
+select * from
+dbfile.bin size = 228
+SELECT statement
+Error in the string: 
+rc=-399
+
+select * from class WHERE
+dbfile.bin size = 228
+SELECT statement
+Invalid WHERE syntax
+
+Error in the string: WHERE
+rc=-350
+
+select * from class ORDER BY
+dbfile.bin size = 228
+SELECT statement
+Invalid Column Name or Invalid Order By Syntax
+
+Error in the string: 
+rc=-350
+
+select * from class WHERE Gender = M
+dbfile.bin size = 228
+SELECT statement
+Invalid data value
+
+Error in the string: M
+rc=-379
+
+select * from class WHERE Gender = 'M' AND Student_Name = N
+dbfile.bin size = 228
+SELECT statement
+Invalid data value
+
+Error in the string: N
+rc=-379
+
+select * from class WHERE Gender = 'M' BUT Student_Name = 'N'
+dbfile.bin size = 228
+SELECT statement
+Invalid Select Syntax
+
+Error in the string: BUT
+rc=-350
+
+select * from class WHERE Gender = 'M' AND  = 'N'
+dbfile.bin size = 228
+SELECT statement
+Missing column in condition
+
+Error in the string: =
+rc=-350
+
+SELECT * FROM CLASS WHERE STUDENT = 'HI'
+dbfile.bin size = 228
+SELECT statement
+The column name is invalid
+
+Error in the string: STUDENT
+rc=-393
+
+select * from class where Exams IS NULL or Gender = 'M' ORDER BY LOVE
+dbfile.bin size = 228
+SELECT statement
+The column name is invalid
+
+Error in the string: LOVE
+rc=-393
+
+==========================================================================================
+MISMATCH ERROR ON INSERT
+==========================================================================================
+insert into class values ('Zeno', 'M', '590', 86, 482)
+dbfile.bin size = 228
+INSERT statement
+Type mismatch
+
+Error in the string: 590
+rc=-382
+
+insert into class values ('Zeno', M, 590, 86, 482)
+dbfile.bin size = 228
+INSERT statement
+Invalid value
+
+Error in the string: M
+rc=-379
+
+==========================================================================================
+NOT NULL ERROR ON INSERT / UPDATE
+==========================================================================================
+insert into class values (NULL, 'M', '590', 86, 482)
+dbfile.bin size = 228
+INSERT statement
+Not Null constraint exists for column name Student_Name
+
+Error in the string: NULL
+rc=-380
+
+insert into class values ('Goku', 'M', '590', 86, NULL)
+dbfile.bin size = 228
+INSERT statement
+Type mismatch
+
+Error in the string: 590
+rc=-382
+
+update class SET Student_Name = 'Five' where Quiz_Total IS NULL
+dbfile.bin size = 228
+UPDATE statement
+Invalid relational operator
+
+Error in the string: IS
+rc=-377
+
+==========================================================================================
+DATATYPE MISMATCH ON WHERE
+==========================================================================================
+delete from class where Student_Name = Zeno
+dbfile.bin size = 228
+DELETE statement
+Invalid data value
+
+Error in the string: Zeno
+rc=-379
+
+update class SET Student_Name = 'Five' where Quiz_Total = 'Nhu'
+dbfile.bin size = 228
+UPDATE statement
+Datatype Mismatch
+
+Error in the string: Nhu
+rc=-378
+
+==========================================================================================
+INVALID DATA VALUE ERRORS
+==========================================================================================
+update class SET Student_Name = Four
+dbfile.bin size = 228
+UPDATE statement
+Invalid or missing data value
+
+Error in the string: Four
+rc=-379
+
+update from class WHERE Student_Name = Four
+dbfile.bin size = 228
+UPDATE statement
+Table from does not exist
+
+Error in the string: from
+rc=-397
+
+==========================================================================================
+INVALID RELATIONAL OPERATOR
+INVALID AGGREGATE FUNCTION PARAMETER
+==========================================================================================
+select AVG(Student_Name) from class
+dbfile.bin size = 228
+SELECT statement
+Can't apply SUM or AVG to String Column Type
+
+Error in the string: Student_Name
+rc=-376
+
+select SUM(Student_Name) from class
+dbfile.bin size = 228
+SELECT statement
+Can't apply SUM or AVG to String Column Type
+
+Error in the string: Student_Name
+rc=-376
+
+select TOTAL(Total) from class
+dbfile.bin size = 228
+SELECT statement
+Invalid aggregated function or missing column name
+
+Error in the string: TOTAL
+rc=-350
+
+select (Total) from class
+dbfile.bin size = 228
+SELECT statement
+Invalid aggregated function or missing column name
+
+Error in the string: (
+rc=-350
+
+select SUM(*) from class
+dbfile.bin size = 228
+SELECT statement
+Invalid column for SUM
+
+Error in the string: *
+rc=-376
+
+select AVG(*) from class
+dbfile.bin size = 228
+SELECT statement
+Invalid column for AVG
+
+Error in the string: *
+rc=-376
+
+select * from class WHERE Student_Name ? 'Siu' Or Quiz_Total > 80 ORDER BY Quiz_Total
+dbfile.bin size = 228
+Error in the string: ?
+rc=99
+
+delete from class WHERE Student_Name * 'Siu'
+dbfile.bin size = 228
+DELETE statement
+Missing relational operator
+Error in the string: *
+rc=-377
+
+update class SET Exams = NULL WHERE Student_Name * 'Siu'
+dbfile.bin size = 228
+UPDATE statement
+Invalid relational operator
+
+Error in the string: *
+rc=-377
+
+update class SET Exams = NULL WHERE Student_Name * 'Siu'
+dbfile.bin size = 228
+UPDATE statement
+Invalid relational operator
+
+Error in the string: *
+rc=-377
+
