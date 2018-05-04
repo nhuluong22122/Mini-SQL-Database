@@ -34,7 +34,6 @@ int main(int argc, char** argv)
 	else
 	{
     rc = get_token(argv[1], &tok_list);
-
 		/* Test code */
 		tok_ptr = tok_list;
     /* Print out token by token */
@@ -306,6 +305,7 @@ int do_semantic(token_list *tok_list)
 
   /* Set current pointer to token list */
   token_list *cur = tok_list;
+  printf("%d  %d\n", cur->tok_class, cur->tok_value);
   /* If it's CREATE and next pointer is not null & the token value of next value is table */
 	if ((cur->tok_value == K_CREATE) &&
 			((cur->next != NULL) && (cur->next->tok_value == K_TABLE)))
@@ -365,6 +365,13 @@ int do_semantic(token_list *tok_list)
     cur_cmd = UPDATE;
     cur = cur->next;
   }
+  else if(cur->tok_value == K_BACKUP
+          && cur->next != NULL && cur->next->tok_value == K_TO)
+  {
+    printf("BACKUP statement\n");
+    cur_cmd = BACKUP;
+    cur = cur->next->next;
+  }
 	else
   {
 		printf("Invalid statement\n");
@@ -398,6 +405,9 @@ int do_semantic(token_list *tok_list)
             break;
       case UPDATE:
             rc = sem_update(cur);
+            break;
+      case BACKUP:
+            rc = backup(cur);
             break;
 			default:
 					; /* no action */
@@ -1140,7 +1150,9 @@ int sem_create_table(token_list *t_list)
 
           /* Set all the value to the header and write*/
           FILE *fhandle = NULL;
+          FILE *flog = NULL;
           fhandle = fopen(filename, "wbc");
+          // flog = fopen(filename, "w+bc");
           tabfile_ptr = (table_file_header*)calloc(1, sizeof(table_file_header));
           tabfile_ptr->file_size = sizeof(table_file_header);
           tabfile_ptr->num_records = 0;
@@ -1149,6 +1161,7 @@ int sem_create_table(token_list *t_list)
           tabfile_ptr->record_offset = tabfile_ptr->file_size;
           /* Intialize everything with starter column defintiion to the tab file */
           fwrite(tabfile_ptr, sizeof(table_file_header), 1, fhandle);
+
           fflush(fhandle);
           fclose(fhandle);
 
@@ -3108,6 +3121,67 @@ int sem_update(token_list *t_list) {
           }//Check column
       }  //Check if table exists
       return rc;
+}
+
+int backup(token_list *t_list){
+  struct stat file_stat;
+  FILE *src, *dest;
+  token_list *cur;
+  int rc = 0;
+
+  char* image_name;
+  char *buffer = NULL;
+
+  /* Get the number of table and pointer from the dbfile.tab */
+  int num_tables = g_tpd_list->num_tables;
+  tpd_entry *dbfile_cur = &(g_tpd_list->tpd_start);
+
+  cur = t_list;
+  if(cur != NULL){
+      //Get the backup image name
+      image_name = cur->tok_string;
+  }
+  else {
+      printf("%s\n", "Missing Backup Image File Name");
+      cur->tok_value = INVALID;
+      rc = INVALID_REPORT_FILE_NAME;
+  }
+  /* Check to see if we can find and open the image file  */
+  if((dest = fopen(image_name, "abc")) == NULL){
+    printf("%s%s\n", image_name, "Open Error");
+    rc = FILE_OPEN_ERROR;
+  }
+  if(!rc){
+      fwrite(g_tpd_list, g_tpd_list->list_size, 1, dest);
+      while (num_tables-- > 0)
+      {
+         printf("%s\n", dbfile_cur->table_name);
+         char tab_name[MAX_IDENT_LEN + 5];
+         /* Concat .tab to table name */
+         strcpy(tab_name, dbfile_cur->table_name);
+         strcat(tab_name, ".tab");
+
+         if((src = fopen(tab_name, "rbc")) != NULL){
+           fstat(fileno(src), &file_stat);
+           buffer = (char*)calloc(1, file_stat.st_size);
+
+           /* Read from tab file */
+           fread(buffer, file_stat.st_size, 1, src);
+           /* Get the pointer in struct table_file_header */
+           tabfile_ptr = (table_file_header*) buffer;
+           /* Write 4-byte length to the backup image file*/
+           fwrite(buffer, 4, 1, dest);
+           /* Write the entire tab file*/
+           fwrite(buffer, tabfile_ptr->file_size, 1, dest);
+         }
+         if (num_tables > 0)
+         {
+           /* Increment pointer from the file */
+           dbfile_cur = (tpd_entry*)((char*)dbfile_cur + dbfile_cur->tpd_size);
+         }
+      }
+  }
+  return rc;
 }
 
 char* load_data_from_tab(char *tablename){
