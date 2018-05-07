@@ -3272,6 +3272,7 @@ int restore(token_list *t_list){
 
     char* image_name;
     char *buffer = NULL;
+    char *buffer_withrf = NULL;
 
     /* Get the number of table and pointer from the dbfile.tab */
     int num_tables = g_tpd_list->num_tables;
@@ -3326,7 +3327,6 @@ int restore(token_list *t_list){
             if((f_log = fopen("db.log","r+c")) != NULL){
               /* When WITHOUT RF is specified */
               /* If the log needs to be pruned, save a copy of the original log before pruning */
-              if(!rf) {
                 char line[256];
                 int currentline = 0;
                 /* Start backing up the log */
@@ -3345,102 +3345,120 @@ int restore(token_list *t_list){
                 strcat(log_buf,image_name);
                 strcat(log_buf,"\n");
 
+                /* Going line by line to find line BACKUP */
                 while (strlen(line) != 0) {
-                  printf("Each %s", line);
+                  // printf("Each %s", line);
                   if(strcasecmp(line, log_buf) == 0){
                       found_bk = true;
-                      bool copy_log_flag = false;
-                      char copy_log[8];
-                      while(!copy_log_flag){
-                        //Testing to see if other back up logs are available
-                        memset(copy_log, '\0', sizeof(copy_log));
-                        strcpy(copy_log,"db.log");
-                        sprintf(back_up_version_char,"%d",back_up_version);
-                        strcat(copy_log,back_up_version_char);
-                        printf("%s\n",copy_log);
-                        f_copy_log = fopen(copy_log, "r");
-                        if(f_copy_log){ // if file already exists
-                           back_up_version++;
-                           fclose(f_copy_log);
-                        }
-                        else { //the backup file doesn't exist -> can start writing
-                            f_copy_log = fopen(copy_log, "w");
-                            printf("%s\n","Can use this file");
-                            /* Write the entire tab file*/
-                            fwrite(buffer,original_log_size, 1, f_copy_log);
-                            copy_log_flag = true;
+                      /* ============START-BACKUP============ */
+                      /* Start backing up the log */
+                      fstat(fileno(f_image_name), &file_stat);
+                      char* buffer_backup = (char*)calloc(1, file_stat.st_size);
+                      /* Read from tab file */
+                      fread(buffer_backup, file_stat.st_size, 1, f_image_name);
 
-                            /* ============START-BACKUP============ */
-                            /* Start backing up the log */
-                            fstat(fileno(f_image_name), &file_stat);
-                            char* buffer_backup = (char*)calloc(1, file_stat.st_size);
-                            /* Read from tab file */
-                            fread(buffer_backup, file_stat.st_size, 1, f_image_name);
-                            printf("First read: %p\n", buffer_backup);
+                      /* Skip to the length of each table name */
+                      buffer_backup = buffer_backup + g_tpd_list->list_size;
+                      while (num_tables-- > 0)
+                      {
+                         char tab_name[MAX_IDENT_LEN + 5];
+                         /* Concat .tab to table name */
+                         strcpy(tab_name, dbfile_cur->table_name);
+                         strcat(tab_name, ".tab");
 
-                            /* Skip to the length of each table name */
-                            buffer_backup = buffer_backup + g_tpd_list->list_size;
-                            printf("Increment: %p\n", buffer_backup);
-                            while (num_tables-- > 0)
-                            {
-                               char tab_name[MAX_IDENT_LEN + 5];
-                               /* Concat .tab to table name */
-                               strcpy(tab_name, dbfile_cur->table_name);
-                               strcat(tab_name, ".tab");
+                         int size_tab_file = 0;
+                         memcpy(&size_tab_file, buffer_backup, 4);
 
-                               int size_tab_file = 0;
-                               memcpy(&size_tab_file, buffer_backup, 4);
-
-                               printf("Increment: %p\n", buffer_backup);
-                               printf("Name: %s Size: %d\n", tab_name, size_tab_file);
-
-                               buffer_backup = buffer_backup + sizeof(int);
-                               if((f_tab = fopen(tab_name, "wbc")) != NULL){
-                                 /* Write the entire tab file*/
-                                 fwrite(buffer_backup, size_tab_file, 1, f_tab);
-                                 buffer_backup = buffer_backup + size_tab_file;
-                               }
-                               if (num_tables > 0)
-                               {
-                                 /* Increment pointer from the file */
-                                 dbfile_cur = (tpd_entry*)((char*)dbfile_cur + dbfile_cur->tpd_size);
-                               }
-                            }
-                            /* ============END-BACKUP============ */
-
-                        }
-                      } // end while loop
-                      if(copy_log_flag){
-                        //After backup, restore all the classes to backup file
-                        //Reopen the file in write mode & override it by truncate
-                        freopen("db.log", "w+", f_log);
-                        fwrite(buffer, currentline + sizeof(line), 1, f_log);
-                        return rc;
+                         buffer_backup = buffer_backup + sizeof(int);
+                         if((f_tab = fopen(tab_name, "wbc")) != NULL){
+                           /* Write the entire tab file*/
+                           fwrite(buffer_backup, size_tab_file, 1, f_tab);
+                           buffer_backup = buffer_backup + size_tab_file;
+                         }
+                         if (num_tables > 0)
+                         {
+                           /* Increment pointer from the file */
+                           dbfile_cur = (tpd_entry*)((char*)dbfile_cur + dbfile_cur->tpd_size);
+                         }
                       }
+                      /* ============END-BACKUP============ */
+
+                      if(!rf) {
+                        bool copy_log_flag = false;
+                        char copy_log[8];
+                        while(!copy_log_flag){
+                          //Testing to see if other back up logs are available
+                          memset(copy_log, '\0', sizeof(copy_log));
+                          strcpy(copy_log,"db.log");
+                          sprintf(back_up_version_char,"%d",back_up_version);
+                          strcat(copy_log,back_up_version_char);
+                          printf("%s\n",copy_log);
+                          f_copy_log = fopen(copy_log, "r");
+                          if(f_copy_log){ // if file already exists
+                             back_up_version++;
+                             fclose(f_copy_log);
+                          }
+                          else { //the backup file doesn't exist -> can start writing
+                              f_copy_log = fopen(copy_log, "w");
+                              printf("%s\n","Can use this file");
+                              /* Write the entire tab file*/
+                              fwrite(buffer,original_log_size, 1, f_copy_log);
+                              copy_log_flag = true;
+                          }
+                        } // end while loop
+                        //Prune original log
+                        if(copy_log_flag){
+                          //Reopen the file in write mode & override it by truncate
+                          freopen("db.log", "w+", f_log);
+                          fwrite(buffer, currentline + sizeof(line), 1, f_log);
+                          fflush(f_log);
+                          fclose(f_log);
+                          return rc;
+                        }
+                    }
+                    /* When WITHOUT RF is not specified */
+                    /* You must use the db_flag in the tpd_list structure for the restore/rollforward commands. */
+                    else if(rf){
+                      g_tpd_list->db_flags = ROLLFORWARD_PENDING;
+                      freopen("db.log", "w+", f_log);
+                      char* buffer_overwrite = (char*)calloc(1, original_log_size + 256);
+                      int currentByte = currentline + sizeof(line);
+                      int remainingByte = original_log_size - currentByte;
+                      memmove(buffer_overwrite, buffer, currentByte);
+
+                      char rf_start[256];
+                      memset(rf_start, '\0', sizeof(rf_start));
+                      strcpy(rf_start,"RF_START\n");
+                      memcpy(buffer_overwrite+currentByte,rf_start,sizeof(rf_start));
+                      /*Copy the rest to buffer*/
+                      memmove(buffer_overwrite+currentByte+sizeof(rf_start), buffer+currentByte,remainingByte);
+                      fwrite(buffer_overwrite, original_log_size + 256, 1,f_log);
+
+                      fflush(f_log);
+                      fclose(f_log);
+                      return rc;
+                    }
                     // }
-                  } //End backing up & pruning
+                   //End backing up & pruning
+                  }
                   currentline = currentline + sizeof(line);
+                  // printf("%d\n", currentline);
                   memset(line, '\0', sizeof(line));
                   memcpy(&line, buffer+currentline, sizeof(line) - 1);
                 } //end going line by line
 
               } //end logic for WITHOUT RF
 
-              /* When WITHOUT RF is not specified */
-              /* You must use the db_flag in the tpd_list structure for the restore/rollforward commands. */
-              else if(rf){
 
-              }
-            } // end logic for open log
-            else {
-                rc = FILE_OPEN_ERROR;
-            }
-       }
+      } // end logic for open log
+      else {
+          rc = FILE_OPEN_ERROR;
+      }
     }
-    fflush(f_image_name);
-    fclose(f_image_name);
-    fflush(f_log);
-    fclose(f_log);
+    // fflush(f_image_name);
+    // fclose(f_image_name);
+    // fflush(f_log);
+    // fclose(f_log);
     return rc;
 }
 int rollforward(token_list *t_list){

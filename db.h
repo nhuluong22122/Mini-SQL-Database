@@ -132,6 +132,8 @@ typedef enum t_value
 	K_ROLLFORWARD, // 42
 	K_WITHOUT, // 43
 	K_RF, // 44
+	/* BLOCK WRITE */
+	ROLLFORWARD_PENDING, // 45
 	S_LEFT_PAREN = 70,  // 70
 	S_RIGHT_PAREN,		  // 71
 	S_COMMA,			      // 72
