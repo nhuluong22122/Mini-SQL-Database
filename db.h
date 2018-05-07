@@ -128,6 +128,10 @@ typedef enum t_value
   F_AVG,        // 38
 	F_COUNT,      // 39 - new function name should be added below this line
 	K_BACKUP, 		// 40
+	K_RESTORE,		// 41
+	K_ROLLFORWARD, // 42
+	K_WITHOUT, // 43
+	K_RF, // 44
 	S_LEFT_PAREN = 70,  // 70
 	S_RIGHT_PAREN,		  // 71
 	S_COMMA,			      // 72
@@ -143,7 +147,7 @@ typedef enum t_value
 } token_value;
 
 /* This constants must be updated when add new keywords */
-#define TOTAL_KEYWORDS_PLUS_TYPE_NAMES 31
+#define TOTAL_KEYWORDS_PLUS_TYPE_NAMES 35
 
 /* New keyword must be added in the same position/order as the enum
    definition above, otherwise the lookup will be wrong */
@@ -152,7 +156,7 @@ char *keyword_table[] =
   "int", "char", "varchar", "create", "table", "not", "null", "drop", "list", "schema",
   "for", "to", "insert", "into", "values", "delete", "from", "where",
   "update", "set", "select", "order", "by", "desc", "is", "and", "or",
-  "sum", "avg", "count", "backup"
+  "sum", "avg", "count", "backup", "restore", "rollforward", "without", "rf"
 };
 
 /* This enum defines a set of possible statements */
@@ -167,7 +171,9 @@ typedef enum s_statement
   DELETE,                   // 105
   UPDATE,                   // 106
   SELECT,                    // 107
-	BACKUP										// 108
+	BACKUP,										// 108
+	RESTORE,
+	ROLLFORWARD,
 } semantic_statement;
 
 /* This enum has a list of all the errors that should be detected
@@ -186,6 +192,9 @@ typedef enum error_return_codes
 	INVALID_COLUMN_DEFINITION,	// -390
 	INVALID_COLUMN_LENGTH,			// -389
   INVALID_REPORT_FILE_NAME,		// -388
+	/* BACKUP ERROR */
+	DUPLICATE_FILE_NAME,
+	FILE_NOT_EXIST,
   /* Must add all the possible errors from I/U/D + SELECT here */
 	/* INSERT ERROR */
 	INSERT_MISSING_COMA = -384,
@@ -204,6 +213,9 @@ typedef enum error_return_codes
 	INVALID_UPDATE_SYNTAX = -360,
 	/* SELECT ERROR */
 	INVALID_SELECT_SYNTAX = -350,
+	/* RESTORE ERROR */
+	INVALID_RESTORE_SYNTAX = -340,
+
 
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299
@@ -224,6 +236,8 @@ int sem_select(token_list *t_list);
 int sem_delete(token_list *t_list);
 int sem_update(token_list *t_list);
 int backup(token_list *t_list);
+int restore(token_list *t_list);
+int rollforward(token_list *t_list);
 
 /*
 	Keep a global list of tpd - in real life, this will be stored

@@ -3,6 +3,7 @@
  ************************************************************/
 
 #include "db.h"
+#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -18,6 +19,10 @@ int main(int argc, char** argv)
 {
 	int rc = 0;
 	token_list *tok_list=NULL, *tok_ptr=NULL, *tmp_tok_ptr=NULL;
+  FILE *f_log = NULL;
+  struct tm *loc_time;
+  time_t curtime;
+  char log_buf[256];
 
 	if ((argc != 2) || (strlen(argv[1]) == 0))
 	{
@@ -51,7 +56,7 @@ int main(int argc, char** argv)
     /* Else print error statement */
 		if (rc)
 		{
-			tok_ptr = tok_list;
+			tok_ptr = tok_ptr;
 			while (tok_ptr != NULL)
 			{
 				if ((tok_ptr->tok_class == error) ||
@@ -64,6 +69,35 @@ int main(int argc, char** argv)
 				tok_ptr = tok_ptr->next;
 			}
 		}
+    /*Create or append to log */
+    if(!rc){
+       if((f_log = fopen("db.log","ac")) != NULL){
+         if(tok_list->tok_value == K_UPDATE
+          || tok_list->tok_value == K_CREATE
+          || tok_list->tok_value == K_INSERT
+          || tok_list->tok_value == K_DELETE){
+           memset(log_buf, '\0', sizeof(log_buf));
+           //Getting current time of system
+           curtime = time (NULL);
+           // Converting current time to local time
+           loc_time = localtime (&curtime);
+           // Format local time
+           strftime(log_buf, sizeof(log_buf), "%Y%m%d%H%M%S ", loc_time);
+           // Displaying date and time in format
+           strcat(log_buf,"\"");
+           strcat(log_buf, argv[1]);
+           strcat(log_buf,"\"\n");
+
+           printf("%s\n", log_buf);
+           fwrite(log_buf, sizeof(log_buf), 1, f_log);
+           fflush(f_log);
+           fclose(f_log);
+         }
+       }
+       else {
+          rc = FILE_OPEN_ERROR;
+       }
+    }
 
     /* Whether the token list is valid or not, we need to free the memory */
 		tok_ptr = tok_list;
@@ -305,7 +339,6 @@ int do_semantic(token_list *tok_list)
 
   /* Set current pointer to token list */
   token_list *cur = tok_list;
-  printf("%d  %d\n", cur->tok_class, cur->tok_value);
   /* If it's CREATE and next pointer is not null & the token value of next value is table */
 	if ((cur->tok_value == K_CREATE) &&
 			((cur->next != NULL) && (cur->next->tok_value == K_TABLE)))
@@ -372,6 +405,20 @@ int do_semantic(token_list *tok_list)
     cur_cmd = BACKUP;
     cur = cur->next->next;
   }
+  else if(cur->tok_value == K_RESTORE
+        && cur->next != NULL && cur->next->tok_value == K_FROM)
+  {
+    printf("RESTORE statement\n");
+    cur_cmd = RESTORE;
+    cur = cur->next->next;
+  }
+  else if(cur->tok_value == K_ROLLFORWARD
+        && cur->next != NULL)
+  {
+    printf("ROLLFORWARD statement\n");
+    cur_cmd = ROLLFORWARD;
+    cur = cur->next;
+  }
 	else
   {
 		printf("Invalid statement\n");
@@ -408,6 +455,12 @@ int do_semantic(token_list *tok_list)
             break;
       case BACKUP:
             rc = backup(cur);
+            break;
+      case RESTORE:
+            rc = restore(cur);
+            break;
+      case ROLLFORWARD:
+            rc = rollforward(cur);
             break;
 			default:
 					; /* no action */
@@ -3146,8 +3199,15 @@ int backup(token_list *t_list){
       cur->tok_value = INVALID;
       rc = INVALID_REPORT_FILE_NAME;
   }
+  /* Check if the file exists */
+  dest = fopen(image_name, "rb");
+  if(dest){
+     printf("%s\n", "This image file already existed");
+     cur->tok_value = INVALID;
+     rc =DUPLICATE_FILE_NAME;
+  }
   /* Check to see if we can find and open the image file  */
-  if((dest = fopen(image_name, "abc")) == NULL){
+  else if((dest = fopen(image_name, "abc")) == NULL){
     printf("%s%s\n", image_name, "Open Error");
     rc = FILE_OPEN_ERROR;
   }
@@ -3155,7 +3215,6 @@ int backup(token_list *t_list){
       fwrite(g_tpd_list, g_tpd_list->list_size, 1, dest);
       while (num_tables-- > 0)
       {
-         printf("%s\n", dbfile_cur->table_name);
          char tab_name[MAX_IDENT_LEN + 5];
          /* Concat .tab to table name */
          strcpy(tab_name, dbfile_cur->table_name);
@@ -3181,9 +3240,212 @@ int backup(token_list *t_list){
          }
       }
   }
+  if(!rc){
+    FILE *f_log = NULL;
+    if((f_log = fopen("db.log","ac")) != NULL){
+      char log_buf[256];
+      memset(log_buf, '\0', sizeof(log_buf));
+      strcpy(log_buf,"BACKUP ");
+      strcat(log_buf,image_name);
+      strcat(log_buf,"\n");
+      fwrite(log_buf, sizeof(log_buf), 1, f_log);
+      fflush(f_log);
+      fclose(f_log);
+    }
+    else {
+       rc = FILE_OPEN_ERROR;
+    }
+  }
   return rc;
 }
 
+int restore(token_list *t_list){
+    struct stat file_stat;
+    FILE *f_image_name;
+    FILE *f_log = NULL;
+    FILE *f_copy_log = NULL;
+    FILE *f_tab = NULL;
+    token_list *cur;
+    int rc = 0;
+    bool rf;
+    bool found_bk;
+
+    char* image_name;
+    char *buffer = NULL;
+
+    /* Get the number of table and pointer from the dbfile.tab */
+    int num_tables = g_tpd_list->num_tables;
+    tpd_entry *dbfile_cur = &(g_tpd_list->tpd_start);
+
+    cur = t_list;
+    if(cur != NULL){
+        //Get the backup image name
+        image_name = cur->tok_string;
+    }
+    else {
+      printf("%s\n", "Missing Backup Image File Name");
+      cur->tok_value = INVALID;
+      rc = INVALID_REPORT_FILE_NAME;
+    }
+    /* Check if the file exists */
+    f_image_name = fopen(image_name, "rb");
+    if(!f_image_name){
+       printf("%s\n", "This image file doesn't exist");
+       cur->tok_value = INVALID;
+       rc =FILE_NOT_EXIST;
+       return rc;
+    }
+    else { //the file must exist
+       if(cur->next != NULL && cur->next->next != NULL){
+          cur = cur->next;
+          if(cur->tok_value == K_WITHOUT && cur->next->tok_value == K_RF){
+            rf = false;
+          }
+          else {
+            cur->tok_value = INVALID;
+            printf("%s\n", "These fields need to be WITHOUT RF");
+            rc = INVALID_RESTORE_SYNTAX;
+            return rc;
+          }
+       }
+       //If there is no WITHOUT RF -> rf is true
+       else if(cur->next != NULL && cur->next->tok_value == EOC){
+         rf = true;
+       }
+       else {
+          cur->tok_value = INVALID;
+          printf("%s\n", "Must be EOC or WITHOUT RF");
+          rc = INVALID_RESTORE_SYNTAX;
+          return rc;
+       }
+
+       if(!rc){
+            /* Open for read and update */
+            char back_up_version_char[2];
+            int back_up_version = 1; // use to write copy of log
+            if((f_log = fopen("db.log","r+c")) != NULL){
+              /* When WITHOUT RF is specified */
+              /* If the log needs to be pruned, save a copy of the original log before pruning */
+              if(!rf) {
+                char line[256];
+                int currentline = 0;
+                /* Start backing up the log */
+                fstat(fileno(f_log), &file_stat);
+                char* buffer = (char*)calloc(1, file_stat.st_size);
+                int original_log_size = file_stat.st_size;
+                /* Read from tab file */
+                fread(buffer, file_stat.st_size, 1, f_log);
+                /* Going line by line */
+                memset(line, '\0', sizeof(line));
+                memcpy(&line, buffer+currentline, sizeof(line) - 1);
+
+                char log_buf[256];
+                memset(log_buf, '\0', sizeof(log_buf));
+                strcpy(log_buf,"BACKUP ");
+                strcat(log_buf,image_name);
+                strcat(log_buf,"\n");
+
+                while (strlen(line) != 0) {
+                  printf("Each %s", line);
+                  if(strcasecmp(line, log_buf) == 0){
+                      found_bk = true;
+                      bool copy_log_flag = false;
+                      char copy_log[8];
+                      while(!copy_log_flag){
+                        //Testing to see if other back up logs are available
+                        memset(copy_log, '\0', sizeof(copy_log));
+                        strcpy(copy_log,"db.log");
+                        sprintf(back_up_version_char,"%d",back_up_version);
+                        strcat(copy_log,back_up_version_char);
+                        printf("%s\n",copy_log);
+                        f_copy_log = fopen(copy_log, "r");
+                        if(f_copy_log){ // if file already exists
+                           back_up_version++;
+                           fclose(f_copy_log);
+                        }
+                        else { //the backup file doesn't exist -> can start writing
+                            f_copy_log = fopen(copy_log, "w");
+                            printf("%s\n","Can use this file");
+                            /* Write the entire tab file*/
+                            fwrite(buffer,original_log_size, 1, f_copy_log);
+                            copy_log_flag = true;
+
+                            /* ============START-BACKUP============ */
+                            /* Start backing up the log */
+                            fstat(fileno(f_image_name), &file_stat);
+                            char* buffer_backup = (char*)calloc(1, file_stat.st_size);
+                            /* Read from tab file */
+                            fread(buffer_backup, file_stat.st_size, 1, f_image_name);
+                            printf("First read: %p\n", buffer_backup);
+
+                            /* Skip to the length of each table name */
+                            buffer_backup = buffer_backup + g_tpd_list->list_size;
+                            printf("Increment: %p\n", buffer_backup);
+                            while (num_tables-- > 0)
+                            {
+                               char tab_name[MAX_IDENT_LEN + 5];
+                               /* Concat .tab to table name */
+                               strcpy(tab_name, dbfile_cur->table_name);
+                               strcat(tab_name, ".tab");
+
+                               int size_tab_file = 0;
+                               memcpy(&size_tab_file, buffer_backup, 4);
+
+                               printf("Increment: %p\n", buffer_backup);
+                               printf("Name: %s Size: %d\n", tab_name, size_tab_file);
+
+                               buffer_backup = buffer_backup + sizeof(int);
+                               if((f_tab = fopen(tab_name, "wbc")) != NULL){
+                                 /* Write the entire tab file*/
+                                 fwrite(buffer_backup, size_tab_file, 1, f_tab);
+                                 buffer_backup = buffer_backup + size_tab_file;
+                               }
+                               if (num_tables > 0)
+                               {
+                                 /* Increment pointer from the file */
+                                 dbfile_cur = (tpd_entry*)((char*)dbfile_cur + dbfile_cur->tpd_size);
+                               }
+                            }
+                            /* ============END-BACKUP============ */
+
+                        }
+                      } // end while loop
+                      if(copy_log_flag){
+                        //After backup, restore all the classes to backup file
+                        //Reopen the file in write mode & override it by truncate
+                        freopen("db.log", "w+", f_log);
+                        fwrite(buffer, currentline + sizeof(line), 1, f_log);
+                        return rc;
+                      }
+                    // }
+                  } //End backing up & pruning
+                  currentline = currentline + sizeof(line);
+                  memset(line, '\0', sizeof(line));
+                  memcpy(&line, buffer+currentline, sizeof(line) - 1);
+                } //end going line by line
+
+              } //end logic for WITHOUT RF
+
+              /* When WITHOUT RF is not specified */
+              /* You must use the db_flag in the tpd_list structure for the restore/rollforward commands. */
+              else if(rf){
+
+              }
+            } // end logic for open log
+            else {
+                rc = FILE_OPEN_ERROR;
+            }
+       }
+    }
+    fflush(f_image_name);
+    fclose(f_image_name);
+    fflush(f_log);
+    fclose(f_log);
+    return rc;
+}
+int rollforward(token_list *t_list){
+    return 0;
+}
 char* load_data_from_tab(char *tablename){
   struct stat file_stat;
   FILE *fhandle = NULL;
