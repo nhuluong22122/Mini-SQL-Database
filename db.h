@@ -220,6 +220,7 @@ typedef enum error_return_codes
 	/* ROLLFORWARD ERROR */
 	INVALID_ROLLFOWARD_SYNTAX = -330,
 	ROLLFORWARD_FAILED,
+	DB_FLAG_ON,
 
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299

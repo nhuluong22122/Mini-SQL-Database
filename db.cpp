@@ -51,7 +51,21 @@ int main(int argc, char** argv)
     /* If rc is equal to 0 -> do semantic */
 		if (!rc)
 		{
-			rc = do_semantic(tok_list);
+      printf("DB FLAG %d\n", g_tpd_list->db_flags);
+      //Dealing with RF_START Flag
+      if(g_tpd_list->db_flags != 0){
+        if(tok_list->tok_value == K_ROLLFORWARD || tok_list->tok_value == K_SELECT){
+            rc = do_semantic(tok_list);
+        }
+        else { // fail other commands
+            printf("%s\n", "Command failed due to db flag");
+            rc = DB_FLAG_ON;
+            return rc;
+        }
+      }
+      else {
+          rc = do_semantic(tok_list);
+      }
 		}
     /* Else print error statement */
 		if (rc)
@@ -89,7 +103,7 @@ int main(int argc, char** argv)
            strcat(log_buf, argv[1]);
            strcat(log_buf,"\"\n");
 
-           printf("%s\n", log_buf);
+           // printf("%s\n", log_buf);
            fwrite(log_buf, sizeof(log_buf), 1, f_log);
            fflush(f_log);
            fclose(f_log);
@@ -3276,9 +3290,6 @@ int restore(token_list *t_list){
     char *buffer = NULL;
     char *buffer_withrf = NULL;
 
-    /* Get the number of table and pointer from the dbfile.tab */
-    int num_tables = g_tpd_list->num_tables;
-    tpd_entry *dbfile_cur = &(g_tpd_list->tpd_start);
 
     cur = t_list;
     if(cur != NULL){
@@ -3366,6 +3377,10 @@ int restore(token_list *t_list){
                       printf("Size of dbfile %d\n",dbfile_size);
 
                       FILE* dbfile = NULL;
+                      /* Get the number of table and pointer from the dbfile.tab */
+                      int num_tables = 0;
+                      tpd_entry *dbfile_cur = NULL;
+
                       if((dbfile = fopen("dbfile.bin","w+bc")) != NULL){
                           g_tpd_list = NULL;
                           /* Allocate and zero-initialize array */
@@ -3375,25 +3390,34 @@ int restore(token_list *t_list){
                             g_tpd_list->db_flags = ROLLFORWARD_PENDING;
                           }
                           fwrite(g_tpd_list, dbfile_size, 1, dbfile);
+                          num_tables = g_tpd_list->num_tables;
+                          dbfile_cur = &(g_tpd_list->tpd_start);
+                          printf("Num File from READ: %d\n", num_tables);
                       }
                       /* Skip to the length of each table name */
                       buffer_backup = buffer_backup + dbfile_size;
 
                       while (num_tables-- > 0)
                       {
+                         printf("Num Table %d\n", num_tables);
                          char tab_name[MAX_IDENT_LEN + 5];
                          /* Concat .tab to table name */
                          strcpy(tab_name, dbfile_cur->table_name);
                          strcat(tab_name, ".tab");
 
+                         //get the size of tab
                          int size_tab_file = 0;
                          memcpy(&size_tab_file, buffer_backup, 4);
+                         printf("Size Table %d\n", size_tab_file);
 
+                         //get the first pointer of that tab
                          buffer_backup = buffer_backup + sizeof(int);
                          if((f_tab = fopen(tab_name, "wbc")) != NULL){
                            /* Write the entire tab file*/
                            fwrite(buffer_backup, size_tab_file, 1, f_tab);
                            buffer_backup = buffer_backup + size_tab_file;
+                           fflush(f_tab);
+                           fclose(f_tab);
                          }
                          if (num_tables > 0)
                          {
