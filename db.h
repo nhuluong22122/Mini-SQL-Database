@@ -217,7 +217,9 @@ typedef enum error_return_codes
 	INVALID_SELECT_SYNTAX = -350,
 	/* RESTORE ERROR */
 	INVALID_RESTORE_SYNTAX = -340,
-
+	/* ROLLFORWARD ERROR */
+	INVALID_ROLLFOWARD_SYNTAX = -330,
+	ROLLFORWARD_FAILED,
 
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299

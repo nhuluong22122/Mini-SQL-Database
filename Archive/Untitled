@@ -1,0 +1,2 @@
+db.ratings.find({$and:[{geometry:{$near:{$geometry: { type: "Point",coordinates: [ -73.9667, 40.78 ] },
+$minDistance: 1000,$maxDistance: 5000}}}, {"fields.amenities":{ $regex: ".*TV.*"}}]}, {"fields.city": 1, "fields.amenities":1, "fields.listing_url":1} )
