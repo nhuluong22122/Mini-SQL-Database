@@ -140,84 +140,82 @@ db.cpp:2056:38: warning: conversion from string literal to 'char *' is deprecate
 db.cpp:2059:38: warning: conversion from string literal to 'char *' is deprecated [-Wc++11-compat-deprecated-writable-strings]
                              start = "AVG(";
                                      ^
-db.cpp:3522:31: warning: format specifies type 'int' but the argument has type 'off_t' (aka 'long long') [-Wformat]
-        printf("Buffer %d\n", file_stat.st_size);
-                       ~~     ^~~~~~~~~~~~~~~~~
-                       %lld
-47 warnings generated.
+46 warnings generated.
 Clean up
 ==========================================================================================
 
 CREATE TABLE statement
-20180509062041 "create table class ( Student char(12) NOT NULL, Gender char(1), Exams int, Quiz int, Total int )"
+20180509063742 "create table class ( Student char(12) NOT NULL, Gender char(1), Exams int, Quiz int, Total int )"
 
 ------------------------------------------------------------------------------------------
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 56. Number of records: 1
-20180509062041 "insert into class values ('Siu', 'M', 480, 80, 560)"
+20180509063742 "insert into class values ('Siu', 'M', 480, 80, 560)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 88. Number of records: 2
-20180509062041 "insert into class values ('Frank', 'M', 600, 100, 700)"
+20180509063742 "insert into class values ('Frank', 'M', 600, 100, 700)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 120. Number of records: 3
-20180509062041 "insert into class values ('Jordon', 'M', 450, 75, 525)"
+20180509063742 "insert into class values ('Jordon', 'M', 450, 75, 525)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 152. Number of records: 4
-20180509062041 "insert into class values ('Jeff', 'M', 455, 60, 515)"
+20180509063742 "insert into class values ('Jeff', 'M', 455, 60, 515)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 184. Number of records: 5
-20180509062041 "insert into class values ('Ying', 'F', 540, 85, 625)"
+20180509063742 "insert into class values ('Ying', 'F', 540, 85, 625)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 216. Number of records: 6
-20180509062041 "insert into class values ('David', 'M', 550, 83, 633)"
+20180509063742 "insert into class values ('David', 'M', 550, 83, 633)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 248. Number of records: 7
-20180509062041 "insert into class values ('euna', 'F', 460, 75, 535)"
+20180509063742 "insert into class values ('euna', 'F', 460, 75, 535)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 280. Number of records: 8
-20180509062041 "insert into class values ('Victor', 'M', 475, 60, 535)"
+20180509063742 "insert into class values ('Victor', 'M', 475, 60, 535)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 312. Number of records: 9
-20180509062041 "insert into class values ('Linawati', 'F', 490, 86, 576)"
+20180509063742 "insert into class values ('Linawati', 'F', 490, 86, 576)"
 
 dbfile.bin size = 228
 INSERT statement
 class.tab size: 344. Number of records: 10
-20180509062041 "insert into class values ('Stephen', 'M', 520, 76, 596)"
+20180509063742 "insert into class values ('Stephen', 'M', 520, 76, 596)"
 
 ------------------------------------------------------------------------------------------
 
-total 616
-drwxr-xr-x@ 14 nhuluong  staff     448 May  9 06:20 .
+total 632
+drwxr-xr-x@ 16 nhuluong  staff     512 May  9 06:37 .
 drwxr-xr-x+ 75 nhuluong  staff    2400 May  7 17:36 ..
 -rw-r--r--@  1 nhuluong  staff    6148 May  8 19:10 .DS_Store
-drwxr-xr-x  13 nhuluong  staff     416 May  6 21:39 .git
+drwxr-xr-x  13 nhuluong  staff     416 May  9 06:26 .git
 drwxr-xr-x   5 nhuluong  staff     160 May  8 19:00 Archive
--rw-r--r--   1 nhuluong  staff     344 May  9 06:20 class.tab
--rwxr-xr-x   1 nhuluong  staff   65076 May  9 06:20 db
--rw-r--r--@  1 nhuluong  staff  148048 May  9 06:20 db.cpp
--rw-r--r--@  1 nhuluong  staff    7535 May  8 19:13 db.h
--rw-r--r--   1 nhuluong  staff    2816 May  9 06:20 db.log
--rw-r--r--   1 nhuluong  staff     228 May  9 06:20 dbfile.bin
--rw-r--r--   1 nhuluong  staff   13400 May  9 06:20 test.out
+-rw-r--r--   1 nhuluong  staff     844 May  9 06:21 bk2
+-rw-r--r--   1 nhuluong  staff     844 May  9 06:34 bk3
+-rw-r--r--   1 nhuluong  staff     344 May  9 06:37 class.tab
+-rwxr-xr-x   1 nhuluong  staff   65076 May  9 06:37 db
+-rw-r--r--@  1 nhuluong  staff  148788 May  9 06:37 db.cpp
+-rw-r--r--@  1 nhuluong  staff    7557 May  9 06:24 db.h
+-rw-r--r--   1 nhuluong  staff    2816 May  9 06:37 db.log
+-rw-r--r--   1 nhuluong  staff     228 May  9 06:37 dbfile.bin
+-rw-r--r--   1 nhuluong  staff   13158 May  9 06:37 test.out
 -rw-r--r--@  1 nhuluong  staff    3641 May  8 16:13 testp3.sh
 -rw-r--r--@  1 nhuluong  staff     162 May  2 12:16 ~$list_2.doc
 ------------------------------------------------------------------------------------------
@@ -246,17 +244,17 @@ Error Testing Section
 Setup the table
 dbfile.bin size = 228
 CREATE TABLE statement
-20180509062041 "create table test (col1 char(10), col2 int, col3 int not null)"
+20180509063742 "create table test (col1 char(10), col2 int, col3 int not null)"
 
 dbfile.bin size = 372
 INSERT statement
 test.tab size: 48. Number of records: 1
-20180509062041 "insert into test values ( 'one', 1, 11 )"
+20180509063742 "insert into test values ( 'one', 1, 11 )"
 
 dbfile.bin size = 372
 INSERT statement
 test.tab size: 72. Number of records: 2
-20180509062041 "insert into test values ( 'two', 2, 22 )"
+20180509063742 "insert into test values ( 'two', 2, 22 )"
 
 dbfile.bin size = 372
 SELECT statement

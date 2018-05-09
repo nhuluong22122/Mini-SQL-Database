@@ -3482,14 +3482,15 @@ int restore(token_list *t_list){
 int rollforward(token_list *t_list){
     token_list *cur = t_list;
     bool timestamp_flag = false;
-    int roll_timestamp = 0;
+    char roll_timestamp[15];
     FILE* f_log = NULL;
     struct stat file_stat;
     int rc = 0;
     if(cur != NULL && cur->tok_value == K_TO){
       /* ROLLFORWARD TO <timestamp> */
         if(cur->next != NULL && cur->next->tok_value == INT_LITERAL){
-            roll_timestamp = atoi(cur->next->tok_string);
+            memset(roll_timestamp, '\0', sizeof(roll_timestamp));
+            strcpy(roll_timestamp, cur->next->tok_string);
             timestamp_flag = true;
         }
         else {
@@ -3538,6 +3539,7 @@ int rollforward(token_list *t_list){
         memset(timestamp, '\0', sizeof(timestamp));
 
         bool redo_all = false;
+        bool redo_timestamp = false;
         bool found_rf = false;
         while (currentline < original_log_size ) {
           // printf("%d\n", currentline);
@@ -3549,28 +3551,38 @@ int rollforward(token_list *t_list){
             /* Extract timestamp */
             memcpy(&timestamp, buffer+currentline,  sizeof(timestamp)-1);
 
-            // printf("TimeStamp: %s\n", timestamp);
             // printf("Query: %s\n", query);
+            token_list *tok_list=NULL;
+
             if(redo_all){
-                token_list *tok_list=NULL;
                 rc = get_token(query, &tok_list);
                 rc = do_semantic(tok_list);
+            }
+            if(redo_timestamp) {
+                // printf("TimeStamp: %s\n", timestamp);
+                // printf("Specfied Timestamp: %s\n", roll_timestamp);
+                printf("%d\n", strcmp(timestamp, roll_timestamp));
+                if(strcmp(timestamp, roll_timestamp) <= 0) {
+                    rc = get_token(query, &tok_list);
+                    rc = do_semantic(tok_list);
+                }
             }
           }
 
           if(strcasecmp(line, rf_start) == 0){ /* The current line is now at RF_START */
               found_rf = true;
+              rf_start_line = currentline;
               printf("%s\n", "FOUND RF_START");
               if(!timestamp_flag){
                   /*redo all the logged transactions from the end of
                   the backup image up to the end of the log.*/
                   redo_all = true;
-                  rf_start_line = currentline;
               }
               else {
                 /*only redo all the transactions up
                 to that time and prune the rest of the log.*/
-
+                  printf("%s\n", roll_timestamp);
+                  redo_timestamp = true;
               }
           }
           currentline = currentline + sizeof(line);
