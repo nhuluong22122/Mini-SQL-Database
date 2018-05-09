@@ -3426,6 +3426,7 @@ int restore(token_list *t_list){
                               copy_log_flag = true;
                           }
                         } // end while loop
+
                         //Prune original log
                         if(copy_log_flag){
                           //Reopen the file in write mode & override it by truncate
@@ -3541,6 +3542,8 @@ int rollforward(token_list *t_list){
         bool redo_all = false;
         bool redo_timestamp = false;
         bool found_rf = false;
+
+        int last_timestamp = 0;
         while (currentline < original_log_size ) {
           // printf("%d\n", currentline);
           if(line[0] != 'B' && line[0] != 'R'){
@@ -3565,6 +3568,7 @@ int rollforward(token_list *t_list){
                 if(strcmp(timestamp, roll_timestamp) <= 0) {
                     rc = get_token(query, &tok_list);
                     rc = do_semantic(tok_list);
+                    last_timestamp = currentline;
                 }
             }
           }
@@ -3617,6 +3621,58 @@ int rollforward(token_list *t_list){
                 }
                 fwrite(g_tpd_list, file_stat.st_size, 1, dbfile);
             }
+        }
+        if(!rc && redo_timestamp){
+            /*prune the rest of the log & remove RF_START AND reset db_Flag = 0 */
+
+            /* BACKUP TO ANOTHER LOG BEFORE PRUNING */
+            char back_up_version_char[2];
+            int back_up_version = 1; // use to write copy of log
+
+            FILE* f_copy_log = NULL;
+            bool copy_log_flag = false;
+            char copy_log[8];
+            while(!copy_log_flag){
+              //Testing to see if other back up logs are available
+              memset(copy_log, '\0', sizeof(copy_log));
+              strcpy(copy_log,"db.log");
+              sprintf(back_up_version_char,"%d",back_up_version);
+              strcat(copy_log,back_up_version_char);
+              printf("%s\n",copy_log);
+              f_copy_log = fopen(copy_log, "r");
+              if(f_copy_log){ // if file already exists
+                 back_up_version++;
+                 fclose(f_copy_log);
+              }
+              else { //the backup file doesn't exist -> can start writing
+                  f_copy_log = fopen(copy_log, "w");
+                  printf("%s\n","Can use this file");
+                  /* Write the entire tab file*/
+                  fwrite(buffer,original_log_size, 1, f_copy_log);
+                  copy_log_flag = true;
+              }
+            } // end while loop
+
+            /* START PRUNING */
+            /* REMOVE RF_START FROM FILE */
+            freopen("db.log", "w+", f_log);
+            char* buffer_overwrite = (char*)calloc(1, last_timestamp); //remove 1 RF_FLAG
+            int currentByte = rf_start_line; // the line after RF_START
+            int remainingByte = last_timestamp - currentByte;
+            int everything_after_rf = rf_start_line + sizeof(line);
+            memmove(buffer_overwrite, buffer, currentByte); //including back up
+              /*Copy the rest to buffer*/
+            memmove(buffer_overwrite+currentByte, buffer+everything_after_rf, remainingByte);
+            fwrite(buffer_overwrite, last_timestamp ,1,f_log);
+
+            //Reopen the file in write mode & override it by truncate
+            // freopen("db.log", "w+", f_log);
+            // fwrite(buffer, currentline + sizeof(line), 1, f_log);
+            // fflush(f_log);
+            // fclose(f_log);
+            // return rc;
+
+
         }
       }
       else{
