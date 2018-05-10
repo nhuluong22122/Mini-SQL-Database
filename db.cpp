@@ -3510,7 +3510,15 @@ int rollforward(token_list *t_list){
         if(cur->next != NULL && cur->next->tok_value == INT_LITERAL){
             memset(roll_timestamp, '\0', sizeof(roll_timestamp));
             strcpy(roll_timestamp, cur->next->tok_string);
-            timestamp_flag = true;
+            if(strlen(roll_timestamp) != 14){
+              rc = INVALID_ROLLFOWARD_SYNTAX;
+              cur->next->tok_value = INVALID;
+              printf("%s\n", "Invalid timestamp");
+              return rc;
+            }
+            else{
+              timestamp_flag = true;
+            }
         }
         else {
           rc = INVALID_ROLLFOWARD_SYNTAX;
@@ -3554,6 +3562,9 @@ int rollforward(token_list *t_list){
         strcpy(log_buf,"BACKUP");
         strcat(log_buf,"\n");
 
+        char first_timestamp[15];
+        memset(first_timestamp, '\0', sizeof(first_timestamp));
+
         char timestamp[15];
         memset(timestamp, '\0', sizeof(timestamp));
 
@@ -3584,8 +3595,9 @@ int rollforward(token_list *t_list){
             if(redo_timestamp) {
                 // printf("TimeStamp: %s\n", timestamp);
                 // printf("Specfied Timestamp: %s\n", roll_timestamp);
-                // printf("%d\n", strcmp(timestamp, roll_timestamp));
-                if(strcmp(timestamp, roll_timestamp) <= 0) {
+                printf("%d\n", strcmp(timestamp, roll_timestamp));
+                if(strcmp(timestamp, roll_timestamp) <= 0 && strcmp(first_timestamp, roll_timestamp) >= 0) {
+
                     initialize_tpd_list();
                     rc = get_token(query, &tok_list);
                     rc = do_semantic(tok_list);
@@ -3608,6 +3620,7 @@ int rollforward(token_list *t_list){
                 to that time and prune the rest of the log.*/
                   printf("%s\n", roll_timestamp);
                   redo_timestamp = true;
+                  memcpy(&first_timestamp, buffer+currentline,  sizeof(timestamp)-1);
               }
           }
           currentline = currentline + sizeof(line);
@@ -3646,8 +3659,12 @@ int rollforward(token_list *t_list){
             // fclose(dbfile);
         }
         if(!rc && redo_timestamp){
+            if(!rollbacked)
+            {
+              printf("%s\n","WARNING: Did not rollback because of invalid timestamp");
+            }
             /*prune the rest of the log & remove RF_START AND reset db_Flag = 0 */
-            if(rollbacked){
+            // if(rollbacked){
               /* BACKUP TO ANOTHER LOG BEFORE PRUNING */
               char back_up_version_char[2];
               int back_up_version = 1; // use to write copy of log
@@ -3681,18 +3698,28 @@ int rollforward(token_list *t_list){
               } // end while loop
               /* START PRUNING */
               /* REMOVE RF_START FROM FILE */
-              freopen("db.log", "w+", f_log);
-              char* buffer_overwrite = (char*)calloc(1, last_timestamp); //remove 1 RF_FLAG
-              int currentByte = rf_start_line; // the line after RF_START
-              int remainingByte = last_timestamp - currentByte;
-              int everything_after_rf = rf_start_line + sizeof(line);
-              memmove(buffer_overwrite, buffer, currentByte); //including back up
-                /*Copy the rest to buffer*/
-              memmove(buffer_overwrite+currentByte, buffer+everything_after_rf, remainingByte);
-              fwrite(buffer_overwrite, last_timestamp ,1,f_log);
 
-            }
+              if(rollbacked){
+                freopen("db.log", "w+", f_log);
+                char* buffer_overwrite = (char*)calloc(1, last_timestamp); //remove 1 RF_FLAG
+                int currentByte = rf_start_line; // the line after RF_START
+                //Trim everything up to the last time stamp
+                int remainingByte = last_timestamp - currentByte;
+                int everything_after_rf = rf_start_line + sizeof(line);
+                memmove(buffer_overwrite, buffer, currentByte); //including back up
+                  /*Copy the rest to buffer*/
+                memmove(buffer_overwrite+currentByte, buffer+everything_after_rf, remainingByte);
+                fwrite(buffer_overwrite, last_timestamp ,1,f_log);
+              }
+              else {
+                freopen("db.log", "w+", f_log);
+                char* buffer_overwrite = (char*)calloc(1, rf_start_line); //remove 1 RF_FLAG
+                int currentByte = rf_start_line; // the line after RF_START
+                memmove(buffer_overwrite, buffer, rf_start_line); //including back up
+                fwrite(buffer_overwrite, rf_start_line ,1,f_log);
+              }
 
+            // }
             /* change the flag of the file */
             FILE* dbfile = NULL;
             if((dbfile = fopen("dbfile.bin","r+bc")) != NULL){
@@ -3703,11 +3730,11 @@ int rollforward(token_list *t_list){
                 fwrite(g_tpd_list, file_stat.st_size, 1, dbfile);
             }
 
-            if(!rollbacked){
-              cur->next->tok_value = INVALID;
-              printf("%s\n", "Invalid timestamp or not found");
-              rc = ROLLFORWARD_FAILED;
-            }
+            // if(!rollbacked){
+            //   cur->next->tok_value = INVALID;
+            //   printf("%s\n", "Invalid timestamp or not found");
+            //   rc = ROLLFORWARD_FAILED;
+            // }
             // fflush(dbfile);
             // fclose(dbfile);
         }

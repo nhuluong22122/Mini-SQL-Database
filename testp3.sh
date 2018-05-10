@@ -114,7 +114,6 @@ echo "    check tab2 contents"
 echo
 ./db "create table tab3(c1 int)"
 echo
-./db "select * from tab3"
 ./db "insert into tab3 values(911)"
 echo
 cat db.log
