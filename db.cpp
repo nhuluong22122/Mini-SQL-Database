@@ -795,12 +795,10 @@ int add_tpd_to_list(tpd_entry *tpd)
 		 	g_tpd_list->list_size += tpd->tpd_size;
 			fwrite(g_tpd_list, old_size, 1, fhandle);
 		}
-
 		fwrite(tpd, tpd->tpd_size, 1, fhandle);
 		fflush(fhandle);
 		fclose(fhandle);
 	}
-
 	return rc;
 }
 
@@ -922,9 +920,12 @@ tpd_entry* get_tpd_from_list(char *tabname)
   /* Find the corresponding tables */
 	if (num_tables > 0)
 	{
+    printf("%s\n", "----GET TPD FROM LIST----");
 		while ((!found) && (num_tables-- > 0))
 		{
       /* Compare two string without worrying about upper or lower case */
+      printf("Num table: %d\n", num_tables);
+      printf("Table Name: %s Input Tabname %s \n", cur->table_name, tabname);
 			if (strcasecmp(cur->table_name, tabname) == 0)
 			{
 				/* found it */
@@ -941,6 +942,7 @@ tpd_entry* get_tpd_from_list(char *tabname)
 				}
 			}
 		}
+      printf("%s\n", "----END GET TPD FROM LIST----");
 	}
 
 	return tpd;
@@ -975,6 +977,7 @@ int sem_create_table(token_list *t_list)
 	}
 	else /* There is a valid class */
 	{
+
     /* check if that table already existed  */
 		if ((new_entry = get_tpd_from_list(cur->tok_string)) != NULL)
 		{
@@ -1247,9 +1250,9 @@ int sem_create_table(token_list *t_list)
 						memcpy((void*)((char*)new_entry + sizeof(tpd_entry)),
 									 (void*)col_entry,
 									 sizeof(cd_entry) * tab_entry.num_columns);
-
+            printf("New Entry: %s\n", new_entry->table_name );
 						rc = add_tpd_to_list(new_entry);
-
+            printf("Pull from tab3: %s\n", get_tpd_from_list(new_entry->table_name));
 						free(new_entry);
 					}
           free(tabfile_ptr);
@@ -1292,10 +1295,12 @@ int sem_create_table(token_list *t_list)
     else /* There is a valid class */
     {
       /* if the table alerady existed then we can insert */
+      // printf("CHECK: %d\n", new_entry = get_tpd_from_list(cur->tok_string));
       if ((new_entry = get_tpd_from_list(cur->tok_string)) == NULL){
           rc = TABLE_NOT_EXIST;
           printf("Table %s not found\n\n", cur->tok_string);
           cur->tok_value = INVALID;
+          return rc;
       }
       else
       {
@@ -2529,6 +2534,7 @@ int sem_delete(token_list *t_list) {
           rc = TABLE_NOT_EXIST;
           printf("%s\n", "Table Not Found");
           cur->tok_value = INVALID;
+          return rc;
       }
       else {
           /* Retrieve the tab file */
@@ -2784,6 +2790,7 @@ int sem_update(token_list *t_list) {
           rc = TABLE_NOT_EXIST;
           printf("Table %s does not exist\n\n", cur->tok_string);
           cur->tok_value = INVALID;
+          return rc;
       }
       else  /* If the table exists  */
       {
@@ -3374,7 +3381,6 @@ int restore(token_list *t_list){
 
                       int dbfile_size = 0;
                       memcpy(&dbfile_size,buffer_backup,sizeof(int));
-                      printf("Size of dbfile %d\n",dbfile_size);
 
                       FILE* dbfile = NULL;
                       /* Get the number of table and pointer from the dbfile.tab */
@@ -3382,33 +3388,30 @@ int restore(token_list *t_list){
                       tpd_entry *dbfile_cur = NULL;
 
                       if((dbfile = fopen("dbfile.bin","w+bc")) != NULL){
-                          g_tpd_list = NULL;
                           /* Allocate and zero-initialize array */
-                          g_tpd_list = (tpd_list*)calloc(1, sizeof(tpd_list));
+                          g_tpd_list = (tpd_list*)calloc(1, dbfile_size);
                           memcpy(g_tpd_list, buffer_backup, dbfile_size);
-                          if(!rc){
+                          if(rf){
                             g_tpd_list->db_flags = ROLLFORWARD_PENDING;
                           }
                           fwrite(g_tpd_list, dbfile_size, 1, dbfile);
                           num_tables = g_tpd_list->num_tables;
                           dbfile_cur = &(g_tpd_list->tpd_start);
-                          printf("Num File from READ: %d\n", num_tables);
                       }
                       /* Skip to the length of each table name */
                       buffer_backup = buffer_backup + dbfile_size;
 
                       while (num_tables-- > 0)
                       {
-                         printf("Num Table %d\n", num_tables);
                          char tab_name[MAX_IDENT_LEN + 5];
                          /* Concat .tab to table name */
                          strcpy(tab_name, dbfile_cur->table_name);
                          strcat(tab_name, ".tab");
+                         printf("tabname: %s\n",dbfile_cur->table_name);
 
                          //get the size of tab
                          int size_tab_file = 0;
                          memcpy(&size_tab_file, buffer_backup, 4);
-                         printf("Size Table %d\n", size_tab_file);
 
                          //get the first pointer of that tab
                          buffer_backup = buffer_backup + sizeof(int);
@@ -3416,8 +3419,7 @@ int restore(token_list *t_list){
                            /* Write the entire tab file*/
                            fwrite(buffer_backup, size_tab_file, 1, f_tab);
                            buffer_backup = buffer_backup + size_tab_file;
-                           fflush(f_tab);
-                           fclose(f_tab);
+
                          }
                          if (num_tables > 0)
                          {
@@ -3456,8 +3458,6 @@ int restore(token_list *t_list){
                           //Reopen the file in write mode & override it by truncate
                           freopen("db.log", "w+", f_log);
                           fwrite(buffer, currentline + sizeof(line), 1, f_log);
-                          fflush(f_log);
-                          fclose(f_log);
                           return rc;
                         }
                     }
@@ -3477,8 +3477,6 @@ int restore(token_list *t_list){
                       /*Copy the rest to buffer*/
                       memmove(buffer_overwrite+currentByte+sizeof(rf_start), buffer+currentByte,remainingByte);
                       fwrite(buffer_overwrite, original_log_size + 256, 1,f_log);
-                      fflush(f_log);
-                      fclose(f_log);
                       return rc;
                     }
                     // }
@@ -3491,7 +3489,8 @@ int restore(token_list *t_list){
                 } //end going line by line
 
               } //end logic for WITHOUT RF
-
+              fflush(f_log);
+              fclose(f_log);
 
       } // end logic for open log
       else {
@@ -3588,7 +3587,7 @@ int rollforward(token_list *t_list){
             if(redo_timestamp) {
                 // printf("TimeStamp: %s\n", timestamp);
                 // printf("Specfied Timestamp: %s\n", roll_timestamp);
-                printf("%d\n", strcmp(timestamp, roll_timestamp));
+                // printf("%d\n", strcmp(timestamp, roll_timestamp));
                 if(strcmp(timestamp, roll_timestamp) <= 0) {
                     rc = get_token(query, &tok_list);
                     rc = do_semantic(tok_list);
@@ -3600,7 +3599,6 @@ int rollforward(token_list *t_list){
           if(strcasecmp(line, rf_start) == 0){ /* The current line is now at RF_START */
               found_rf = true;
               rf_start_line = currentline;
-              printf("%s\n", "FOUND RF_START");
               if(!timestamp_flag){
                   /*redo all the logged transactions from the end of
                   the backup image up to the end of the log.*/
@@ -3645,6 +3643,8 @@ int rollforward(token_list *t_list){
                 }
                 fwrite(g_tpd_list, file_stat.st_size, 1, dbfile);
             }
+            // fflush(dbfile);
+            // fclose(dbfile);
         }
         if(!rc && redo_timestamp){
             /*prune the rest of the log & remove RF_START AND reset db_Flag = 0 */
@@ -3662,7 +3662,6 @@ int rollforward(token_list *t_list){
               strcpy(copy_log,"db.log");
               sprintf(back_up_version_char,"%d",back_up_version);
               strcat(copy_log,back_up_version_char);
-              printf("%s\n",copy_log);
               f_copy_log = fopen(copy_log, "r");
               if(f_copy_log){ // if file already exists
                  back_up_version++;
@@ -3670,7 +3669,6 @@ int rollforward(token_list *t_list){
               }
               else { //the backup file doesn't exist -> can start writing
                   f_copy_log = fopen(copy_log, "w");
-                  printf("%s\n","Can use this file");
                   /* Write the entire tab file*/
                   fwrite(buffer,original_log_size, 1, f_copy_log);
                   copy_log_flag = true;
@@ -3689,12 +3687,16 @@ int rollforward(token_list *t_list){
             memmove(buffer_overwrite+currentByte, buffer+everything_after_rf, remainingByte);
             fwrite(buffer_overwrite, last_timestamp ,1,f_log);
 
-            //Reopen the file in write mode & override it by truncate
-            // freopen("db.log", "w+", f_log);
-            // fwrite(buffer, currentline + sizeof(line), 1, f_log);
-            // fflush(f_log);
-            // fclose(f_log);
-            // return rc;
+            FILE* dbfile = NULL;
+            if((dbfile = fopen("dbfile.bin","r+bc")) != NULL){
+                fstat(fileno(dbfile), &file_stat);
+                if(!rc){
+                  g_tpd_list->db_flags = 0;
+                }
+                fwrite(g_tpd_list, file_stat.st_size, 1, dbfile);
+            }
+            // fflush(dbfile);
+            // fclose(dbfile);
 
 
         }
