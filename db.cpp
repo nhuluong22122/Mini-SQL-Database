@@ -920,7 +920,6 @@ tpd_entry* get_tpd_from_list(char *tabname)
   /* Find the corresponding tables */
 	if (num_tables > 0)
 	{
-    printf("%s\n", "----GET TPD FROM LIST----");
 		while ((!found) && (num_tables-- > 0))
 		{
       /* Compare two string without worrying about upper or lower case */
@@ -942,7 +941,6 @@ tpd_entry* get_tpd_from_list(char *tabname)
 				}
 			}
 		}
-      printf("%s\n", "----END GET TPD FROM LIST----");
 	}
 
 	return tpd;
@@ -3581,6 +3579,7 @@ int rollforward(token_list *t_list){
             token_list *tok_list=NULL;
 
             if(redo_all){
+                initialize_tpd_list();
                 rc = get_token(query, &tok_list);
                 rc = do_semantic(tok_list);
             }
@@ -3589,6 +3588,7 @@ int rollforward(token_list *t_list){
                 // printf("Specfied Timestamp: %s\n", roll_timestamp);
                 // printf("%d\n", strcmp(timestamp, roll_timestamp));
                 if(strcmp(timestamp, roll_timestamp) <= 0) {
+                    initialize_tpd_list();
                     rc = get_token(query, &tok_list);
                     rc = do_semantic(tok_list);
                     last_timestamp = currentline;

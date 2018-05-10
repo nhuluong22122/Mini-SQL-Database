@@ -153,26 +153,26 @@ echo Pause here, press enter to continue; read dummy;
 echo
 ./db "rollforward"
 ls tab2.tab
-# echo
-# echo "11 - 13. Errors - dupicate backup image name, bad image name, bad timestamp, wrong state"
-# echo
-# ./db "backup to third"
-# echo
-# ./db "backup to third"
-# echo
-# ./db "restore from nothing"
-# echo
-# ./db "insert into tab1 values('new', 55, 85, 625)"
-# echo
-# ./db "rollforward"
-# echo
-# ./db "restore from third"
-# echo
-# ./db "rollforward to 20030531123030"
-# echo
-# ./db "rollforward"
-# echo
-# ./db "select * from tab1"
-# echo
-# echo End of test1.bat
-# echo
+echo
+echo "11 - 13. Errors - dupicate backup image name, bad image name, bad timestamp, wrong state"
+echo
+./db "backup to third"
+echo
+./db "backup to third"
+echo
+./db "restore from nothing"
+echo
+./db "insert into tab1 values('new', 55, 85, 625)"
+echo
+./db "rollforward"
+echo
+./db "restore from third"
+echo
+./db "rollforward to 20030531123030"
+echo
+./db "rollforward"
+echo
+./db "select * from tab1"
+echo
+echo End of test1.bat
+echo
