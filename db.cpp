@@ -51,16 +51,17 @@ int main(int argc, char** argv)
     /* If rc is equal to 0 -> do semantic */
 		if (!rc)
 		{
-      printf("DB FLAG %d\n", g_tpd_list->db_flags);
       //Dealing with RF_START Flag
       if(g_tpd_list->db_flags != 0){
-        if(tok_list->tok_value == K_ROLLFORWARD || tok_list->tok_value == K_SELECT){
+        if(tok_list->tok_value == K_ROLLFORWARD
+        || tok_list->tok_value == K_SELECT
+        || tok_list->tok_value == K_LIST){
             rc = do_semantic(tok_list);
         }
         else { // fail other commands
-            printf("%s\n", "Command failed due to db flag");
+            printf("%s\n", "ROLLFORWARD In Progress | Cannot accept any commands");
+            tok_list->tok_value = INVALID;
             rc = DB_FLAG_ON;
-            return rc;
         }
       }
       else {
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
     /* Else print error statement */
 		if (rc)
 		{
-			tok_ptr = tok_ptr;
+			tok_ptr = tok_list;
 			while (tok_ptr != NULL)
 			{
 				if ((tok_ptr->tok_class == error) ||
@@ -923,8 +924,7 @@ tpd_entry* get_tpd_from_list(char *tabname)
 		while ((!found) && (num_tables-- > 0))
 		{
       /* Compare two string without worrying about upper or lower case */
-      printf("Num table: %d\n", num_tables);
-      printf("Table Name: %s Input Tabname %s \n", cur->table_name, tabname);
+
 			if (strcasecmp(cur->table_name, tabname) == 0)
 			{
 				/* found it */
@@ -1248,9 +1248,7 @@ int sem_create_table(token_list *t_list)
 						memcpy((void*)((char*)new_entry + sizeof(tpd_entry)),
 									 (void*)col_entry,
 									 sizeof(cd_entry) * tab_entry.num_columns);
-            printf("New Entry: %s\n", new_entry->table_name );
 						rc = add_tpd_to_list(new_entry);
-            printf("Pull from tab3: %s\n", get_tpd_from_list(new_entry->table_name));
 						free(new_entry);
 					}
           free(tabfile_ptr);
@@ -3405,7 +3403,7 @@ int restore(token_list *t_list){
                          /* Concat .tab to table name */
                          strcpy(tab_name, dbfile_cur->table_name);
                          strcat(tab_name, ".tab");
-                         printf("tabname: %s\n",dbfile_cur->table_name);
+                         // printf("tabname: %s\n",dbfile_cur->table_name);
 
                          //get the size of tab
                          int size_tab_file = 0;
@@ -3436,7 +3434,7 @@ int restore(token_list *t_list){
                           strcpy(copy_log,"db.log");
                           sprintf(back_up_version_char,"%d",back_up_version);
                           strcat(copy_log,back_up_version_char);
-                          printf("%s\n",copy_log);
+                          // printf("%s\n",copy_log);
                           f_copy_log = fopen(copy_log, "r");
                           if(f_copy_log){ // if file already exists
                              back_up_version++;
@@ -3444,7 +3442,6 @@ int restore(token_list *t_list){
                           }
                           else { //the backup file doesn't exist -> can start writing
                               f_copy_log = fopen(copy_log, "w");
-                              printf("%s\n","Can use this file");
                               /* Write the entire tab file*/
                               fwrite(buffer,original_log_size, 1, f_copy_log);
                               copy_log_flag = true;
@@ -3563,6 +3560,7 @@ int rollforward(token_list *t_list){
         bool redo_all = false;
         bool redo_timestamp = false;
         bool found_rf = false;
+        bool rollbacked = false;
 
         int last_timestamp = 0;
         while (currentline < original_log_size ) {
@@ -3592,6 +3590,7 @@ int rollforward(token_list *t_list){
                     rc = get_token(query, &tok_list);
                     rc = do_semantic(tok_list);
                     last_timestamp = currentline;
+                    rollbacked = true;
                 }
             }
           }
@@ -3648,45 +3647,53 @@ int rollforward(token_list *t_list){
         }
         if(!rc && redo_timestamp){
             /*prune the rest of the log & remove RF_START AND reset db_Flag = 0 */
+            if(rollbacked){
+              /* BACKUP TO ANOTHER LOG BEFORE PRUNING */
+              char back_up_version_char[2];
+              int back_up_version = 1; // use to write copy of log
 
-            /* BACKUP TO ANOTHER LOG BEFORE PRUNING */
-            char back_up_version_char[2];
-            int back_up_version = 1; // use to write copy of log
+              FILE* f_copy_log = NULL;
+              bool copy_log_flag = false;
+              char copy_log[8];
+              while(!copy_log_flag){
+                //Testing to see if other back up logs are available
+                memset(copy_log, '\0', sizeof(copy_log));
+                strcpy(copy_log,"db.log");
+                sprintf(back_up_version_char,"%d",back_up_version);
+                strcat(copy_log,back_up_version_char);
+                f_copy_log = fopen(copy_log, "r");
+                if(f_copy_log){ // if file already exists
+                   back_up_version++;
+                   fclose(f_copy_log);
+                }
+                else { //the backup file doesn't exist -> can start writing
+                    //try to exclude RF_START
+                    f_copy_log = fopen(copy_log, "w");
+                    int write_length = original_log_size - 256; //remove one line (RF_START)
+                    int first_half = rf_start_line;
+                    int the_rest = write_length - rf_start_line;
+                    /* Write the entire tab file*/
+                    fwrite(buffer, first_half, 1, f_copy_log);
+                    fwrite(buffer+rf_start_line+256, the_rest, 1, f_copy_log);
+                    // fwrite(buffer,original_log_size, 1, f_copy_log);
+                    copy_log_flag = true;
+                }
+              } // end while loop
+              /* START PRUNING */
+              /* REMOVE RF_START FROM FILE */
+              freopen("db.log", "w+", f_log);
+              char* buffer_overwrite = (char*)calloc(1, last_timestamp); //remove 1 RF_FLAG
+              int currentByte = rf_start_line; // the line after RF_START
+              int remainingByte = last_timestamp - currentByte;
+              int everything_after_rf = rf_start_line + sizeof(line);
+              memmove(buffer_overwrite, buffer, currentByte); //including back up
+                /*Copy the rest to buffer*/
+              memmove(buffer_overwrite+currentByte, buffer+everything_after_rf, remainingByte);
+              fwrite(buffer_overwrite, last_timestamp ,1,f_log);
 
-            FILE* f_copy_log = NULL;
-            bool copy_log_flag = false;
-            char copy_log[8];
-            while(!copy_log_flag){
-              //Testing to see if other back up logs are available
-              memset(copy_log, '\0', sizeof(copy_log));
-              strcpy(copy_log,"db.log");
-              sprintf(back_up_version_char,"%d",back_up_version);
-              strcat(copy_log,back_up_version_char);
-              f_copy_log = fopen(copy_log, "r");
-              if(f_copy_log){ // if file already exists
-                 back_up_version++;
-                 fclose(f_copy_log);
-              }
-              else { //the backup file doesn't exist -> can start writing
-                  f_copy_log = fopen(copy_log, "w");
-                  /* Write the entire tab file*/
-                  fwrite(buffer,original_log_size, 1, f_copy_log);
-                  copy_log_flag = true;
-              }
-            } // end while loop
+            }
 
-            /* START PRUNING */
-            /* REMOVE RF_START FROM FILE */
-            freopen("db.log", "w+", f_log);
-            char* buffer_overwrite = (char*)calloc(1, last_timestamp); //remove 1 RF_FLAG
-            int currentByte = rf_start_line; // the line after RF_START
-            int remainingByte = last_timestamp - currentByte;
-            int everything_after_rf = rf_start_line + sizeof(line);
-            memmove(buffer_overwrite, buffer, currentByte); //including back up
-              /*Copy the rest to buffer*/
-            memmove(buffer_overwrite+currentByte, buffer+everything_after_rf, remainingByte);
-            fwrite(buffer_overwrite, last_timestamp ,1,f_log);
-
+            /* change the flag of the file */
             FILE* dbfile = NULL;
             if((dbfile = fopen("dbfile.bin","r+bc")) != NULL){
                 fstat(fileno(dbfile), &file_stat);
@@ -3695,10 +3702,14 @@ int rollforward(token_list *t_list){
                 }
                 fwrite(g_tpd_list, file_stat.st_size, 1, dbfile);
             }
+
+            if(!rollbacked){
+              cur->next->tok_value = INVALID;
+              printf("%s\n", "Invalid timestamp or not found");
+              rc = ROLLFORWARD_FAILED;
+            }
             // fflush(dbfile);
             // fclose(dbfile);
-
-
         }
       }
       else{
