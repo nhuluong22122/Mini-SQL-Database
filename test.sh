@@ -9,7 +9,7 @@ echo Clean up
 rm dbfile.bin *.tab
 echo ==========================================================================================
 echo #01 Test setup - create table + insert data
-./db "create table class ( Student char(12) NOT NULL, Gender char(1), Exams int, Quiz int, Total int )"
+./db "create table schedule ( Student char(12) NOT NULL, class char(12) )"
 echo ------------------------------------------------------------------------------------------
 echo #02 Insert 15 rows of data
 ./db "insert into class values ('Siu', 'M', 480, 80, 560)"

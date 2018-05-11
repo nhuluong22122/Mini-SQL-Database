@@ -1550,16 +1550,19 @@ int sem_select(token_list *t_list) {
 
     token_list *cur;
     tpd_entry *tab_entry = NULL;
+    tpd_entry *tab_entry2 = NULL;
     cd_entry *col_entry = NULL;
     FILE *fhandle = NULL;
 
     tabfile_ptr = NULL;
+    table_file_header* tabfile2_ptr = NULL;
 
     int cur_row = 0;
     int rc = 0;
 
     struct stat file_stat;
     char* record_ptr = NULL;
+    char* table2_ptr = NULL;
 
     /* Set the current pointer to the token list */
     cur = t_list;
@@ -1570,8 +1573,10 @@ int sem_select(token_list *t_list) {
     char proj_col[MAX_NUM_COL][MAX_TOK_LEN];
 
     bool select_all = false;
+    bool join = false;
 
-    char table2;
+    char table2[MAX_TOK_LEN];
+    memset(table2, '\0', MAX_TOK_LEN);
 
     //Check for SELECT ALL
     if(cur->tok_value == S_STAR){
@@ -1694,21 +1699,38 @@ int sem_select(token_list *t_list) {
           rc = INVALID_TABLE_NAME;
           cur->tok_value = INVALID;
         }
-        // /*If there is a comma for */
-        // if(cur->next != NULL && cur->next->tok_class == S_COMMA){
-        //   if(cur->next->next != NULL && cur->next->next->tok_value == IDENT){
-        //       strcpy(&table2, cur->next->next->tok_string);
-        //       printf("Table2: %s\n", table2);
-        //   }
-        //   else {
-        //       printf("%s\n", "Invalid syntax for INNER JOIN ");
-        //   }
-        // }
         else { /* Check for table name */
+          /*If there is a comma for */
+          if(cur->next != NULL && cur->next->tok_value == S_COMMA){
+            if(cur->next->next != NULL && cur->next->next->tok_value == IDENT){
+                strcpy(table2, (cur->next->next->tok_string));
+                join = true;
+            }
+            else {
+                rc = INVALID_JOIN_SYNTAX;
+                cur->next->next->tok_value = INVALID;
+                printf("%s\n", "Invalid table syntax for INNER JOIN ");
+                return rc;
+            }
+          }
           if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
           {
+
+              /* Check if the second table doesn't exist */
+              if(join){
+                if((tab_entry2 = get_tpd_from_list(table2)) == NULL){
+                  cur->next->next->tok_value = INVALID;
+                  rc = TABLE_NOT_EXIST;
+                  printf("Table %s doesn't exists \n", table2);
+                  return rc;
+                }
+              }
+              tab_entry2 = get_tpd_from_list(table2);
               /* Load file to memory  */
               record_ptr = load_data_from_tab(cur->tok_string);
+
+              table2_ptr = load_data_from_tab(table2);
+
               if (!record_ptr)
               {
                 rc = MEMORY_ERROR;
@@ -1717,9 +1739,15 @@ int sem_select(token_list *t_list) {
               {
                 /* Load file to memory  */
                 tabfile_ptr = (table_file_header*)record_ptr;
+                if(join){
+                  tabfile2_ptr = (table_file_header*)table2_ptr;
+                  table2_ptr += tabfile2_ptr->record_offset;
+                }
                 /* Jump to the first record  */
+
                 record_ptr+= tabfile_ptr->record_offset;
                 struct cd_entry_def *list_cd_entry[tab_entry->num_columns];
+
 
                 int count_cond = 0;
                 //Store the column name
@@ -1731,12 +1759,21 @@ int sem_select(token_list *t_list) {
                 token_list *orderby_column;
                 // int *cond_value_int[2];
 
+                /* JOIN Predicate Column  */
+                token_list *join_predicate_col;
+
                 bool where_flag = false;
                 bool orderby_flag = false;
                 bool multi_cond = false;
                 token_list *and_or = NULL;
                 bool order_desc = false;
                 cd_entry *orderby_col;
+
+                if(join){
+                  cur = cur->next->next; //go to the second table
+
+                }
+
                 /*Check for WHERE Clause */
                 token_list *cur2 = NULL;
                 if(cur->next != NULL && cur->next->tok_value == K_WHERE){
@@ -1748,6 +1785,7 @@ int sem_select(token_list *t_list) {
                       printf("%s\n\n", "Invalid WHERE syntax");
                       return rc;
                     }
+                    /*=======FIRST CONDITION========*/
                     cur2 = cur->next; // jump to column
                     do{ //Check each condition
                           if(cur2 != NULL && cur2->tok_value != IDENT){
@@ -1762,6 +1800,13 @@ int sem_select(token_list *t_list) {
                             if(cur2->next != NULL && cur2->next->tok_value != EOC){
                               cur2 = cur2->next;
                               if(cur2->tok_value == S_EQUAL || cur2->tok_value == S_LESS || cur2->tok_value == S_GREATER){
+                                  /*=======CHECK FOR JOIN PREDICATE========*/
+                                  if(join && cur2->tok_value == S_EQUAL){
+                                        // check for the join column
+                                      if(cur2->next != NULL && cur2->next->tok_value == IDENT){
+                                          join_predicate_col = cur2->next;
+                                      }
+                                  }
                                   //belong to the signs
                                   // printf("%s\n", "Sign");
                                   cond_relation_operator[count_cond] = cur2;
@@ -1941,7 +1986,7 @@ int sem_select(token_list *t_list) {
                 }
 
                 int i = 0;
-                //Get all the column information from file
+                //Get all the column information from table 1
                 for(i = 0, col_entry = (cd_entry*)((char*)tab_entry + tab_entry->cd_offset);
                     i < tab_entry->num_columns; i++, col_entry++)
                 {
@@ -1969,6 +2014,30 @@ int sem_select(token_list *t_list) {
                         }
                       }
                     }
+                    /*If there is join check the projection column */
+                    if(join){
+                      struct cd_entry_def *list_cd_entry2[tab_entry2->num_columns];
+                      int i = 0;
+                      for(i = 0, col_entry = (cd_entry*)((char*)tab_entry2 + tab_entry2->cd_offset);
+                          i < tab_entry2->num_columns; i++, col_entry++)
+                      {
+                        list_cd_entry2[i] = col_entry;
+                      }
+                      for(i = 0; i < tab_entry2->num_columns; i++) // against all the column in table
+                      {
+                        if(strcasecmp(proj_col[col], list_cd_entry2[i]->col_name)==0){
+                          match = true;
+                          if(list_cd_entry2[i]->col_type == T_CHAR || list_cd_entry2[i]->col_type == T_VARCHAR){
+                            if(aggregate_func != NULL && (aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG)){
+                               rc = INVALID_AGGREGATE_FUNCTION_PARAM;
+                               cur_projection->tok_value = INVALID;
+                               printf("%s\n\n", "Can't apply SUM or AVG to String Column Type");
+                               return rc;
+                            }
+                          }
+                        }
+                      }
+                    }
                     if(!match){
                       rc = COLUMN_NOT_EXIST;
                       cur_projection->tok_value = INVALID;
@@ -1981,6 +2050,7 @@ int sem_select(token_list *t_list) {
                   }
                   print_column = count_proj;
                 }
+
 
                 //Check where columns
                 int col = 0;

@@ -221,7 +221,8 @@ typedef enum error_return_codes
 	INVALID_ROLLFOWARD_SYNTAX = -330,
 	ROLLFORWARD_FAILED,
 	DB_FLAG_ON,
-
+	/* INNER JOIN ERROR */
+	INVALID_JOIN_SYNTAX,
 	/* Other pre-defined error */
 	FILE_OPEN_ERROR = -299,			// -299
 	DBFILE_CORRUPTION,					// -298
