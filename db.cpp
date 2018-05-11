@@ -44,8 +44,8 @@ int main(int argc, char** argv)
     /* Print out token by token */
 		while (tok_ptr != NULL)
 		{
-			// printf("%16s \t%d \t %d\n",tok_ptr->tok_string, tok_ptr->tok_class,
-			// 	      tok_ptr->tok_value);
+			printf("%16s \t%d \t %d\n",tok_ptr->tok_string, tok_ptr->tok_class,
+				      tok_ptr->tok_value);
 			tok_ptr = tok_ptr->next;
 		}
     /* If rc is equal to 0 -> do semantic */
@@ -1272,10 +1272,13 @@ int sem_create_table(token_list *t_list)
     int cur_id = 0;
     /* Column descriptor sturcture */
     cd_entry *col_entry;
+    cd_entry *col_entry_2;
     // struct table_file_header_def tabfile;
+    /* token list for second table */
     tabfile_ptr = NULL;
     FILE *fhandle = NULL;
     char filename[MAX_IDENT_LEN+5];
+
 
     /* Set the current pointer to the token list */
     cur = t_list;
@@ -1290,6 +1293,7 @@ int sem_create_table(token_list *t_list)
   	}
     else /* There is a valid class */
     {
+
       /* if the table alerady existed then we can insert */
       // printf("CHECK: %d\n", new_entry = get_tpd_from_list(cur->tok_string));
       if ((new_entry = get_tpd_from_list(cur->tok_string)) == NULL){
@@ -1543,6 +1547,7 @@ int sem_create_table(token_list *t_list)
 }
 
 int sem_select(token_list *t_list) {
+
     token_list *cur;
     tpd_entry *tab_entry = NULL;
     cd_entry *col_entry = NULL;
@@ -1565,6 +1570,8 @@ int sem_select(token_list *t_list) {
     char proj_col[MAX_NUM_COL][MAX_TOK_LEN];
 
     bool select_all = false;
+
+    char table2;
 
     //Check for SELECT ALL
     if(cur->tok_value == S_STAR){
@@ -1687,6 +1694,16 @@ int sem_select(token_list *t_list) {
           rc = INVALID_TABLE_NAME;
           cur->tok_value = INVALID;
         }
+        // /*If there is a comma for */
+        // if(cur->next != NULL && cur->next->tok_class == S_COMMA){
+        //   if(cur->next->next != NULL && cur->next->next->tok_value == IDENT){
+        //       strcpy(&table2, cur->next->next->tok_string);
+        //       printf("Table2: %s\n", table2);
+        //   }
+        //   else {
+        //       printf("%s\n", "Invalid syntax for INNER JOIN ");
+        //   }
+        // }
         else { /* Check for table name */
           if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
           {
@@ -2491,8 +2508,13 @@ int sem_select(token_list *t_list) {
                 fflush(fhandle);
                 fclose(fhandle);
               }
+          }  //End checking if that table exist
+          else {
+            cur->tok_value = INVALID;
+            rc = TABLE_NOT_EXIST;
+            printf("%s\n", "Table doesn't exists");
           }
-          }//End checking if that table exist
+        }
       }// End checking for invalid table
     return rc;
 }
