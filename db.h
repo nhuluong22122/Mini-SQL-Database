@@ -7,7 +7,7 @@ db.h - This file contains all the structures, defines, and function
 #define MAX_NUM_COL			16
 #define MAX_TOK_LEN			32
 #define KEYWORD_OFFSET	10
-#define FORMAT_LENGTH 	20
+#define FORMAT_LENGTH 	16
 #define STRING_BREAK		" (),<>="
 #define NUMBER_BREAK		" ),"
 

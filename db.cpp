@@ -1705,6 +1705,7 @@ int sem_select(token_list *t_list) {
             if(cur->next->next != NULL && cur->next->next->tok_value == IDENT){
                 strcpy(table2, (cur->next->next->tok_string));
                 join = true;
+                printf("%s\n", "INNER JOIN");
             }
             else {
                 rc = INVALID_JOIN_SYNTAX;
@@ -1726,6 +1727,7 @@ int sem_select(token_list *t_list) {
                 }
               }
               tab_entry2 = get_tpd_from_list(table2);
+              struct cd_entry_def *list_cd_entry2[tab_entry2->num_columns];
               /* Load file to memory  */
               record_ptr = load_data_from_tab(cur->tok_string);
 
@@ -1995,6 +1997,18 @@ int sem_select(token_list *t_list) {
                 int print_column = tab_entry->num_columns;
 
                 //Check agaisnt projection columns
+                /*If there is join check the projection column */
+                if(join){
+                  int i = 0;
+                  for(i = 0, col_entry = (cd_entry*)((char*)tab_entry2 + tab_entry2->cd_offset);
+                      i < tab_entry2->num_columns; i++, col_entry++)
+                  {
+                    list_cd_entry2[i] = col_entry;
+                    printf("%s\n", list_cd_entry2[i]->col_name);
+                  }
+                }
+
+
                 if(!select_all){
                   int col = 0;
                   bool match = false;
@@ -2014,18 +2028,11 @@ int sem_select(token_list *t_list) {
                         }
                       }
                     }
-                    /*If there is join check the projection column */
                     if(join){
-                      struct cd_entry_def *list_cd_entry2[tab_entry2->num_columns];
-                      int i = 0;
-                      for(i = 0, col_entry = (cd_entry*)((char*)tab_entry2 + tab_entry2->cd_offset);
-                          i < tab_entry2->num_columns; i++, col_entry++)
-                      {
-                        list_cd_entry2[i] = col_entry;
-                      }
                       for(i = 0; i < tab_entry2->num_columns; i++) // against all the column in table
                       {
                         if(strcasecmp(proj_col[col], list_cd_entry2[i]->col_name)==0){
+                          printf("%s\n", proj_col[col]);
                           match = true;
                           if(list_cd_entry2[i]->col_type == T_CHAR || list_cd_entry2[i]->col_type == T_VARCHAR){
                             if(aggregate_func != NULL && (aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG)){
@@ -2138,7 +2145,13 @@ int sem_select(token_list *t_list) {
 
                 //If everything is ok -> start printing
                 for(int count = 0; count < print_column; count++){
-                  printf("%s","+--------------------");
+                  printf("%s","+----------------");
+                }
+                if(join){
+                  int j = 0;
+                  for(j = 0; j < tab_entry2->num_columns; j++){
+                      printf("%s","+----------------");
+                  }
                 }
                 printf("+\n");
 
@@ -2173,10 +2186,22 @@ int sem_select(token_list *t_list) {
                       printf("|%*s", -FORMAT_LENGTH, list_cd_entry[i]->col_name);
                     }
                 }
+                if(join){
+                  int j = 0;
+                  for(j = 0; j < tab_entry2->num_columns; j++){
+                    printf("|%*s", -FORMAT_LENGTH, list_cd_entry2[j]->col_name);
+                  }
+                }
                 printf("|\n");
 
                 for(int count = 0; count < print_column; count++){
-                  printf("%s","+--------------------");
+                  printf("%s","+----------------");
+                }
+                if(join){
+                  int j = 0;
+                  for(j = 0; j < tab_entry2->num_columns; j++){
+                      printf("%s","+----------------");
+                  }
                 }
                 printf("+\n");
 
@@ -2570,7 +2595,7 @@ int sem_select(token_list *t_list) {
 
                 int count = 0;
                 for(count = 0; count < print_column; count++){
-                  printf("%s","+--------------------");
+                  printf("%s","+----------------");
                 }
                 printf("+\n");
                 printf("%d rows selected.\n", total_row);
