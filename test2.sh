@@ -8,14 +8,14 @@ gcc db.cpp -m32 -o db         #-m32 for 32bit code
 echo Clean up
 echo ==========================================================================================
 echo #01 Test setup - create table + insert data
-./db "create table schedule ( Student_Name char(12) NOT NULL, Classes char(12) )"
+./db "create table schedule ( Student_Name char(12) NOT NULL, Exam_Score int, Classes char(12) )"
 echo ------------------------------------------------------------------------------------------
 echo #02 Insert 15 rows of data
-./db "insert into schedule values ('Siu', 'CS156')"
-./db "insert into schedule values ('Frank', 'CS174')"
-./db "insert into schedule values ('Jordon', 'CS160')"
-./db "insert into schedule values ('Jeff', 'CS160')"
-./db "insert into schedule values ('Linawati', 'CS185C')"
+./db "insert into schedule values ('Siu', 480, 'CS156')"
+./db "insert into schedule values ('Frank', 600, 'CS174')"
+./db "insert into schedule values ('Victor',475, 'CS160')"
+./db "insert into schedule values ('euna', 460, 'CS160')"
+./db "insert into schedule values ('Ying',540, 'CS185C')"
 ./db "insert into schedule values ('Tiffany', 'CS190')"
 
 

@@ -2018,6 +2018,7 @@ int sem_select(token_list *t_list) {
                 bool join_col_found = false;
                 int temp_offset = 0;
                 int join_col_offset = 0;
+
                 if(join){
                   int i = 0;
                   for(i = 0, col_entry = (cd_entry*)((char*)tab_entry2 + tab_entry2->cd_offset);
@@ -2032,11 +2033,10 @@ int sem_select(token_list *t_list) {
                       join_col_offset = temp_offset;
                     }
                     else {
-                      temp_offset += tok_length2;
+                      temp_offset += list_cd_entry2[i]->col_len;
                     }
                   }
                 }
-                printf("%d\n",join_col_offset);
 
                 if(!join_col_found && join) {
                    rc = COLUMN_NOT_EXIST;
@@ -2116,7 +2116,7 @@ int sem_select(token_list *t_list) {
 
                               }
                               else if(list_cd_entry[i]->col_type == T_INT){
-                                if(cond_value[0]->tok_value != INT_LITERAL){
+                                if(cond_value[0]->tok_value != INT_LITERAL && !join){
                                     rc = DATATYPE_MISMATCH;
                                     cond_value[0]->tok_value = INVALID;
                                     printf("Data Type Mismatch\n\n");
@@ -2131,7 +2131,7 @@ int sem_select(token_list *t_list) {
                             valid_column2 = true;
                             if(cond_relation_operator[1]->tok_value  != K_NULL && cond_relation_operator[1]->tok_value != K_NOT){
                               if(list_cd_entry[i]->col_type == T_VARCHAR || list_cd_entry[i]->col_type == T_CHAR){
-                                  if(cond_value[1]->tok_value != STRING_LITERAL){
+                                  if(cond_value[1]->tok_value != STRING_LITERAL && !join){
                                       rc = DATATYPE_MISMATCH;
                                       cond_value[1]->tok_value = INVALID;
                                       printf("Data Type Mismatch\n\n");
@@ -2139,7 +2139,7 @@ int sem_select(token_list *t_list) {
                                   }
                               }
                               else if(list_cd_entry[i]->col_type == T_INT){
-                                if(cond_value[1]->tok_value != INT_LITERAL){
+                                if(cond_value[1]->tok_value != INT_LITERAL && !join){
                                     rc = DATATYPE_MISMATCH;
                                     cond_value[1]->tok_value = INVALID;
                                     printf("Data Type Mismatch\n\n");
@@ -2301,7 +2301,7 @@ int sem_select(token_list *t_list) {
                                         // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
                                         if(strcmp(temp_string, temp_string2) == 0){
                                            record_to_print[total_row] = record_ptr;
-                                           record_to_print2[total_row] = table2_ptr;
+                                           record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
                                            total_row++;
                                         }
                                     }
@@ -2330,11 +2330,28 @@ int sem_select(token_list *t_list) {
                               int temp_num = 0;
                               memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
                               int extract_value = atoi(cond_value[0]->tok_string);
-                              if(cond_relation_operator[0]->tok_value == S_EQUAL
-                                && temp_num == extract_value){
-                                  record_to_print[total_row] = record_ptr;
-                                  total_row++;
+                              if(cond_relation_operator[0]->tok_value == S_EQUAL) {
+                                if(join){
+                                    // temp_string
+                                    int table2_row;
+                                    for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
+                                        /*Get each row of that join column from table 2*/
+                                        int temp_num2 = 0;
+                                        memcpy(&temp_num2,table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), sizeof(int));
+                                        if(temp_num == temp_num2){
+                                           record_to_print[total_row] = record_ptr;
+                                           record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
+                                           total_row++;
+                                        }
+                                    }
                                 }
+                                else {
+                                  if(temp_num == extract_value){
+                                    record_to_print[total_row] = record_ptr;
+                                    total_row++;
+                                  }
+                                }
+                              }
                               else if(cond_relation_operator[0]->tok_value == S_GREATER
                                 && temp_num > extract_value)
                                 {
@@ -2373,9 +2390,29 @@ int sem_select(token_list *t_list) {
                                   memset(temp_string, '\0', tok_length + 1);
                                   memcpy(&temp_string, record_ptr+record_offset, tok_length);
                                   if(cond_relation_operator[1]->tok_value == S_EQUAL){
-                                    if(strcmp(cond_value[1]->tok_string, temp_string) == 0){
-                                          record_to_print[total_row] = record_ptr;
-                                          total_row++;
+                                    if(join){
+                                        // temp_string
+                                        int table2_row;
+                                        for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
+                                            /*Get each row of that join column from table 2*/
+                                            unsigned char tok_length2 = NULL;
+                                            memcpy(&tok_length2, table2_ptr+(tabfile2_ptr->record_size * table2_row), 1);
+                                            char temp_string2[tok_length2 + 1];
+                                            memset(temp_string2, '\0', tok_length2 + 1);
+                                            memcpy(&temp_string2, table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), tok_length2);
+                                            // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
+                                            if(strcmp(temp_string, temp_string2) == 0){
+                                               record_to_print[total_row] = record_ptr;
+                                               record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
+                                               total_row++;
+                                            }
+                                        }
+                                    }
+                                    else {
+                                      if(strcmp(cond_value[1]->tok_string, temp_string) == 0){
+                                            record_to_print[total_row] = record_ptr;
+                                            total_row++;
+                                      }
                                     }
                                   }
                                   else if(cond_relation_operator[0]->tok_value == S_GREATER){
@@ -2395,11 +2432,28 @@ int sem_select(token_list *t_list) {
                                   int temp_num = 0;
                                   memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
                                   int extract_value = atoi(cond_value[1]->tok_string);
-                                  if(cond_relation_operator[1]->tok_value == S_EQUAL
-                                    && temp_num ==  extract_value){
+                                  if(cond_relation_operator[1]->tok_value == S_EQUAL){
+                                    if(join){
+                                        // temp_string
+                                        int table2_row;
+                                        for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
+                                            /*Get each row of that join column from table 2*/
+                                            int temp_num2 = 0;
+                                            memcpy(&temp_num2,table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), sizeof(int));
+                                            // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
+                                            if(temp_num == temp_num2){
+                                               record_to_print[total_row] = record_ptr;
+                                               record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
+                                               total_row++;
+                                            }
+                                        }
+                                    }
+                                    else if(temp_num ==  extract_value && !join){
                                       record_to_print[total_row] = record_ptr;
                                       total_row++;
                                     }
+                                  }
+
                                   else if(cond_relation_operator[1]->tok_value == S_GREATER
                                     && temp_num >  extract_value)
                                     {
@@ -2521,14 +2575,17 @@ int sem_select(token_list *t_list) {
 
                 for(int z = 0; z < total_row; z++){
                     record_ptr = record_to_print_final[z];
+                    table2_ptr = record_to_print2[z];
                     if(select_all) { // SELECT ALL
                        int record_offset2 = 0;
+                       //PRINT THE ORIGINAL TABLE COLUMNS
                        for(j = 0; j < tab_entry->num_columns; j++)
                        {
                         /* If the column type is CHAR*/
                         unsigned char tok_length2 = NULL;
                         memcpy(&tok_length2, record_ptr+record_offset2, 1);
                         record_offset2++;
+
 
                         printf("%s","|");
                         if(list_cd_entry[j]->col_type == T_CHAR || list_cd_entry[j]->col_type == T_VARCHAR){
@@ -2567,6 +2624,52 @@ int sem_select(token_list *t_list) {
                          }
                        }
                        record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
+                      }
+                      if(join){
+                        int record_offset2 = 0;
+                        //PRINT THE ORIGINAL TABLE COLUMNS
+                        int j = 0;
+                        for(j = 0; j < tab_entry2->num_columns; j++)
+                        {
+                         /* If the column type is CHAR*/
+                         unsigned char tok_length2 = NULL;
+                         memcpy(&tok_length2, table2_ptr+record_offset2, 1);
+                         record_offset2++;
+                         printf("%s","|");
+                         if(list_cd_entry2[j]->col_type == T_CHAR || list_cd_entry2[j]->col_type == T_VARCHAR){
+                          int col_len2 = list_cd_entry2[j]->col_len;
+                          if(tok_length2 == 0){ //NULL
+                            if(aggregate_func == NULL){
+                              printf("%*s",-FORMAT_LENGTH,"-");
+                            }
+                            null_count++;
+                          }
+                          else {
+                            char temp_string[tok_length2 + 1];
+                            memset(temp_string, '\0', tok_length2 + 1);
+                            memcpy(&temp_string, table2_ptr+record_offset2, tok_length2);
+                            if(aggregate_func == NULL){
+                              printf("%*s", -FORMAT_LENGTH ,temp_string);
+                            }
+                          }
+                        }
+                        else { //column type is INT
+                          if(tok_length2 == 0){ //NULL
+                            if(aggregate_func == NULL){
+                              printf("%*s",FORMAT_LENGTH,"-");
+                            }
+                            null_count++;
+                          }
+                          else {
+                            int value = 0;
+                            memcpy(&value, table2_ptr+record_offset2, sizeof(int));
+                            if(aggregate_func == NULL){
+                              printf("%*d",FORMAT_LENGTH,value);
+                            }
+                          }
+                        }
+                        record_offset2 = record_offset2 + list_cd_entry2[j]->col_len;
+                       }
                       }
                     }
                     else if(!select_all) {
@@ -2654,6 +2757,12 @@ int sem_select(token_list *t_list) {
                 int count = 0;
                 for(count = 0; count < print_column; count++){
                   printf("%s","+----------------");
+                }
+                if(join){
+                  int j = 0;
+                  for(j = 0; j < tab_entry2->num_columns; j++){
+                      printf("%s","+----------------");
+                  }
                 }
                 printf("+\n");
                 printf("%d rows selected.\n", total_row);
