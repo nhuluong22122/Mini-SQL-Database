@@ -25,9 +25,9 @@ echo
 echo
 ./db "create table tab2(student_name char(16), college char(20), zipcode char(5), rank int)"
 echo
-./db "insert into tab1 values('Siu', 11, 80, 560)"
+./db "insert into tab1 values('LiMing', 11, 80, 560)"
 echo
-./db "insert into tab1 values('Frank', 22, 100, 700)"
+./db "insert into tab1 values('DVa', 22, 100, 700)"
 echo
 ./db "insert into tab1 values('Butcher', 33, 75, 525)"
 echo
@@ -39,9 +39,9 @@ echo
 echo
 ./db "insert into tab1 values('Jordon', 77, 79, 580)"
 echo
-./db "insert into tab2 values('Siu','UCLA', '11111', 3)"
+./db "insert into tab2 values('LiMing','UCLA', '11111', 3)"
 echo
-./db "insert into tab2 values('Frank','SJSU', '22222', 10)"
+./db "insert into tab2 values('DVa','SJSU', '22222', 10)"
 echo
 ./db "insert into tab2 values('Jordon','Stanford', '33333', 2)"
 echo
@@ -53,13 +53,21 @@ echo
 echo
 ./db "select * from tab1, tab2 where name = student_name"
 echo
+./db "select * from tab1, tab2 where name = student_name"
+echo
 ./db "select * from tab1, tab2 where name = student_name AND name = 'Jordon'"
 echo
 ./db "select * from tab1, tab2 where name = student_name AND quizzes < 50"
 echo
-./db "select * from tab1, tab2 where name = 'Jordon' and name = student_name"
+./db "select * from tab1, tab2 where name = 'DVa' and name = student_name"
 echo
 ./db "select * from tab1, tab2 where quizzes > 50 and name = student_name"
+echo
+./db "select * from tab1, tab2 where student_name=name and name = 'LiMing'"
+echo
+ ./db "select name,zipcode,college from tab1,tab2 where student_name = name"
+echo
+./db "select zipcode from tab1,tab2 where name = student_name"
 # echo
 # echo Check transaction log
 # echo

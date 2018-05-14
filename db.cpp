@@ -1695,7 +1695,6 @@ int sem_select(token_list *t_list) {
             (cur->tok_class != identifier) &&
             (cur->tok_class != type_name))
         {
-
           rc = INVALID_TABLE_NAME;
           cur->tok_value = INVALID;
         }
@@ -1712,7 +1711,6 @@ int sem_select(token_list *t_list) {
                 else {
                   strcpy(table2, (cur->next->next->tok_string));
                   join = true;
-                  printf("%s\n", "INNER JOIN");
                 }
             }
             else {
@@ -1724,7 +1722,6 @@ int sem_select(token_list *t_list) {
           }
           if ((tab_entry = get_tpd_from_list(cur->tok_string)) != NULL)
           {
-
               /* Check if the second table doesn't exist */
               if(join){
                 if((tab_entry2 = get_tpd_from_list(table2)) == NULL){
@@ -2044,6 +2041,22 @@ int sem_select(token_list *t_list) {
                       join_col_found = true;
                       join_col_offset = temp_offset;
                     }
+                    if(strcasecmp(cond_column[0]->tok_string, list_cd_entry2[i]->col_name) == 0){
+                      token_list *temp = join_predicate_col;
+                      join_predicate_col = cond_column[0];
+                      cond_column[0] = temp;
+                      join_col_found = true;
+                      join_col_offset = temp_offset;
+                    }
+                    if(multi_cond){
+                      if(strcasecmp(cond_column[1]->tok_string, list_cd_entry2[i]->col_name) == 0){
+                        token_list *temp = join_predicate_col;
+                        join_predicate_col = cond_column[1];
+                        cond_column[1] = temp;
+                        join_col_found = true;
+                        join_col_offset = temp_offset;
+                      }
+                    }
                     else {
                       temp_offset += list_cd_entry2[i]->col_len;
                     }
@@ -2080,7 +2093,6 @@ int sem_select(token_list *t_list) {
                       for(i = 0; i < tab_entry2->num_columns; i++) // against all the column in table
                       {
                         if(strcasecmp(proj_col[col], list_cd_entry2[i]->col_name)==0){
-                          printf("%s\n", proj_col[col]);
                           match = true;
                           if(list_cd_entry2[i]->col_type == T_CHAR || list_cd_entry2[i]->col_type == T_VARCHAR){
                             if(aggregate_func != NULL && (aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG)){
@@ -2111,6 +2123,7 @@ int sem_select(token_list *t_list) {
                 bool valid_column = false;
                 bool valid_column2 = false;
                 bool valid_orderby_column = false;
+                bool local_cond_join = false;
                 if(where_flag || orderby_flag){
                   for(i = 0; i < tab_entry->num_columns; i++) // against all the column in table
                   {
@@ -2167,6 +2180,27 @@ int sem_select(token_list *t_list) {
                         }
                       }
                   }
+                  for(i = 0; i < tab_entry2->num_columns; i++) // against all the column in table
+                  {
+                      if(where_flag){
+                        if(strcasecmp(cond_column[0]->tok_string, list_cd_entry2[i]->col_name) == 0){
+                            valid_column = true;
+                            local_cond_join = true;
+                        }
+                      }
+                      if(multi_cond){
+                          if(strcasecmp(cond_column[1]->tok_string, list_cd_entry2[i]->col_name ) == 0){
+                            valid_column2 = true;
+                            local_cond_join = true;
+                        }
+                      }
+                      if(orderby_flag) {
+                        if(strcasecmp(orderby_column->tok_string, list_cd_entry2[i]->col_name) == 0){
+                          valid_orderby_column = true;
+                          local_cond_join = true;
+                        }
+                      }
+                  }
                 }
                 if(multi_cond && !valid_column2){
                   rc = COLUMN_NOT_EXIST;
@@ -2195,7 +2229,7 @@ int sem_select(token_list *t_list) {
                 for(int count = 0; count < print_column; count++){
                   printf("%s","+----------------");
                 }
-                if(join){
+                if(join && select_all){
                   int j = 0;
                   for(j = 0; j < tab_entry2->num_columns; j++){
                       printf("%s","+----------------");
@@ -2235,7 +2269,7 @@ int sem_select(token_list *t_list) {
                     }
                 }
 
-                if(join){
+                if(join && select_all){
                   int j = 0;
                   for(j = 0; j < tab_entry2->num_columns; j++){
                     printf("|%*s", -FORMAT_LENGTH, list_cd_entry2[j]->col_name);
@@ -2246,7 +2280,7 @@ int sem_select(token_list *t_list) {
                 for(int count = 0; count < print_column; count++){
                   printf("%s","+----------------");
                 }
-                if(join){
+                if(join && select_all){
                   int j = 0;
                   for(j = 0; j < tab_entry2->num_columns; j++){
                       printf("%s","+----------------");
@@ -2268,245 +2302,246 @@ int sem_select(token_list *t_list) {
                 char* record_to_print[tabfile_ptr->num_records]; //Array of all possible records to print;
                 char* record_to_print2[MAX_NUM_COL]; //Array of all possible records to print;
                 char* record_to_print_final[tabfile_ptr->num_records];
-                /* For every row in this file */
-                for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
-                record_offset = 0;
-                    /* For every column in the column */
-                    for(j = 0; j < tab_entry->num_columns; j++){
-                      column_address = list_cd_entry[j];
-                      unsigned char tok_length = NULL;
-                      memcpy(&tok_length, record_ptr+record_offset, 1);
-                      record_offset++;
 
-                      //If there is a where flag
-                      if(where_flag){
-                        if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
-                          if(cond_relation_operator[0]->tok_value == K_NULL){ //when its null & check if is null
-                            if(tok_length == 0){
-                              record_to_print[total_row] = record_ptr;
-                              total_row++;
+                  for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
+                  record_offset = 0;
+                      /* For every column in the column */
+                      for(j = 0; j < tab_entry->num_columns; j++){
+                        column_address = list_cd_entry[j];
+                        unsigned char tok_length = NULL;
+                        memcpy(&tok_length, record_ptr+record_offset, 1);
+                        record_offset++;
+
+                        //If there is a where flag
+                        if(where_flag){
+                          if(strcasecmp(cond_column[0]->tok_string, column_address->col_name) == 0){
+                            if(cond_relation_operator[0]->tok_value == K_NULL){ //when its null & check if is null
+                              if(tok_length == 0){
+                                record_to_print[total_row] = record_ptr;
+                                total_row++;
+                              }
+                            }//end checking for null
+                            else if(cond_relation_operator[0]->tok_value == K_NOT){
+                              if(tok_length == 0){
+                                record_to_print[total_row] = record_ptr;
+                                total_row++;
+                              }
                             }
-                          }//end checking for null
-                          else if(cond_relation_operator[0]->tok_value == K_NOT){
-                            if(tok_length == 0){
-                              record_to_print[total_row] = record_ptr;
-                              total_row++;
-                            }
-                          }
-                          else { // must be relational
-                            if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
-                            {
-                              char temp_string[tok_length + 1];
-                              memset(temp_string, '\0', tok_length + 1);
-                              memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                              if(cond_relation_operator[0]->tok_value == S_EQUAL){
-                                if(join  && cond_value[0]->tok_value == IDENT){
-                                    // temp_string
-                                    int table2_row;
-                                    for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
-                                        /*Get each row of that join column from table 2*/
-                                        unsigned char tok_length2 = NULL;
-                                        memcpy(&tok_length2, table2_ptr+(tabfile2_ptr->record_size * table2_row), 1);
-                                        char temp_string2[tok_length2 + 1];
-                                        memset(temp_string2, '\0', tok_length2 + 1);
-                                        memcpy(&temp_string2, table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), tok_length2);
-                                        // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
-                                        if(strcmp(temp_string, temp_string2) == 0){
-                                           record_to_print[total_row] = record_ptr;
-                                           record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
-                                           total_row++;
-                                           // join_row++;
-                                        }
+                            else { // must be relational
+                              if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
+                              {
+                                char temp_string[tok_length + 1];
+                                memset(temp_string, '\0', tok_length + 1);
+                                memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                                if(cond_relation_operator[0]->tok_value == S_EQUAL){
+                                  if(join  && cond_value[0]->tok_value == IDENT){
+                                      // temp_string
+                                      int table2_row;
+                                      for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
+                                          /*Get each row of that join column from table 2*/
+                                          unsigned char tok_length2 = NULL;
+                                          memcpy(&tok_length2, table2_ptr+(tabfile2_ptr->record_size * table2_row), 1);
+                                          char temp_string2[tok_length2 + 1];
+                                          memset(temp_string2, '\0', tok_length2 + 1);
+                                          memcpy(&temp_string2, table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), tok_length2);
+                                          // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
+                                          if(strcmp(temp_string, temp_string2) == 0){
+                                             record_to_print[total_row] = record_ptr;
+                                             record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
+                                             total_row++;
+                                             // join_row++;
+                                          }
+                                      }
+                                  }
+                                  else { //NOT JOIN
+                                    if(strcmp(cond_value[0]->tok_string, temp_string) == 0){
+                                        record_to_print[total_row] = record_ptr;
+                                        total_row++;
                                     }
+                                  }
                                 }
-                                else { //NOT JOIN
-                                  if(strcmp(cond_value[0]->tok_string, temp_string) == 0){
+                                else if(cond_relation_operator[0]->tok_value == S_GREATER){
+                                  if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
+                                      record_to_print[total_row] = record_ptr;
+                                      total_row++;
+                                  }
+                                }
+                                else {
+                                  if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
                                       record_to_print[total_row] = record_ptr;
                                       total_row++;
                                   }
                                 }
                               }
-                              else if(cond_relation_operator[0]->tok_value == S_GREATER){
-                                if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
+                              else { // this must be int
+                                int temp_num = 0;
+                                memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
+                                int extract_value = atoi(cond_value[0]->tok_string);
+                                if(cond_relation_operator[0]->tok_value == S_EQUAL) {
+                                  if(join && cond_value[0]->tok_value == IDENT){
+                                      // temp_string
+                                      int table2_row;
+                                      for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
+                                          /*Get each row of that join column from table 2*/
+                                          int temp_num2 = 0;
+                                          memcpy(&temp_num2,table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), sizeof(int));
+                                          if(temp_num == temp_num2){
+                                             record_to_print[total_row] = record_ptr;
+                                             record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
+                                             total_row++;
+                                             // join_row++;
+                                          }
+                                      }
+                                  }
+                                  else {
+                                    if(temp_num == extract_value){
+                                      record_to_print[total_row] = record_ptr;
+                                      total_row++;
+                                    }
+                                  }
+                                }
+                                else if(cond_relation_operator[0]->tok_value == S_GREATER
+                                  && temp_num > extract_value)
+                                  {
+                                    // printf("%s\n", "first condition");
                                     record_to_print[total_row] = record_ptr;
                                     total_row++;
-                                }
-                              }
-                              else {
-                                if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
+                                  }
+                                else if(cond_relation_operator[0]->tok_value == S_LESS
+                                  && temp_num < extract_value)
+                                  {
                                     record_to_print[total_row] = record_ptr;
                                     total_row++;
-                                }
+                                  }
                               }
                             }
-                            else { // this must be int
-                              int temp_num = 0;
-                              memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
-                              int extract_value = atoi(cond_value[0]->tok_string);
-                              if(cond_relation_operator[0]->tok_value == S_EQUAL) {
-                                if(join && cond_value[0]->tok_value == IDENT){
-                                    // temp_string
-                                    int table2_row;
-                                    for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
-                                        /*Get each row of that join column from table 2*/
-                                        int temp_num2 = 0;
-                                        memcpy(&temp_num2,table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), sizeof(int));
-                                        if(temp_num == temp_num2){
-                                           record_to_print[total_row] = record_ptr;
-                                           record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
-                                           total_row++;
-                                           // join_row++;
-                                        }
-                                    }
-                                }
-                                else {
-                                  if(temp_num == extract_value){
+                          }
+                          if(multi_cond){//if both
+                              int boolean = and_or->tok_value;
+                              //If match the column name -> find the matching cell
+                              if(strcasecmp(cond_column[1]->tok_string, column_address->col_name) == 0){
+                                if(cond_relation_operator[1]->tok_value == K_NULL){ //when its null & check if is null
+                                  if(tok_length == 0){
+                                    record_to_print[total_row] = record_ptr;
+                                    total_row++;
+                                  }
+                                }//end checking for null
+                                else if(cond_relation_operator[1]->tok_value == K_NOT){
+                                  if(tok_length == 0){
                                     record_to_print[total_row] = record_ptr;
                                     total_row++;
                                   }
                                 }
-                              }
-                              else if(cond_relation_operator[0]->tok_value == S_GREATER
-                                && temp_num > extract_value)
-                                {
-                                  // printf("%s\n", "first condition");
-                                  record_to_print[total_row] = record_ptr;
-                                  total_row++;
-                                }
-                              else if(cond_relation_operator[0]->tok_value == S_LESS
-                                && temp_num < extract_value)
-                                {
-                                  record_to_print[total_row] = record_ptr;
-                                  total_row++;
-                                }
-                            }
-                          }
-                        }
-                        if(multi_cond){//if both
-                            int boolean = and_or->tok_value;
-                            //If match the column name -> find the matching cell
-                            if(strcasecmp(cond_column[1]->tok_string, column_address->col_name) == 0){
-                              if(cond_relation_operator[1]->tok_value == K_NULL){ //when its null & check if is null
-                                if(tok_length == 0){
-                                  record_to_print[total_row] = record_ptr;
-                                  total_row++;
-                                }
-                              }//end checking for null
-                              else if(cond_relation_operator[1]->tok_value == K_NOT){
-                                if(tok_length == 0){
-                                  record_to_print[total_row] = record_ptr;
-                                  total_row++;
-                                }
-                              }
-                              else { // must be relational
-                                if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
-                                {
-                                  char temp_string[tok_length + 1];
-                                  memset(temp_string, '\0', tok_length + 1);
-                                  memcpy(&temp_string, record_ptr+record_offset, tok_length);
-                                  if(cond_relation_operator[1]->tok_value == S_EQUAL){
-                                    if(join && cond_value[1]->tok_value == IDENT){
-                                        // temp_string
-                                        int table2_row;
-                                        for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
-                                            /*Get each row of that join column from table 2*/
-                                            unsigned char tok_length2 = NULL;
-                                            memcpy(&tok_length2, table2_ptr+(tabfile2_ptr->record_size * table2_row), 1);
-                                            char temp_string2[tok_length2 + 1];
-                                            memset(temp_string2, '\0', tok_length2 + 1);
-                                            memcpy(&temp_string2, table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), tok_length2);
-                                            // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
-                                            if(strcmp(temp_string, temp_string2) == 0){
-                                               record_to_print[total_row] = record_ptr;
-                                               record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
-                                               total_row++;
-                                               // join_row++;
-                                            }
+                                else { // must be relational
+                                  if(column_address->col_type == T_CHAR || column_address->col_type == T_VARCHAR) // VARCHAR
+                                  {
+                                    char temp_string[tok_length + 1];
+                                    memset(temp_string, '\0', tok_length + 1);
+                                    memcpy(&temp_string, record_ptr+record_offset, tok_length);
+                                    if(cond_relation_operator[1]->tok_value == S_EQUAL){
+                                      if(join && cond_value[1]->tok_value == IDENT){
+                                          // temp_string
+                                          int table2_row;
+                                          for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
+                                              /*Get each row of that join column from table 2*/
+                                              unsigned char tok_length2 = NULL;
+                                              memcpy(&tok_length2, table2_ptr+(tabfile2_ptr->record_size * table2_row), 1);
+                                              char temp_string2[tok_length2 + 1];
+                                              memset(temp_string2, '\0', tok_length2 + 1);
+                                              memcpy(&temp_string2, table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), tok_length2);
+                                              // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
+                                              if(strcmp(temp_string, temp_string2) == 0){
+                                                 record_to_print[total_row] = record_ptr;
+                                                 record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
+                                                 total_row++;
+                                                 // join_row++;
+                                              }
+                                          }
+                                      }
+                                      else {
+                                        if(strcmp(cond_value[1]->tok_string, temp_string) == 0){
+                                              record_to_print[total_row] = record_ptr;
+                                              total_row++;
                                         }
+                                      }
+                                    }
+                                    else if(cond_relation_operator[0]->tok_value == S_GREATER){
+                                      if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
+                                          record_to_print[total_row] = record_ptr;
+                                          total_row++;
+                                      }
                                     }
                                     else {
-                                      if(strcmp(cond_value[1]->tok_string, temp_string) == 0){
-                                            record_to_print[total_row] = record_ptr;
-                                            total_row++;
+                                      if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
+                                          record_to_print[total_row] = record_ptr;
+                                          total_row++;
                                       }
                                     }
                                   }
-                                  else if(cond_relation_operator[0]->tok_value == S_GREATER){
-                                    if(strcmp(cond_value[0]->tok_string, temp_string) < 0){
+                                  else{ // this must be int
+                                    int temp_num = 0;
+                                    memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
+                                    int extract_value = atoi(cond_value[1]->tok_string);
+                                    if(cond_relation_operator[1]->tok_value == S_EQUAL){
+                                      if(join){
+                                          // temp_string
+                                          int table2_row;
+                                          for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
+                                              /*Get each row of that join column from table 2*/
+                                              int temp_num2 = 0;
+                                              memcpy(&temp_num2,table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), sizeof(int));
+                                              // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
+                                              if(temp_num == temp_num2){
+                                                 record_to_print[total_row] = record_ptr;
+                                                 record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
+                                                 total_row++;
+                                                 // join_row++;
+                                              }
+                                          }
+                                      }
+                                      else if(temp_num ==  extract_value && !join){
                                         record_to_print[total_row] = record_ptr;
                                         total_row++;
+                                      }
                                     }
-                                  }
-                                  else {
-                                    if(strcmp(cond_value[0]->tok_string, temp_string) > 0){
-                                        record_to_print[total_row] = record_ptr;
-                                        total_row++;
-                                    }
-                                  }
-                                }
-                                else{ // this must be int
-                                  int temp_num = 0;
-                                  memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
-                                  int extract_value = atoi(cond_value[1]->tok_string);
-                                  if(cond_relation_operator[1]->tok_value == S_EQUAL){
-                                    if(join){
-                                        // temp_string
-                                        int table2_row;
-                                        for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
-                                            /*Get each row of that join column from table 2*/
-                                            int temp_num2 = 0;
-                                            memcpy(&temp_num2,table2_ptr+join_col_offset+(tabfile2_ptr->record_size * table2_row), sizeof(int));
-                                            // printf("Table 1: %s Table 2: %s \n", temp_string, temp_string2);
-                                            if(temp_num == temp_num2){
-                                               record_to_print[total_row] = record_ptr;
-                                               record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
-                                               total_row++;
-                                               // join_row++;
-                                            }
-                                        }
-                                    }
-                                    else if(temp_num ==  extract_value && !join){
-                                      record_to_print[total_row] = record_ptr;
-                                      total_row++;
-                                    }
-                                  }
 
-                                  else if(cond_relation_operator[1]->tok_value == S_GREATER
-                                    && temp_num >  extract_value)
-                                    {
-                                      record_to_print[total_row] = record_ptr;
-                                      total_row++;
-                                    }
-                                  else if(cond_relation_operator[1]->tok_value == S_LESS
-                                    && temp_num <  extract_value)
-                                    {
-                                      record_to_print[total_row] = record_ptr;
-                                      total_row++;
-                                    }
+                                    else if(cond_relation_operator[1]->tok_value == S_GREATER
+                                      && temp_num >  extract_value)
+                                      {
+                                        record_to_print[total_row] = record_ptr;
+                                        total_row++;
+                                      }
+                                    else if(cond_relation_operator[1]->tok_value == S_LESS
+                                      && temp_num <  extract_value)
+                                      {
+                                        record_to_print[total_row] = record_ptr;
+                                        total_row++;
+                                      }
+                                  }
                                 }
                               }
-                            }
+                          }
+                          else {
+                            record_to_print_final[total_row-1] = record_to_print[total_row-1];
+                          }
                         }
-                        else {
-                          record_to_print_final[total_row-1] = record_to_print[total_row-1];
+                        if(orderby_flag){
+                          if(strcasecmp(orderby_column->tok_string, column_address->col_name) == 0){
+                              orderby_col = column_address;
+                              orderby_offset = record_offset;
+                          }
                         }
+                        record_offset = record_offset + list_cd_entry[j]->col_len;
                       }
-                      if(orderby_flag){
-                        if(strcasecmp(orderby_column->tok_string, column_address->col_name) == 0){
-                            orderby_col = column_address;
-                            orderby_offset = record_offset;
-                        }
+                      if(!where_flag){
+                        record_to_print_final[cur_row] = record_ptr;
+                        total_row++;
                       }
-                      record_offset = record_offset + list_cd_entry[j]->col_len;
-                    }
-                    if(!where_flag){
-                      record_to_print_final[cur_row] = record_ptr;
-                      total_row++;
-                    }
-                    //At the end of each column
-                    record_ptr = record_ptr + tabfile_ptr->record_size;
-                }
-                // printf("Rows after search: %d\n", total_row);
+                      //At the end of each column
+                      record_ptr = record_ptr + tabfile_ptr->record_size;
+                  }
+
+
                 //AND OR LOGIC
                 if(multi_cond){
                   int new_total_row = 0;
@@ -2698,6 +2733,7 @@ int sem_select(token_list *t_list) {
                     else if(!select_all) {
                       for(int i = 0; i < count_proj; i++){ // for all projection column
                         int record_offset2 = 0;
+                        int record_offset_join = 0;
                         for(j = 0; j < tab_entry->num_columns; j++) //search through all 5 columns
                         {
                           int tok_length2 = NULL;
@@ -2747,6 +2783,57 @@ int sem_select(token_list *t_list) {
                         } // Compare Columns
                           record_offset2 = record_offset2 + list_cd_entry[j]->col_len;
                         }
+                        if(join){
+                          for(j = 0; j < tab_entry2->num_columns; j++) //search through all 5 columns
+                          {
+                            int tok_length2 = NULL;
+                            memcpy(&tok_length2, table2_ptr+record_offset_join, 1);
+                            record_offset_join++;
+                           /* If the column type is CHAR*/
+                           if(strcasecmp(proj_col[i], list_cd_entry2[j]->col_name) == 0){
+                             if(aggregate_func == NULL){
+                                printf("%s","|");
+                              }
+                             if(list_cd_entry2[j]->col_type == T_CHAR || list_cd_entry2[j]->col_type == T_VARCHAR){
+                              if(tok_length2 == 0){ //NULL
+                                if(aggregate_func == NULL){
+                                  printf("%*s",-FORMAT_LENGTH,"-");
+                                }
+                                null_count++;
+                              }
+                              else {
+                                char temp_string[tok_length2 + 1];
+                                memset(temp_string, '\0', tok_length2 + 1);
+                                memcpy(&temp_string, table2_ptr+record_offset_join, tok_length2);
+                                if(aggregate_func == NULL){
+                                  printf("%*s", -FORMAT_LENGTH ,temp_string);
+                                }
+                              }
+                            }//End parse string
+                            else { //column type is INT
+                              if(tok_length2 == 0){ //NULL
+                                if(aggregate_func == NULL){
+                                  printf("%*s",FORMAT_LENGTH,"-");
+                                }
+                                null_count++;
+                              }
+                              else {
+                                int value = 0;
+                                memcpy(&value, table2_ptr+record_offset_join, sizeof(int));
+                                if(aggregate_func == NULL){
+                                  printf("%*d",FORMAT_LENGTH,value);
+                                }
+                                else if(aggregate_func->tok_value == F_SUM || aggregate_func->tok_value == F_AVG){
+                                        aggregate_result = aggregate_result + value;
+                                }//End parse aggregate
+                              }//End parse valid int
+                            }//End parse int
+                            // j++;
+                          } // Compare Columns
+                          record_offset_join = record_offset_join + list_cd_entry2[j]->col_len;
+                          }
+                        }
+
                      }
                   }
                     if(aggregate_func == NULL){
@@ -2781,7 +2868,7 @@ int sem_select(token_list *t_list) {
                 for(count = 0; count < print_column; count++){
                   printf("%s","+----------------");
                 }
-                if(join){
+                if(join && select_all){
                   int j = 0;
                   for(j = 0; j < tab_entry2->num_columns; j++){
                       printf("%s","+----------------");
