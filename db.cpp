@@ -1820,11 +1820,12 @@ int sem_select(token_list *t_list) {
                                   //belong to the signs
                                   // printf("%s\n", "Sign");
                                   cond_relation_operator[count_cond] = cur2;
-                                  // printf("%d\n", cond_relation_operator[count_cond]->tok_value);
+
                                   if(join && cur2->tok_value == S_EQUAL){
                                         // check for the join column
                                       if(cur2->next != NULL && cur2->next->tok_value == IDENT){
                                           join_predicate_col = cur2->next;
+                                          cur2 = cur2->next;
                                       }
                                   }
                                   else if(cur2->next != NULL && cur2->next->tok_value != EOC){ //This is the data value
@@ -1898,12 +1899,13 @@ int sem_select(token_list *t_list) {
                                return rc;
                             }
                           }
-                          if(!rc && !multi_cond && !join){
+                          if(!rc && !multi_cond){
                              if(cur2->next != NULL
                                 && (cur2->next->tok_value == K_AND || cur2->next->tok_value == K_OR))
                               {
                                   and_or = cur2->next;
                                   multi_cond = true;
+                                  
                                   cur2 = and_or;
                                   if(cur2->next->tok_value == EOC){
                                     rc = INVALID_SELECT_SYNTAX;
@@ -2247,6 +2249,7 @@ int sem_select(token_list *t_list) {
                 int record_offset = 0;
                 int print_count = 0;
                 int total_row = 0;
+                int join_row = 0;
                 int row_select = 0;
                 int row_select2 = 0;
                 bool done = true;
@@ -2303,6 +2306,7 @@ int sem_select(token_list *t_list) {
                                            record_to_print[total_row] = record_ptr;
                                            record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
                                            total_row++;
+                                           // join_row++;
                                         }
                                     }
                                 }
@@ -2342,6 +2346,7 @@ int sem_select(token_list *t_list) {
                                            record_to_print[total_row] = record_ptr;
                                            record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
                                            total_row++;
+                                           // join_row++;
                                         }
                                     }
                                 }
@@ -2405,6 +2410,7 @@ int sem_select(token_list *t_list) {
                                                record_to_print[total_row] = record_ptr;
                                                record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
                                                total_row++;
+                                               // join_row++;
                                             }
                                         }
                                     }
@@ -2445,6 +2451,7 @@ int sem_select(token_list *t_list) {
                                                record_to_print[total_row] = record_ptr;
                                                record_to_print2[total_row] = table2_ptr + (tabfile2_ptr->record_size * table2_row);
                                                total_row++;
+                                               // join_row++;
                                             }
                                         }
                                     }
@@ -2489,14 +2496,16 @@ int sem_select(token_list *t_list) {
                     //At the end of each column
                     record_ptr = record_ptr + tabfile_ptr->record_size;
                 }
-
+                //AND OR LOGIC
                 if(multi_cond){
                   int new_total_row = 0;
+                  //and logic
                   if(and_or->tok_value == K_AND){
                       int i = 0;
                       for(int j = 0; j < total_row-1; j++){
                             if(record_to_print[j] == record_to_print[j+1]){
                                 record_to_print_final[i] = record_to_print[j+1];
+                                record_to_print2[i] = record_to_print2[j];
                                 i++;
                                 new_total_row++;
                             }
@@ -2568,14 +2577,17 @@ int sem_select(token_list *t_list) {
                     }//End INT
                   } //End loop
                 }//End order by
-
                 // PRINT EVERYTHING
                 long long aggregate_result = 0;
                 int null_count = 0;
-
+                int y = 0;
                 for(int z = 0; z < total_row; z++){
+                    y = z;
                     record_ptr = record_to_print_final[z];
-                    table2_ptr = record_to_print2[z];
+                    while(record_to_print2[y] == NULL){
+                        y++;
+                    }
+                    table2_ptr = record_to_print2[y];
                     if(select_all) { // SELECT ALL
                        int record_offset2 = 0;
                        //PRINT THE ORIGINAL TABLE COLUMNS
