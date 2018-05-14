@@ -1783,6 +1783,7 @@ int sem_select(token_list *t_list) {
                 token_list *and_or = NULL;
                 bool order_desc = false;
                 cd_entry *orderby_col;
+                bool found_join_col = false;
 
                 if(join){
                   cur = cur->next->next; //go to the second table
@@ -1814,19 +1815,29 @@ int sem_select(token_list *t_list) {
                             // printf("Column %d: %s\n",count_cond,cond_column[count_cond]->tok_string); //condition
                             if(cur2->next != NULL && cur2->next->tok_value != EOC){
                               cur2 = cur2->next;
+
                               if(cur2->tok_value == S_EQUAL || cur2->tok_value == S_LESS || cur2->tok_value == S_GREATER){
                                   /*=======CHECK FOR JOIN PREDICATE========*/
 
                                   //belong to the signs
                                   // printf("%s\n", "Sign");
                                   cond_relation_operator[count_cond] = cur2;
-
-                                  if(join && cur2->tok_value == S_EQUAL){
+                                  if(join && cur2->tok_value == S_EQUAL && !found_join_col
+                                    && cur2->next != NULL && cur2->next->tok_value == IDENT){
                                         // check for the join column
-                                      if(cur2->next != NULL && cur2->next->tok_value == IDENT){
+                                      // if(found_join_col && cur2->next->tok_value == IDENT){
+                                      //   rc = INVALID_JOIN_SYNTAX;
+                                      //   cur2->next->tok_value = INVALID;
+                                      //   printf("%s\n\n", "Can only have 1 join predicate");
+                                      //   return rc;
+                                      // }
+                                      // else if(cur2->next != NULL && cur2->next->tok_value == IDENT){
                                           join_predicate_col = cur2->next;
+                                          found_join_col = true;
                                           cur2 = cur2->next;
-                                      }
+                                          cond_value[count_cond] = cur2;
+
+                                      // }
                                   }
                                   else if(cur2->next != NULL && cur2->next->tok_value != EOC){ //This is the data value
                                       cur2 = cur2->next; // Move to the data
@@ -1905,7 +1916,6 @@ int sem_select(token_list *t_list) {
                               {
                                   and_or = cur2->next;
                                   multi_cond = true;
-                                  
                                   cur2 = and_or;
                                   if(cur2->next->tok_value == EOC){
                                     rc = INVALID_SELECT_SYNTAX;
@@ -2261,7 +2271,6 @@ int sem_select(token_list *t_list) {
                 /* For every row in this file */
                 for(cur_row = 0; cur_row < tabfile_ptr->num_records; cur_row++){
                 record_offset = 0;
-
                     /* For every column in the column */
                     for(j = 0; j < tab_entry->num_columns; j++){
                       column_address = list_cd_entry[j];
@@ -2291,7 +2300,7 @@ int sem_select(token_list *t_list) {
                               memset(temp_string, '\0', tok_length + 1);
                               memcpy(&temp_string, record_ptr+record_offset, tok_length);
                               if(cond_relation_operator[0]->tok_value == S_EQUAL){
-                                if(join){
+                                if(join  && cond_value[0]->tok_value == IDENT){
                                     // temp_string
                                     int table2_row;
                                     for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
@@ -2335,7 +2344,7 @@ int sem_select(token_list *t_list) {
                               memcpy(&temp_num,record_ptr+record_offset, sizeof(int));
                               int extract_value = atoi(cond_value[0]->tok_string);
                               if(cond_relation_operator[0]->tok_value == S_EQUAL) {
-                                if(join){
+                                if(join && cond_value[0]->tok_value == IDENT){
                                     // temp_string
                                     int table2_row;
                                     for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
@@ -2360,6 +2369,7 @@ int sem_select(token_list *t_list) {
                               else if(cond_relation_operator[0]->tok_value == S_GREATER
                                 && temp_num > extract_value)
                                 {
+                                  // printf("%s\n", "first condition");
                                   record_to_print[total_row] = record_ptr;
                                   total_row++;
                                 }
@@ -2395,7 +2405,7 @@ int sem_select(token_list *t_list) {
                                   memset(temp_string, '\0', tok_length + 1);
                                   memcpy(&temp_string, record_ptr+record_offset, tok_length);
                                   if(cond_relation_operator[1]->tok_value == S_EQUAL){
-                                    if(join){
+                                    if(join && cond_value[1]->tok_value == IDENT){
                                         // temp_string
                                         int table2_row;
                                         for(table2_row = 0; table2_row < tabfile2_ptr->num_records; table2_row++){
@@ -2496,6 +2506,7 @@ int sem_select(token_list *t_list) {
                     //At the end of each column
                     record_ptr = record_ptr + tabfile_ptr->record_size;
                 }
+                // printf("Rows after search: %d\n", total_row);
                 //AND OR LOGIC
                 if(multi_cond){
                   int new_total_row = 0;

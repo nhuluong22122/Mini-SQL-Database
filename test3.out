@@ -1,0 +1,418 @@
+Project Part 3 test batch file
+
+cleanup
+
+
+01. Setup and inserts
+
+          create 	1 	 13
+           table 	1 	 14
+            tab1 	2 	 85
+               ( 	3 	 70
+            name 	2 	 85
+            char 	4 	 11
+               ( 	3 	 70
+              16 	5 	 90
+               ) 	3 	 71
+               , 	3 	 72
+         quizzes 	2 	 85
+             int 	4 	 10
+               , 	3 	 72
+         midterm 	2 	 85
+             int 	4 	 10
+               , 	3 	 72
+           final 	2 	 85
+             int 	4 	 10
+               ) 	3 	 71
+                 	7 	 95
+CREATE TABLE statement
+
+dbfile.bin size = 192
+          create 	1 	 13
+           table 	1 	 14
+            tab2 	2 	 85
+               ( 	3 	 70
+    student_name 	2 	 85
+            char 	4 	 11
+               ( 	3 	 70
+              16 	5 	 90
+               ) 	3 	 71
+               , 	3 	 72
+         college 	2 	 85
+            char 	4 	 11
+               ( 	3 	 70
+              20 	5 	 90
+               ) 	3 	 71
+               , 	3 	 72
+         zipcode 	2 	 85
+            char 	4 	 11
+               ( 	3 	 70
+               5 	5 	 90
+               ) 	3 	 71
+               , 	3 	 72
+            rank 	2 	 85
+             int 	4 	 10
+               ) 	3 	 71
+                 	7 	 95
+CREATE TABLE statement
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab1 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+             Siu 	5 	 91
+               , 	3 	 72
+              11 	5 	 90
+               , 	3 	 72
+              80 	5 	 90
+               , 	3 	 72
+             560 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab1.tab size: 56. Number of records: 1
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab1 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+           Frank 	5 	 91
+               , 	3 	 72
+              22 	5 	 90
+               , 	3 	 72
+             100 	5 	 90
+               , 	3 	 72
+             700 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab1.tab size: 88. Number of records: 2
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab1 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+         Butcher 	5 	 91
+               , 	3 	 72
+              33 	5 	 90
+               , 	3 	 72
+              75 	5 	 90
+               , 	3 	 72
+             525 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab1.tab size: 120. Number of records: 3
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab1 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+           Jaina 	5 	 91
+               , 	3 	 72
+              44 	5 	 90
+               , 	3 	 72
+              90 	5 	 90
+               , 	3 	 72
+             600 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab1.tab size: 152. Number of records: 4
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab1 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+         Nazeebo 	5 	 91
+               , 	3 	 72
+              55 	5 	 90
+               , 	3 	 72
+              92 	5 	 90
+               , 	3 	 72
+             624 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab1.tab size: 184. Number of records: 5
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab1 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+        Sylvanas 	5 	 91
+               , 	3 	 72
+              66 	5 	 90
+               , 	3 	 72
+              60 	5 	 90
+               , 	3 	 72
+             420 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab1.tab size: 216. Number of records: 6
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab1 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+          Jordon 	5 	 91
+               , 	3 	 72
+              77 	5 	 90
+               , 	3 	 72
+              79 	5 	 90
+               , 	3 	 72
+             580 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab1.tab size: 248. Number of records: 7
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab2 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+             Siu 	5 	 91
+               , 	3 	 72
+            UCLA 	5 	 91
+               , 	3 	 72
+           11111 	5 	 91
+               , 	3 	 72
+               3 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab2.tab size: 76. Number of records: 1
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab2 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+           Frank 	5 	 91
+               , 	3 	 72
+            SJSU 	5 	 91
+               , 	3 	 72
+           22222 	5 	 91
+               , 	3 	 72
+              10 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab2.tab size: 128. Number of records: 2
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab2 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+          Jordon 	5 	 91
+               , 	3 	 72
+        Stanford 	5 	 91
+               , 	3 	 72
+           33333 	5 	 91
+               , 	3 	 72
+               2 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab2.tab size: 180. Number of records: 3
+
+dbfile.bin size = 372
+          insert 	1 	 22
+            into 	1 	 23
+            tab2 	2 	 85
+          values 	1 	 24
+               ( 	3 	 70
+        Sylvanas 	5 	 91
+               , 	3 	 72
+              UW 	5 	 91
+               , 	3 	 72
+           44444 	5 	 91
+               , 	3 	 72
+               5 	5 	 90
+               ) 	3 	 71
+                 	7 	 95
+INSERT statement
+tab2.tab size: 232. Number of records: 4
+
+dbfile.bin size = 372
+          select 	1 	 30
+               * 	3 	 73
+            from 	1 	 26
+            tab1 	2 	 85
+                 	7 	 95
+SELECT statement
++----------------+----------------+----------------+----------------+
+|name            |quizzes         |midterm         |final           |
++----------------+----------------+----------------+----------------+
+|Siu             |              11|              80|             560|
+|Frank           |              22|             100|             700|
+|Butcher         |              33|              75|             525|
+|Jaina           |              44|              90|             600|
+|Nazeebo         |              55|              92|             624|
+|Sylvanas        |              66|              60|             420|
+|Jordon          |              77|              79|             580|
++----------------+----------------+----------------+----------------+
+7 rows selected.
+
+dbfile.bin size = 372
+          select 	1 	 30
+               * 	3 	 73
+            from 	1 	 26
+            tab2 	2 	 85
+                 	7 	 95
+SELECT statement
++----------------+----------------+----------------+----------------+
+|student_name    |college         |zipcode         |rank            |
++----------------+----------------+----------------+----------------+
+|Siu             |UCLA            |11111           |               3|
+|Frank           |SJSU            |22222           |              10|
+|Jordon          |Stanford        |33333           |               2|
+|Sylvanas        |UW              |44444           |               5|
++----------------+----------------+----------------+----------------+
+4 rows selected.
+
+dbfile.bin size = 372
+          select 	1 	 30
+               * 	3 	 73
+            from 	1 	 26
+            tab1 	2 	 85
+               , 	3 	 72
+            tab2 	2 	 85
+           where 	1 	 27
+            name 	2 	 85
+               = 	3 	 74
+    student_name 	2 	 85
+                 	7 	 95
+SELECT statement
+INNER JOIN
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|name            |quizzes         |midterm         |final           |student_name    |college         |zipcode         |rank            |
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|Siu             |              11|              80|             560|Siu             |UCLA            |11111           |               3|
+|Frank           |              22|             100|             700|Frank           |SJSU            |22222           |              10|
+|Sylvanas        |              66|              60|             420|Sylvanas        |UW              |44444           |               5|
+|Jordon          |              77|              79|             580|Jordon          |Stanford        |33333           |               2|
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+4 rows selected.
+
+dbfile.bin size = 372
+          select 	1 	 30
+               * 	3 	 73
+            from 	1 	 26
+            tab1 	2 	 85
+               , 	3 	 72
+            tab2 	2 	 85
+           where 	1 	 27
+            name 	2 	 85
+               = 	3 	 74
+    student_name 	2 	 85
+             AND 	1 	 35
+            name 	2 	 85
+               = 	3 	 74
+          Jordon 	5 	 91
+                 	7 	 95
+SELECT statement
+INNER JOIN
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|name            |quizzes         |midterm         |final           |student_name    |college         |zipcode         |rank            |
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|Jordon          |              77|              79|             580|Jordon          |Stanford        |33333           |               2|
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+1 rows selected.
+
+dbfile.bin size = 372
+          select 	1 	 30
+               * 	3 	 73
+            from 	1 	 26
+            tab1 	2 	 85
+               , 	3 	 72
+            tab2 	2 	 85
+           where 	1 	 27
+            name 	2 	 85
+               = 	3 	 74
+    student_name 	2 	 85
+             AND 	1 	 35
+         quizzes 	2 	 85
+               < 	3 	 75
+              50 	5 	 90
+                 	7 	 95
+SELECT statement
+INNER JOIN
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|name            |quizzes         |midterm         |final           |student_name    |college         |zipcode         |rank            |
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|Siu             |              11|              80|             560|Siu             |UCLA            |11111           |               3|
+|Frank           |              22|             100|             700|Frank           |SJSU            |22222           |              10|
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+2 rows selected.
+
+dbfile.bin size = 372
+          select 	1 	 30
+               * 	3 	 73
+            from 	1 	 26
+            tab1 	2 	 85
+               , 	3 	 72
+            tab2 	2 	 85
+           where 	1 	 27
+            name 	2 	 85
+               = 	3 	 74
+          Jordon 	5 	 91
+             and 	1 	 35
+            name 	2 	 85
+               = 	3 	 74
+    student_name 	2 	 85
+                 	7 	 95
+SELECT statement
+INNER JOIN
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|name            |quizzes         |midterm         |final           |student_name    |college         |zipcode         |rank            |
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|Jordon          |              77|              79|             580|Frank           |SJSU            |22222           |              10|
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+1 rows selected.
+
+dbfile.bin size = 372
+          select 	1 	 30
+               * 	3 	 73
+            from 	1 	 26
+            tab1 	2 	 85
+               , 	3 	 72
+            tab2 	2 	 85
+           where 	1 	 27
+         quizzes 	2 	 85
+               > 	3 	 76
+              50 	5 	 90
+             and 	1 	 35
+            name 	2 	 85
+               = 	3 	 74
+    student_name 	2 	 85
+                 	7 	 95
+SELECT statement
+INNER JOIN
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|name            |quizzes         |midterm         |final           |student_name    |college         |zipcode         |rank            |
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+|Sylvanas        |              66|              60|             420|Sylvanas        |UW              |44444           |               5|
+|Jordon          |              77|              79|             580|Jordon          |Stanford        |33333           |               2|
++----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
+2 rows selected.

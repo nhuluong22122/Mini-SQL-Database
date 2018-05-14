@@ -16,7 +16,7 @@ rm *.ilk
 rm first
 rm second
 rm third
-g++ -m32 -o db db.cpp
+gcc -m32 -o db db.cpp
 
 echo
 echo "01. Setup and inserts"
@@ -50,6 +50,16 @@ echo
 ./db "select * from tab1"
 echo
 ./db "select * from tab2"
+echo
+./db "select * from tab1, tab2 where name = student_name"
+echo
+./db "select * from tab1, tab2 where name = student_name AND name = 'Jordon'"
+echo
+./db "select * from tab1, tab2 where name = student_name AND quizzes < 50"
+echo
+./db "select * from tab1, tab2 where name = 'Jordon' and name = student_name"
+echo
+./db "select * from tab1, tab2 where quizzes > 50 and name = student_name"
 # echo
 # echo Check transaction log
 # echo
